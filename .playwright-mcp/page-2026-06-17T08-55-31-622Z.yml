@@ -1,0 +1,11 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e6]: Markly
+    - generic [ref=e7]:
+      - button "Editor" [ref=e8]
+      - button "Split" [ref=e9]
+      - button "Preview" [ref=e10]
+  - generic [ref=e12]:
+    - heading "Markly" [level=1] [ref=e13]
+    - paragraph [ref=e14]: MD로 쓰고, 아름답게 렌더되는 로컬 지식 관리 앱
+    - button "Open Vault Folder" [ref=e15]

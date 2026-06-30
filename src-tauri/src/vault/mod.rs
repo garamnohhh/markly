@@ -1,0 +1,419 @@
+pub mod change;
+pub mod db;
+pub mod diff;
+pub mod hash;
+pub mod snapshot;
+
+use change::ChangeRecord;
+use db::{Db, DocEntry};
+use diff::DiffResult;
+use serde::Serialize;
+use std::path::Path;
+use std::time::{SystemTime, UNIX_EPOCH};
+use walkdir::WalkDir;
+
+#[derive(Serialize)]
+pub struct DocContent {
+    pub content: String,
+    pub meta: DocEntry,
+}
+
+fn now() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
+}
+
+fn title_from(content: &str, fallback_path: &str) -> String {
+    for line in content.lines() {
+        if let Some(rest) = line.trim().strip_prefix("# ") {
+            return rest.trim().to_string();
+        }
+    }
+    Path::new(fallback_path)
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or(fallback_path)
+        .to_string()
+}
+
+// Parse YAML frontmatter (--- block at top) for pinned and tags fields.
+fn parse_frontmatter(content: &str) -> (bool, Vec<String>) {
+    let mut lines = content.lines();
+    if lines.next().map(str::trim) != Some("---") {
+        return (false, vec![]);
+    }
+    let mut pinned = false;
+    let mut tags: Vec<String> = vec![];
+    for line in lines {
+        let t = line.trim();
+        if t == "---" {
+            break;
+        }
+        if let Some(rest) = t.strip_prefix("pinned:") {
+            pinned = rest.trim().eq_ignore_ascii_case("true");
+        } else if let Some(rest) = t.strip_prefix("tags:") {
+            // inline list: tags: [a, b, c]
+            let inner = rest.trim().trim_start_matches('[').trim_end_matches(']');
+            tags = inner
+                .split(',')
+                .map(|s| s.trim().trim_matches('"').trim_matches('\'').to_string())
+                .filter(|s| !s.is_empty())
+                .collect();
+        } else if t.starts_with("- ") && !tags.is_empty() {
+            // block list item (continuation)
+        } else if t.starts_with("- ") {
+            // block list under tags key not yet seen — skip
+        }
+    }
+    (pinned, tags)
+}
+
+fn rel_doc_id(root: &Path, p: &Path) -> Result<(String, String), String> {
+    let rel = p.strip_prefix(root).map_err(|e| e.to_string())?;
+    let path = rel.to_string_lossy().replace('\\', "/");
+    Ok((path.to_lowercase(), path))
+}
+
+// Walk the vault, detect new/changed/deleted .md files, snapshot + record changes.
+pub fn scan(root: &Path) -> Result<Db, String> {
+    let mut db = db::load(root);
+
+    // Migration: entries that predate last_decided_version (serde default = 0).
+    // Set ldv = lrv if user has read some version, else cv (never-read files are not "changed").
+    let was_empty = db.docs.is_empty();
+    for e in db.docs.values_mut() {
+        if e.last_decided_version == 0 {
+            e.last_decided_version = if e.last_read_version > 0 {
+                e.last_read_version
+            } else {
+                e.current_version
+            };
+        }
+    }
+
+    let markly = db::markly_dir(root);
+    let mut found = std::collections::HashSet::new();
+
+    for entry in WalkDir::new(root).into_iter().filter_map(|e| e.ok()) {
+        let p = entry.path();
+        if !p.is_file() || p.starts_with(&markly) {
+            continue;
+        }
+        if p.extension().and_then(|e| e.to_str()) != Some("md") {
+            continue;
+        }
+
+        let (doc_id, path) = rel_doc_id(root, p)?;
+        found.insert(doc_id.clone());
+        let content = std::fs::read_to_string(p).map_err(|e| e.to_string())?;
+        let h = hash::sha256_hex(&content);
+
+        let (fm_pinned, fm_tags) = parse_frontmatter(&content);
+
+        match db.docs.get(&doc_id).cloned() {
+            None => {
+                snapshot::write_snapshot(root, &doc_id, 1, &content)?;
+                // Initial vault scan: treat existing files as already read.
+                // Files added after the first scan start as unread (lrv=0).
+                let lrv = if was_empty { 1 } else { 0 };
+                db.docs.insert(
+                    doc_id.clone(),
+                    DocEntry {
+                        doc_id: doc_id.clone(),
+                        path,
+                        title: title_from(&content, &doc_id),
+                        current_version: 1,
+                        last_read_version: lrv,
+                        last_decided_version: 1,
+                        pinned: fm_pinned,
+                        tags: fm_tags,
+                        hash: h,
+                        mtime: now(),
+                    },
+                );
+            }
+            Some(existing) if existing.hash != h => {
+                let new_v = existing.current_version + 1;
+                let prev =
+                    snapshot::read_snapshot(root, &doc_id, existing.current_version).unwrap_or_default();
+                let (ops, stats) = diff::word_diff(&prev, &content);
+                snapshot::write_snapshot(root, &doc_id, new_v, &content)?;
+                change::append_change(
+                    root,
+                    &doc_id,
+                    ChangeRecord {
+                        from: existing.current_version,
+                        to: new_v,
+                        at: now(),
+                        source: "external".into(),
+                        stats,
+                        ops,
+                    },
+                )?;
+                let e = db.docs.get_mut(&doc_id).unwrap();
+                e.current_version = new_v;
+                e.hash = h;
+                e.mtime = now();
+                e.title = title_from(&content, &doc_id);
+                e.pinned = fm_pinned;
+                e.tags = fm_tags;
+            }
+            Some(_) => {
+                // hash unchanged — no new snapshot, but always sync frontmatter
+                let e = db.docs.get_mut(&doc_id).unwrap();
+                e.pinned = fm_pinned;
+                e.tags = fm_tags;
+            }
+        }
+    }
+
+    // Remove docs whose files no longer exist on disk
+    db.docs.retain(|id, _| found.contains(id));
+
+    db::save(root, &db)?;
+    Ok(db)
+}
+
+pub fn read_doc(root: &Path, doc_id: &str) -> Result<DocContent, String> {
+    let meta = db::load(root)
+        .docs
+        .get(doc_id)
+        .cloned()
+        .ok_or_else(|| format!("unknown doc: {doc_id}"))?;
+    let content = std::fs::read_to_string(root.join(&meta.path)).map_err(|e| e.to_string())?;
+    Ok(DocContent { content, meta })
+}
+
+// Write new content to disk + snapshot + change record + version bump.
+pub fn write_doc(root: &Path, doc_id: &str, content: &str, source: &str) -> Result<Db, String> {
+    let mut db = db::load(root);
+    let existing = db
+        .docs
+        .get(doc_id)
+        .cloned()
+        .ok_or_else(|| format!("unknown doc: {doc_id}"))?;
+
+    let h = hash::sha256_hex(content);
+    if h == existing.hash {
+        return Ok(db); // nothing changed
+    }
+
+    let new_v = existing.current_version + 1;
+    let prev = snapshot::read_snapshot(root, doc_id, existing.current_version).unwrap_or_default();
+    let (ops, stats) = diff::word_diff(&prev, content);
+
+    std::fs::write(root.join(&existing.path), content).map_err(|e| e.to_string())?;
+    snapshot::write_snapshot(root, doc_id, new_v, content)?;
+    change::append_change(
+        root,
+        doc_id,
+        ChangeRecord {
+            from: existing.current_version,
+            to: new_v,
+            at: now(),
+            source: source.into(),
+            stats,
+            ops,
+        },
+    )?;
+
+    let (fm_pinned, fm_tags) = parse_frontmatter(content);
+    let e = db.docs.get_mut(doc_id).unwrap();
+    e.current_version = new_v;
+    e.hash = h;
+    e.mtime = now();
+    e.title = title_from(content, doc_id);
+    e.pinned = fm_pinned;
+    e.tags = fm_tags;
+    // edits the user made (or a revert they triggered) are read and decided by definition
+    if source == "in-app" || source == "revert" {
+        e.last_read_version = new_v;
+        e.last_decided_version = new_v;
+    }
+
+    db::save(root, &db)?;
+    Ok(db)
+}
+
+pub fn mark_read(root: &Path, doc_id: &str) -> Result<Db, String> {
+    let mut db = db::load(root);
+    let e = db
+        .docs
+        .get_mut(doc_id)
+        .ok_or_else(|| format!("unknown doc: {doc_id}"))?;
+    e.last_read_version = e.current_version;
+    e.last_decided_version = e.current_version;
+    db::save(root, &db)?;
+    Ok(db)
+}
+
+pub fn accept_change(root: &Path, doc_id: &str) -> Result<Db, String> {
+    let mut db = db::load(root);
+    let e = db
+        .docs
+        .get_mut(doc_id)
+        .ok_or_else(|| format!("unknown doc: {doc_id}"))?;
+    e.last_decided_version = e.current_version;
+    db::save(root, &db)?;
+    Ok(db)
+}
+
+pub fn decide_version(root: &Path, doc_id: &str, version: u32) -> Result<Db, String> {
+    let mut db = db::load(root);
+    let e = db
+        .docs
+        .get_mut(doc_id)
+        .ok_or_else(|| format!("unknown doc: {doc_id}"))?;
+    e.last_decided_version = version.min(e.current_version);
+    db::save(root, &db)?;
+    Ok(db)
+}
+
+pub fn list_updates(root: &Path) -> Vec<DocEntry> {
+    let mut v: Vec<DocEntry> = db::load(root)
+        .docs
+        .into_values()
+        .filter(|d| d.current_version > d.last_read_version)
+        .collect();
+    v.sort_by(|a, b| b.mtime.cmp(&a.mtime));
+    v
+}
+
+pub fn diff(root: &Path, doc_id: &str, from: u32, to: u32) -> Result<DiffResult, String> {
+    let a = if from == 0 {
+        String::new()
+    } else {
+        snapshot::read_snapshot(root, doc_id, from)?
+    };
+    let b = snapshot::read_snapshot(root, doc_id, to)?;
+    let (ops, stats) = diff::word_diff(&a, &b);
+    Ok(DiffResult {
+        from,
+        to,
+        ops,
+        stats,
+    })
+}
+
+pub fn list_changes(root: &Path, doc_id: &str) -> Vec<ChangeRecord> {
+    change::load_changes(root, doc_id)
+}
+
+// Restore snapshot at `version` back to disk as a new version.
+pub fn revert(root: &Path, doc_id: &str, version: u32) -> Result<Db, String> {
+    let snap = snapshot::read_snapshot(root, doc_id, version)?;
+    write_doc(root, doc_id, &snap, "revert")
+}
+
+pub fn rename_doc(root: &Path, doc_id: &str, new_rel_path: &str) -> Result<Db, String> {
+    let mut db = db::load(root);
+    let existing = db.docs.get(doc_id).cloned()
+        .ok_or_else(|| format!("unknown doc: {doc_id}"))?;
+
+    let old_file = root.join(&existing.path);
+    let new_file = root.join(new_rel_path);
+    if new_file.exists() {
+        return Err(format!("already exists: {new_rel_path}"));
+    }
+    if let Some(p) = new_file.parent() {
+        std::fs::create_dir_all(p).map_err(|e| e.to_string())?;
+    }
+    std::fs::rename(&old_file, &new_file).map_err(|e| e.to_string())?;
+
+    let new_doc_id = new_rel_path.to_lowercase().replace('\\', "/");
+    let markly = db::markly_dir(root);
+
+    let old_snap = markly.join("snapshots").join(db::storage_key(doc_id));
+    let new_snap = markly.join("snapshots").join(db::storage_key(&new_doc_id));
+    if old_snap.exists() { std::fs::rename(&old_snap, &new_snap).ok(); }
+
+    let old_chg = markly.join("changes").join(format!("{}.json", db::storage_key(doc_id)));
+    let new_chg = markly.join("changes").join(format!("{}.json", db::storage_key(&new_doc_id)));
+    if old_chg.exists() { std::fs::rename(&old_chg, &new_chg).ok(); }
+
+    db.docs.remove(doc_id);
+    let content = std::fs::read_to_string(&new_file).unwrap_or_default();
+    let mut entry = existing;
+    entry.doc_id = new_doc_id.clone();
+    entry.path = new_rel_path.replace('\\', "/");
+    entry.title = title_from(&content, new_rel_path);
+    db.docs.insert(new_doc_id, entry);
+
+    db::save(root, &db)?;
+    Ok(db)
+}
+
+pub fn delete_doc(root: &Path, doc_id: &str) -> Result<Db, String> {
+    let mut db = db::load(root);
+    let existing = db.docs.get(doc_id).cloned()
+        .ok_or_else(|| format!("unknown doc: {doc_id}"))?;
+
+    std::fs::remove_file(root.join(&existing.path)).ok();
+
+    let markly = db::markly_dir(root);
+    std::fs::remove_dir_all(markly.join("snapshots").join(db::storage_key(doc_id))).ok();
+    std::fs::remove_file(markly.join("changes").join(format!("{}.json", db::storage_key(doc_id)))).ok();
+
+    db.docs.remove(doc_id);
+    db::save(root, &db)?;
+    Ok(db)
+}
+
+// Create a brand-new markdown file in the vault, then rescan to index it.
+pub fn create_doc(root: &Path, rel_path: &str, content: &str) -> Result<Db, String> {
+    let target = root.join(rel_path);
+    if target.exists() {
+        return Err(format!("already exists: {rel_path}"));
+    }
+    if let Some(parent) = target.parent() {
+        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    std::fs::write(&target, content).map_err(|e| e.to_string())?;
+    scan(root)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn temp_vault() -> std::path::PathBuf {
+        let dir = std::env::temp_dir().join(format!("markly-test-{}", now() * 1000 + std::process::id() as u64));
+        std::fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    #[test]
+    fn scan_then_external_change_bumps_version_keeps_unread() {
+        let root = temp_vault();
+        std::fs::write(root.join("note.md"), "# Note\nhello world").unwrap();
+
+        // first scan: v1, read
+        let db = scan(&root).unwrap();
+        let d = &db.docs["note.md"];
+        assert_eq!(d.current_version, 1);
+        assert_eq!(d.last_read_version, 1);
+        assert_eq!(d.title, "Note");
+
+        // external edit + rescan: v2, still last-read v1 → unread
+        std::fs::write(root.join("note.md"), "# Note\nhello rust").unwrap();
+        let db = scan(&root).unwrap();
+        let d = &db.docs["note.md"];
+        assert_eq!(d.current_version, 2);
+        assert_eq!(d.last_read_version, 1);
+        assert!(d.current_version > d.last_read_version);
+
+        // updates list sees it; mark_read clears it
+        assert_eq!(list_updates(&root).len(), 1);
+        mark_read(&root, "note.md").unwrap();
+        assert_eq!(list_updates(&root).len(), 0);
+
+        // diff v1→v2 carries the word change
+        let r = diff(&root, "note.md", 1, 2).unwrap();
+        assert!(r.ops.iter().any(|o| o.op == "del" && o.text.contains("world")));
+        assert!(r.ops.iter().any(|o| o.op == "ins" && o.text.contains("rust")));
+
+        std::fs::remove_dir_all(&root).ok();
+    }
+}

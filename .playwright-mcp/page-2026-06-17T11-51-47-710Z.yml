@@ -1,0 +1,52 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e6]: Markly
+    - generic [ref=e7]:
+      - button "Editor" [ref=e8]
+      - button "Split" [ref=e9]
+      - button "Preview" [ref=e10]
+      - button "⚙" [active] [ref=e12]
+  - generic [ref=e14]:
+    - heading "Markly" [level=1] [ref=e15]
+    - paragraph [ref=e16]: MD로 쓰고, 아름답게 렌더되는 로컬 지식 관리 앱
+    - button "Open Vault Folder" [ref=e17]
+  - generic [ref=e19]:
+    - generic [ref=e20]:
+      - heading "Settings" [level=2] [ref=e21]
+      - button "✕" [ref=e22]
+    - generic [ref=e23]:
+      - button "editor" [ref=e24]
+      - button "app" [ref=e25]
+      - button "shortcuts" [ref=e26]
+    - generic [ref=e28]:
+      - generic [ref=e29]:
+        - generic [ref=e30]: Font Size
+        - generic [ref=e32]:
+          - button "−" [ref=e33]
+          - generic [ref=e34]: "14"
+          - button "+" [ref=e35]
+      - generic [ref=e36]:
+        - generic [ref=e37]: Font Family
+        - combobox [ref=e39]:
+          - option "JetBrains Mono" [selected]
+          - option "Fira Code"
+          - option "Cascadia Code"
+          - option "Menlo"
+          - option "SF Mono"
+          - option "Consolas"
+          - option "monospace"
+      - generic [ref=e40]:
+        - generic [ref=e41]: Tab Size
+        - combobox [ref=e43]:
+          - option "2" [selected]
+          - option "4"
+          - option "8"
+      - generic [ref=e44]:
+        - generic [ref=e45]: Word Wrap
+        - button [ref=e47]
+      - generic [ref=e49]:
+        - generic [ref=e50]: Vim Mode
+        - button [ref=e52]
+    - generic [ref=e54]:
+      - button "Cancel" [ref=e55]
+      - button "Save" [ref=e56]

@@ -1,0 +1,91 @@
+import { Component, useEffect, useRef } from "react";
+import type { ReactNode } from "react";
+import { listen } from "@tauri-apps/api/event";
+import { useStore } from "./store";
+import { useKeymap } from "./hooks/useKeymap";
+import { useDarkMode } from "./hooks/useDarkMode";
+import { Onboarding } from "./screens/Onboarding";
+import { MainApp } from "./screens/MainApp";
+import { CommandPalette } from "./components/ui/CommandPalette";
+
+class ErrorBoundary extends Component<{ children: ReactNode }, { caught: boolean }> {
+  state = { caught: false };
+  static getDerivedStateFromError() { return { caught: true }; }
+  render() {
+    if (this.state.caught) {
+      return (
+        <div className="grid h-full place-items-center gap-3 text-center text-muted">
+          <span style={{ fontSize: 14 }}>Something went wrong.</span>
+          <button
+            onClick={() => {
+              this.setState({ caught: false });
+              useStore.getState().goBack();
+            }}
+            className="rounded-card border border-line px-3 py-1.5 text-[13px] text-slate hover:text-ink"
+          >
+            Go back
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function App() {
+  useKeymap();
+  useDarkMode();
+
+  const vaultRoot = useStore((s) => s.vaultRoot);
+  const db = useStore((s) => s.db);
+  const clearVault = useStore((s) => s.clearVault);
+  const didStartScan = useRef(false);
+
+  // Real-time file watcher events from Rust
+  useEffect(() => {
+    const p = listen("vault-changed", () => useStore.getState().rescan());
+    return () => { p.then((fn) => fn()); };
+  }, []);
+
+  // Scan the persisted Base once on launch to catch changes made while closed.
+  // A missing/unreadable Base must not strand the app on "Loading…" — fall
+  // back to onboarding so there's always a way forward.
+  useEffect(() => {
+    const s = useStore.getState();
+    if (didStartScan.current) return;
+    didStartScan.current = true;
+    if (s.vaultRoot) {
+      s.rescan()
+        .then(() => {
+          if (useStore.getState().view === "onboarding") {
+            useStore.getState().setView("inbox");
+          }
+        })
+        .catch(() => useStore.getState().clearVault());
+    }
+  }, []);
+
+  if (!vaultRoot) return <Onboarding />;
+  // brief gap before first scan resolves — escapable, never a dead end
+  if (!db)
+    return (
+      <div className="grid h-full place-items-center gap-3 text-center text-muted">
+        <span>Loading your Base…</span>
+        <button
+          onClick={clearVault}
+          className="rounded-card border border-line px-3 py-1.5 text-[13px] text-slate hover:text-ink"
+        >
+          Choose another Base
+        </button>
+      </div>
+    );
+
+  return (
+    <ErrorBoundary>
+      <MainApp />
+      <CommandPalette />
+    </ErrorBoundary>
+  );
+}
+
+export default App;

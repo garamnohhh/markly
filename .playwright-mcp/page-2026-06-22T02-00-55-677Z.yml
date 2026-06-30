@@ -1,0 +1,5 @@
+- generic [ref=e4]:
+  - img "Markly" [ref=e5]
+  - heading "Welcome to Markly" [level=1] [ref=e8]
+  - paragraph [ref=e9]: Read, don’t manage. Choose a folder of markdown files as your Base.
+  - button "Choose a Base" [ref=e10]

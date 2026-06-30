@@ -1,0 +1,406 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "D2Coding";
+  src: url("/fonts/D2Coding-Ver1.3.2-20180524.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* class-based dark mode (toggled via settings, not OS) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Design tokens — single source of truth (design_handoff_markly/CLAUDE.md) */
+@theme {
+  --color-paper: #fcfbf9;
+  --color-surface: #f6f5f2;
+  --color-tertiary: #efeee9;
+  --color-line: #e7e5e0;
+  --color-mid: #bdb9ad;
+  --color-muted: #8c8980;
+  --color-slate: #56534d;
+  --color-ink: #2c2a27;
+
+  --color-gold: #caa53d;
+  --color-green: #6a9a5b;
+  --color-red: #c2705b;
+
+  --radius-control: 7px;
+  --radius-input: 9px;
+  --radius-card: 12px;
+  --radius-container: 14px;
+
+  --font-ui: "Avenir Next", "Mulish", system-ui, sans-serif;
+  --font-mono: "SF Mono", "JetBrains Mono", ui-monospace, monospace;
+
+  --spacing-reading: 660px;
+  --spacing-reading-wide: 920px;
+
+  /* Warm gold-tint surfaces — UpdateNoticeBar, Updates banner */
+  --color-warm-surface: #faf3e6;
+  --color-warm-border: #ecdcba;
+  --color-warm-hi: #7a5b20;
+  --color-warm-mid: #9a7b34;
+  --color-warm-lo: #bfae87;
+  --color-warm-badge: #f3e8cf;
+
+  /* Row states */
+  --color-row-active: #e9e7e1;
+}
+
+/* Syntax highlighting tokens (editor code fences) */
+:root {
+  --hl-keyword:  #cf222e;
+  --hl-string:   #0a3069;
+  --hl-number:   #0550ae;
+  --hl-comment:  #6e7781;
+  --hl-type:     #953800;
+  --hl-function: #8250df;
+  --hl-operator: #cf222e;
+  --hl-property: #116329;
+  --hl-constant: #0550ae;
+}
+
+/* Dark theme: override the same token vars so every utility flips automatically */
+.dark {
+  --color-paper: #171614;
+  --color-surface: #1b1a18;
+  --color-tertiary: #211f1c;
+  --color-line: #2a2825;
+  --color-mid: #56534d;
+  --color-muted: #7a766d;
+  --color-slate: #a6a299;
+  --color-ink: #e7e4dd;
+
+  --color-warm-surface: #2a2316;
+  --color-warm-border: #4a3f24;
+  --color-warm-hi: #e0c074;
+  --color-warm-mid: #d6b15e;
+  --color-warm-lo: #8c7a4e;
+  --color-warm-badge: #3a3016;
+
+  --color-row-active: #262420;
+
+  /* dark mode syntax tokens */
+  --hl-keyword:  #ff7b72;
+  --hl-string:   #a5d6ff;
+  --hl-number:   #79c0ff;
+  --hl-comment:  #8b949e;
+  --hl-type:     #ffa657;
+  --hl-function: #d2a8ff;
+  --hl-operator: #ff7b72;
+  --hl-property: #7ee787;
+  --hl-constant: #79c0ff;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* transparent OS window → rounded app surface shows through the corners */
+html,
+body {
+  margin: 0;
+  background: transparent;
+}
+
+#root {
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--color-paper);
+  font-family: var(--font-ui);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: #dedcd4;
+}
+
+/* Rendered markdown body — reading typography (design system scale) */
+.md-body {
+  font-size: 15.5px;
+  line-height: 1.85;
+  color: var(--color-ink);
+}
+.md-body > :first-child {
+  margin-top: 0;
+}
+.md-body h1 {
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 1.6em 0 0.5em;
+}
+.md-body h2 {
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  margin: 1.5em 0 0.4em;
+}
+.md-body h3 {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 1.3em 0 0.3em;
+}
+.md-body p {
+  margin: 0.85em 0;
+}
+.md-body a {
+  color: var(--color-gold);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.md-body strong {
+  font-weight: 600;
+}
+.md-body mark {
+  background: #f3e8cf;
+  border-radius: 3px;
+  padding: 0 2px;
+}
+.md-body blockquote {
+  border-left: 3px solid var(--color-line);
+  padding-left: 1em;
+  margin: 1em 0;
+  font-style: italic;
+  color: var(--color-slate);
+}
+.md-body ul,
+.md-body ol {
+  margin: 0.85em 0;
+  padding-left: 1.4em;
+  line-height: 1.8;
+}
+.md-body li {
+  margin: 0.2em 0;
+}
+.md-body code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  background: var(--color-tertiary);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+}
+.md-body pre {
+  background: var(--color-tertiary);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  padding: 0.9em 1em;
+  overflow-x: auto;
+  margin: 1em 0;
+  line-height: 1.7;
+}
+.md-body pre code {
+  background: none;
+  padding: 0;
+}
+.md-body table {
+  border-collapse: collapse;
+  margin: 1em 0;
+  font-size: 14px;
+  width: 100%;
+}
+.md-body th,
+.md-body td {
+  border: 1px solid var(--color-line);
+  padding: 0.4em 0.7em;
+  text-align: left;
+}
+.md-body th {
+  background: var(--color-surface);
+  font-weight: 600;
+}
+.md-body hr {
+  border: none;
+  border-top: 1px solid var(--color-line);
+  margin: 1.6em 0;
+}
+
+/* Task lists */
+.md-body ul:has(> li > input.task-list-item-checkbox),
+.md-body ul.contains-task-list {
+  list-style: none;
+  padding-left: 0.4em;
+}
+.md-body li.task-list-item {
+  list-style: none;
+  cursor: pointer;
+}
+.md-body input.task-list-item-checkbox {
+  margin-right: 0.5em;
+  accent-color: var(--color-gold);
+  vertical-align: middle;
+  pointer-events: none;
+}
+
+/* Callouts (Obsidian-style) */
+.md-body blockquote.callout {
+  border-left: 3px solid var(--color-mid);
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  padding: 0.6em 1em;
+  margin: 1em 0;
+  font-style: normal;
+  color: var(--color-ink);
+}
+.md-body blockquote.callout .callout-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 0.2em;
+}
+.md-body blockquote.callout p {
+  margin: 0.3em 0;
+}
+.md-body blockquote.callout-note,
+.md-body blockquote.callout-info {
+  border-left-color: #4a78b0;
+}
+.md-body blockquote.callout-note .callout-title,
+.md-body blockquote.callout-info .callout-title {
+  color: #4a78b0;
+}
+.md-body blockquote.callout-tip,
+.md-body blockquote.callout-success {
+  border-left-color: var(--color-green);
+}
+.md-body blockquote.callout-tip .callout-title,
+.md-body blockquote.callout-success .callout-title {
+  color: var(--color-green);
+}
+.md-body blockquote.callout-warning,
+.md-body blockquote.callout-caution {
+  border-left-color: #9a7b34;
+}
+.md-body blockquote.callout-warning .callout-title,
+.md-body blockquote.callout-caution .callout-title {
+  color: #9a7b34;
+}
+.md-body blockquote.callout-danger,
+.md-body blockquote.callout-error,
+.md-body blockquote.callout-bug {
+  border-left-color: var(--color-red);
+}
+.md-body blockquote.callout-danger .callout-title,
+.md-body blockquote.callout-error .callout-title,
+.md-body blockquote.callout-bug .callout-title {
+  color: var(--color-red);
+}
+
+/* KaTeX block centering */
+.md-body .katex-display {
+  margin: 1em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.md-body .mermaid-diagram {
+  display: flex;
+  justify-content: center;
+  margin: 1.2em 0;
+}
+.md-body .mermaid-diagram svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Hide scrollbar in editor */
+.doc-scroll::-webkit-scrollbar { display: none; }
+.doc-scroll { scrollbar-width: none; }
+
+/* Shiki code blocks (read mode) — Markly design, Shiki token colors */
+.shiki-block {
+  position: relative;
+  margin: 1em 0;
+}
+
+.shiki-lang-badge {
+  position: absolute;
+  top: 0.55em;
+  left: 0.75em;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1;
+  color: var(--color-muted);
+  user-select: none;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Override Shiki's inline background; match .md-body pre */
+.shiki-wrap .shiki,
+.shiki-plain {
+  background: var(--color-tertiary) !important;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  padding: 2em 1em 0.9em;
+  overflow-x: auto;
+  margin: 0;
+  line-height: 1.7;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+/* Dark mode: swap token colors only; background via --color-tertiary already */
+.dark .shiki-wrap span {
+  color: var(--shiki-dark) !important;
+}
+
+/* Shared action buttons (code copy, mermaid copy/image) */
+.block-action-wrap {
+  position: absolute;
+  top: 0.45em;
+  right: 0.45em;
+  display: flex;
+  gap: 4px;
+  z-index: 2;
+  transition: opacity 0.15s;
+}
+
+.block-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-control);
+  border: none;
+  cursor: pointer;
+  background: var(--color-surface);
+  color: var(--color-muted);
+  transition: background 0.1s, color 0.1s;
+}
+.block-action-btn:hover {
+  background: var(--color-line);
+  color: var(--color-ink);
+}
+.block-action-btn.check {
+  color: var(--color-green);
+}
+
+/* Mermaid wrapper (for group + action buttons) */
+.mermaid-diagram-wrap {
+  position: relative;
+  margin: 1.2em 0;
+}
+.mermaid-diagram-wrap .mermaid-diagram {
+  margin: 0;
+}
+
+/* Word-level diff marks */
+.word-del {
+  background: #fbeae6;
+  color: #9a4632;
+  text-decoration: line-through;
+  border-radius: 3px;
+  padding: 0 1px;
+}
+.word-ins {
+  background: #eef5e9;
+  color: #3f6a37;
+  border-radius: 3px;
+  padding: 0 1px;
+}

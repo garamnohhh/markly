@@ -1,0 +1,505 @@
+import { getCurrentWindow } from "@tauri-apps/api/window";
+import { useLayoutEffect, useRef, useState } from "react";
+import { useStore, useDocs } from "../../store";
+import { AppIcon } from "../ui/AppIcon";
+import { docName, docDirs } from "../../lib/types";
+import type { DocEntry } from "../../lib/types";
+
+export function TitleBar() {
+  const toggleSidebar = useStore((s) => s.toggleSidebar);
+  const toggleToc = useStore((s) => s.toggleToc);
+  const setView = useStore((s) => s.setView);
+  const goInbox = useStore((s) => s.goInbox);
+  const goBack = useStore((s) => s.goBack);
+  const view = useStore((s) => s.view);
+  const mode = useStore((s) => s.mode);
+  const toggleMode = useStore((s) => s.toggleMode);
+  const openDocId = useStore((s) => s.openDocId);
+  const activeTag = useStore((s) => s.activeTag);
+  const rabbitTrail = useStore((s) => s.rabbitTrail);
+  const doc = useStore((s) => (openDocId && s.db ? s.db.docs[openDocId] : undefined));
+  const rabbitStartDoc = useStore((s) =>
+    s.rabbitTrail[0] && s.db ? s.db.docs[s.rabbitTrail[0]] : undefined,
+  );
+  const inReader = view === "reader" && !!doc;
+  const isSecondaryView =
+    view === "settings" || view === "diff" || view === "tag-results" || view === "rabbit-hole";
+
+  return (
+    <header
+      data-tauri-drag-region
+      className="flex h-[38px] shrink-0 items-center gap-3 border-b border-line bg-surface px-[18px] select-none"
+    >
+      <TrafficLights />
+
+      {!isSecondaryView && (
+        <IconButton label="Toggle sidebar (⌘\)" onClick={toggleSidebar}>
+          <SidebarIcon />
+        </IconButton>
+      )}
+
+      {/* Center breadcrumb */}
+      <div
+        data-tauri-drag-region
+        className="flex min-w-0 flex-1 items-center justify-center gap-1.5 text-[12.5px] text-muted"
+      >
+        {/* Reader / RabbitHole: AppIcon lives inside the breadcrumb so logo + path center together */}
+        {inReader && doc
+          ? <ReaderBreadcrumb doc={doc} onGoInbox={goInbox} />
+          : view === "rabbit-hole" && rabbitStartDoc
+          ? <RabbitHoleBreadcrumb doc={rabbitStartDoc} onGoInbox={goInbox} />
+          : (
+            <>
+              <button
+                onClick={goInbox}
+                title="Base"
+                className="flex shrink-0 items-center rounded-control p-0.5 hover:bg-tertiary"
+              >
+                <AppIcon size={18} />
+              </button>
+
+              {view === "inbox" && (
+                <span className="rounded-control px-1 py-0.5 font-medium text-ink">My Base</span>
+              )}
+              {view === "tag-results" && activeTag && (
+                <>
+                  <Sep />
+                  <span className="rounded-control px-1 py-0.5 font-medium text-ink">
+                    Tag · {activeTag}
+                  </span>
+                </>
+              )}
+              {view === "diff" && (
+                <>
+                  <Sep />
+                  <span className="rounded-control px-1 py-0.5 font-medium text-ink">Changes</span>
+                </>
+              )}
+              {view === "settings" && (
+                <>
+                  <Sep />
+                  <span className="rounded-control px-1 py-0.5 font-medium text-ink">Settings</span>
+                </>
+              )}
+              {view === "rabbit-hole" && !rabbitStartDoc && rabbitTrail[0] && (
+                <>
+                  <Sep />
+                  <span className="text-muted px-1">{rabbitTrail[0]}</span>
+                  <span className="ml-2 text-muted px-1">Rabbit Hole</span>
+                </>
+              )}
+            </>
+          )
+        }
+      </div>
+
+      {/* Right buttons */}
+      <div className="flex items-center gap-1">
+        {inReader && (
+          <button
+            onClick={toggleMode}
+            title={mode === "edit" ? "Read mode (⌘E)" : "Edit mode (⌘E)"}
+            className={`flex items-center gap-1.5 rounded-control px-2.5 py-1 text-[12px] font-medium transition-colors ${
+              mode === "edit"
+                ? "text-[#5a8a5a] hover:bg-tertiary"
+                : "text-slate hover:bg-tertiary hover:text-ink"
+            }`}
+          >
+            {mode === "edit" ? null : <PencilIcon />}
+            {mode === "edit" ? "Done" : "Edit"}
+          </button>
+        )}
+        {inReader && (
+          <IconButton label="Toggle outline (⌘⇧\)" onClick={toggleToc}>
+            <OutlineIcon />
+          </IconButton>
+        )}
+
+        {isSecondaryView ? (
+          <button
+            onClick={goBack}
+            title="Go back"
+            className="grid h-7 w-[30px] place-items-center rounded-control text-muted hover:bg-tertiary hover:text-ink transition-colors"
+          >
+            <ChevronLeftIcon />
+          </button>
+        ) : (
+          <IconButton label="Settings" onClick={() => setView("settings")}>
+            <GearIcon />
+          </IconButton>
+        )}
+      </div>
+    </header>
+  );
+}
+
+function Sep() {
+  return <span className="text-mid shrink-0">›</span>;
+}
+
+interface DropdownState {
+  folderPrefix: string;
+  x: number;
+  y: number;
+}
+
+function FolderDropdown({
+  state,
+  onClose,
+}: {
+  state: DropdownState;
+  onClose: () => void;
+}) {
+  const docs = useDocs();
+  const openDoc = useStore((s) => s.openDoc);
+
+  // docId is lowercase; folderPrefix comes from doc.path (may be mixed case) → normalize
+  const rootPrefix = state.folderPrefix.toLowerCase();
+  const [currentPrefix, setCurrentPrefix] = useState(rootPrefix);
+
+  const directFiles = docs
+    .filter((d) => {
+      const rest = d.docId.slice(currentPrefix.length);
+      return d.docId.startsWith(currentPrefix) && !rest.includes("/");
+    })
+    .sort((a, b) => docName(a).localeCompare(docName(b)));
+
+  const subfolders = [
+    ...new Set(
+      docs
+        .filter((d) => d.docId.startsWith(currentPrefix))
+        .map((d) => {
+          const rest = d.docId.slice(currentPrefix.length);
+          const slash = rest.indexOf("/");
+          return slash === -1 ? null : rest.slice(0, slash);
+        })
+        .filter((x): x is string => x !== null),
+    ),
+  ].sort();
+
+  function enterFolder(sf: string) {
+    setCurrentPrefix(currentPrefix + sf + "/");
+  }
+
+  function goUp() {
+    const stripped = currentPrefix.slice(0, -1); // remove trailing slash
+    const parent = stripped.slice(0, stripped.lastIndexOf("/") + 1);
+    setCurrentPrefix(parent || rootPrefix);
+  }
+
+  const canGoUp = currentPrefix !== rootPrefix;
+  const currentFolderName = currentPrefix.slice(0, -1).split("/").pop() ?? "";
+
+  return (
+    <>
+      <div className="fixed inset-0 z-40" onClick={onClose} />
+      <div
+        className="fixed z-50 overflow-hidden rounded-[10px] border border-line bg-paper"
+        style={{
+          top: state.y,
+          left: state.x,
+          minWidth: 220,
+          maxHeight: 360,
+          overflowY: "auto",
+          boxShadow: "0 8px 24px -4px rgba(44,42,39,0.18)",
+        }}
+      >
+        {/* Header row: back button + current folder name */}
+        <div className="flex items-center gap-1 border-b border-line px-2 py-1.5">
+          {canGoUp ? (
+            <button
+              onClick={goUp}
+              className="flex items-center gap-1 rounded-[6px] px-1.5 py-0.5 text-[12px] text-muted hover:bg-tertiary hover:text-ink"
+            >
+              <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+                <path d="M10 3L5 8l5 5" />
+              </svg>
+              back
+            </button>
+          ) : (
+            <span className="w-[11px]" />
+          )}
+          <span className="text-[11px] font-medium text-mid">{currentFolderName}</span>
+        </div>
+
+        {subfolders.length === 0 && directFiles.length === 0 && (
+          <div className="px-3 py-2 text-[12px] text-muted">Empty folder</div>
+        )}
+        {subfolders.map((sf) => (
+          <button
+            key={sf}
+            onClick={() => enterFolder(sf)}
+            className="flex w-full items-center gap-2 px-3 py-[7px] text-left text-[13px] text-slate hover:bg-tertiary"
+          >
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="var(--color-mid)" strokeWidth="1.3">
+              <path d="M2 4.4c0-.5.4-.9.9-.9h2.4l1.1 1.3h6.7c.5 0 .9.4.9.9v6.1c0 .5-.4.9-.9.9H2.9c-.5 0-.9-.4-.9-.9z" />
+            </svg>
+            <span className="flex-1">{sf}</span>
+            <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="var(--color-muted)" strokeWidth="1.6" strokeLinecap="round">
+              <path d="M6 3l5 5-5 5" />
+            </svg>
+          </button>
+        ))}
+        {directFiles.map((d) => (
+          <button
+            key={d.docId}
+            onClick={() => { openDoc(d.docId); onClose(); }}
+            className="flex w-full items-center gap-2 px-3 py-[7px] text-left text-[13px] text-slate hover:bg-tertiary"
+          >
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="var(--color-muted)" strokeWidth="1.3">
+              <path d="M4 2h5l3 3v9H4z" />
+              <path d="M9 2v3h3" strokeLinejoin="round" />
+            </svg>
+            {docName(d)}
+          </button>
+        ))}
+      </div>
+    </>
+  );
+}
+
+// Reader breadcrumb with overflow detection — AppIcon included so logo+path center as one unit
+function ReaderBreadcrumb({ doc, onGoInbox }: { doc: DocEntry; onGoInbox: () => void }) {
+  const dirs = docDirs(doc);
+  const name = docName(doc);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const measureRef = useRef<HTMLSpanElement>(null);
+  const [compressed, setCompressed] = useState(false);
+  const [dropdown, setDropdown] = useState<DropdownState | null>(null);
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    const measure = measureRef.current;
+    if (!container || !measure) return;
+    const check = () => setCompressed(measure.offsetWidth > container.offsetWidth);
+    check();
+    const obs = new ResizeObserver(check);
+    obs.observe(container);
+    return () => obs.disconnect();
+  }, [dirs, name]);
+
+  const folderPrefix = (i: number) => dirs.slice(0, i + 1).join("/") + "/";
+
+  let shownDirs: { label: string; prefix: string | null }[];
+  if (!compressed || dirs.length <= 2) {
+    shownDirs = dirs.map((d, i) => ({ label: d, prefix: folderPrefix(i) }));
+  } else {
+    shownDirs = [
+      { label: dirs[0], prefix: folderPrefix(0) },
+      { label: "…", prefix: null },
+      { label: dirs[dirs.length - 1], prefix: folderPrefix(dirs.length - 1) },
+    ];
+  }
+
+  function openDropdown(e: React.MouseEvent, prefix: string) {
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setDropdown({ folderPrefix: prefix, x: rect.left, y: rect.bottom + 4 });
+  }
+
+  return (
+    <>
+      <div ref={containerRef} className="relative flex min-w-0 flex-1 items-center justify-center gap-1.5 overflow-hidden">
+        {/* Measurer: logo(22px) + all dirs + sep + filename */}
+        <span
+          ref={measureRef}
+          aria-hidden
+          className="pointer-events-none invisible absolute left-0 top-0 flex shrink-0 items-center gap-1.5 whitespace-nowrap"
+        >
+          <span style={{ width: 22, display: "inline-block" }} />
+          {dirs.map((d, i) => (
+            <span key={i} className="flex items-center gap-1.5">
+              <span>›</span>
+              <span className="px-1">{d}</span>
+            </span>
+          ))}
+          <span>›</span>
+          <span className="px-1 font-medium">{name}</span>
+        </span>
+
+        {/* Logo */}
+        <button
+          onClick={onGoInbox}
+          title="Base"
+          className="flex shrink-0 items-center rounded-control p-0.5 hover:bg-tertiary"
+        >
+          <AppIcon size={18} />
+        </button>
+
+        {shownDirs.map(({ label, prefix }, i) => (
+          <span key={i} className="flex shrink-0 items-center gap-1.5">
+            <Sep />
+            {prefix ? (
+              <button
+                onClick={(e) => openDropdown(e, prefix)}
+                className="rounded-control px-1 py-0.5 text-slate hover:bg-tertiary"
+              >
+                {label}
+              </button>
+            ) : (
+              <span className="px-1 text-muted">…</span>
+            )}
+          </span>
+        ))}
+        <span className="shrink-0 text-mid">›</span>
+        <button
+          onClick={() =>
+            document.querySelector(".doc-scroll")?.scrollTo({ top: 0, behavior: "smooth" })
+          }
+          title={name}
+          className="min-w-0 truncate rounded-control px-1 py-0.5 font-medium text-ink hover:bg-tertiary"
+        >
+          {name}
+        </button>
+      </div>
+
+      {dropdown && (
+        <FolderDropdown state={dropdown} onClose={() => setDropdown(null)} />
+      )}
+    </>
+  );
+}
+
+function RabbitHoleBreadcrumb({ doc, onGoInbox }: { doc: DocEntry; onGoInbox: () => void }) {
+  const dirs = docDirs(doc);
+  const name = docName(doc);
+  const [dropdown, setDropdown] = useState<DropdownState | null>(null);
+
+  const folderPrefix = (i: number) => dirs.slice(0, i + 1).join("/") + "/";
+
+  function openDropdown(e: React.MouseEvent, prefix: string) {
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setDropdown({ folderPrefix: prefix, x: rect.left, y: rect.bottom + 4 });
+  }
+
+  return (
+    <>
+      <div className="flex min-w-0 flex-1 items-center justify-center gap-1.5 overflow-hidden">
+        <button
+          onClick={onGoInbox}
+          title="Base"
+          className="flex shrink-0 items-center rounded-control p-0.5 hover:bg-tertiary"
+        >
+          <AppIcon size={18} />
+        </button>
+
+        {dirs.map((d, i) => (
+          <span key={i} className="flex shrink-0 items-center gap-1.5">
+            <Sep />
+            <button
+              onClick={(e) => openDropdown(e, folderPrefix(i))}
+              className="rounded-control px-1 py-0.5 text-slate hover:bg-tertiary"
+            >
+              {d}
+            </button>
+          </span>
+        ))}
+        <Sep />
+        <span className="shrink-0 rounded-control px-1 py-0.5 font-medium text-ink">
+          {name}
+        </span>
+        <span className="ml-1 shrink-0 px-1 text-muted">Rabbit Hole</span>
+      </div>
+
+      {dropdown && (
+        <FolderDropdown state={dropdown} onClose={() => setDropdown(null)} />
+      )}
+    </>
+  );
+}
+
+function TrafficLights() {
+  const win = () => getCurrentWindow();
+  return (
+    <div className="flex items-center gap-2">
+      <Dot color="#ff5f57" hover="#e0443e" label="Close" onClick={() => win().close()} />
+      <Dot color="#febc2e" hover="#d89e25" label="Minimize" onClick={() => win().minimize()} />
+      <Dot color="#28c840" hover="#1fa732" label="Zoom" onClick={() => win().toggleMaximize()} />
+    </div>
+  );
+}
+const DOT = 12;
+function Dot({
+  color,
+  hover,
+  label,
+  onClick,
+}: {
+  color: string;
+  hover: string;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+      onMouseDown={(e) => e.stopPropagation()}
+      className="rounded-full"
+      style={{ width: DOT, height: DOT, background: color }}
+      onMouseEnter={(e) => (e.currentTarget.style.background = hover)}
+      onMouseLeave={(e) => (e.currentTarget.style.background = color)}
+    />
+  );
+}
+
+function IconButton({
+  children,
+  label,
+  onClick,
+}: {
+  children: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      title={label}
+      aria-label={label}
+      onClick={onClick}
+      className="grid h-7 w-[30px] place-items-center rounded-control text-muted hover:bg-tertiary hover:text-ink"
+    >
+      {children}
+    </button>
+  );
+}
+
+function SidebarIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+      <path d="M14 4h-7M14 8h-7M14 12h-5" />
+      <path d="M3 4v8" strokeWidth="1.6" />
+    </svg>
+  );
+}
+function OutlineIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+      <path d="M2 4h7M2 8h7M2 12h5" />
+      <path d="M13 4v8" strokeWidth="1.6" />
+    </svg>
+  );
+}
+function PencilIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M11 2.5l2.5 2.5L6 12.5l-3 .5.5-3z" />
+    </svg>
+  );
+}
+function ChevronLeftIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 3l-5 5 5 5" />
+    </svg>
+  );
+}
+function GearIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+      <path d="M2.5 5h6M11 5h2.5M2.5 11h2.5M8 11h5.5" />
+      <circle cx="9.5" cy="5" r="1.7" />
+      <circle cx="6.5" cy="11" r="1.7" />
+    </svg>
+  );
+}

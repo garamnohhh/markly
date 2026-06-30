@@ -1,0 +1,264 @@
+import { useState } from "react";
+import { open } from "@tauri-apps/plugin-dialog";
+import { useStore } from "../store";
+
+export function Onboarding() {
+  const openVault = useStore((s) => s.openVault);
+  const removeVault = useStore((s) => s.removeVault);
+  const vaults = useStore((s) => s.vaults);
+  const scanning = useStore((s) => s.scanning);
+  const [error, setError] = useState<string | null>(null);
+
+  async function chooseBase(_mode: "new" | "open") {
+    setError(null);
+    const path = await open({ directory: true, multiple: false });
+    if (typeof path !== "string") return;
+    try {
+      await openVault(path);
+    } catch (e) {
+      setError(String(e));
+    }
+  }
+
+  return (
+    <div
+      className="grid h-full place-items-center"
+      style={{ background: "#fcfbf9" }}
+    >
+      <div
+        style={{
+          width: 560,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          padding: "0 40px",
+        }}
+      >
+        {/* Logo + title */}
+        <div className="flex items-center gap-[13px] mb-[10px]">
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 40,
+              height: 40,
+              borderRadius: "24%",
+              background: "linear-gradient(150deg,#2c2823,#171614)",
+              flexShrink: 0,
+            }}
+          >
+            <svg width="40" height="40" viewBox="0 0 48 48" fill="none">
+              <g transform="translate(24,24.8) scale(0.8) translate(-24,-24)">
+                <path
+                  d="M11 36V12l13 22 13-22v24"
+                  stroke="#f3f1ec"
+                  strokeWidth="6.25"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </g>
+              <circle cx="40" cy="8" r="3.7" fill="#caa53d" />
+            </svg>
+          </span>
+          <span
+            style={{
+              fontSize: 27,
+              fontWeight: 600,
+              letterSpacing: "-0.02em",
+              color: "#2c2a27",
+            }}
+          >
+            Welcome to Markly
+          </span>
+        </div>
+
+        <p
+          style={{
+            fontSize: 14,
+            color: "#8c8980",
+            marginBottom: 32,
+            textAlign: "center",
+          }}
+        >
+          Create your first Base — where your notes, bookmarks, and documents
+          live.
+        </p>
+
+        {/* Two cards */}
+        <div className="flex gap-4 w-full mb-[26px]">
+          {/* New Base (dark) */}
+          <button
+            onClick={() => chooseBase("new")}
+            disabled={scanning}
+            className="flex-1 text-left rounded-[12px] p-[22px_20px] border border-[#e0ddd5] bg-[#fcfbf9] hover:border-[#2c2a27] hover:bg-[#faf9f6] transition-colors disabled:opacity-50"
+          >
+            <div
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 10,
+                background: "#2c2a27",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 16,
+              }}
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 18 18"
+                fill="none"
+                stroke="#f6f5f2"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M2 5.2c0-.7.5-1.2 1.2-1.2h3l1.4 1.6h6.2c.7 0 1.2.5 1.2 1.2V13c0 .7-.5 1.2-1.2 1.2H3.2C2.5 14.2 2 13.7 2 13z" />
+                <path d="M9 8.2v3.2M7.4 9.8h3.2" />
+              </svg>
+            </div>
+            <div
+              style={{ fontSize: 15, fontWeight: 600, color: "#2c2a27", marginBottom: 5 }}
+            >
+              New Base
+            </div>
+            <div style={{ fontSize: 12.5, color: "#8c8980", lineHeight: 1.55 }}>
+              Create an empty folder and set it as a Markly Base.
+            </div>
+          </button>
+
+          {/* Open existing (light) */}
+          <button
+            onClick={() => chooseBase("open")}
+            disabled={scanning}
+            className="flex-1 text-left rounded-[12px] p-[22px_20px] border border-[#e0ddd5] bg-[#fcfbf9] hover:border-[#2c2a27] hover:bg-[#faf9f6] transition-colors disabled:opacity-50"
+          >
+            <div
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 10,
+                background: "#f1f0ea",
+                border: "1px solid #e0ddd5",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 16,
+              }}
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 18 18"
+                fill="none"
+                stroke="#56534d"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M2 5.2c0-.7.5-1.2 1.2-1.2h3l1.4 1.6h6.2c.7 0 1.2.5 1.2 1.2V13c0 .7-.5 1.2-1.2 1.2H3.2C2.5 14.2 2 13.7 2 13z" />
+              </svg>
+            </div>
+            <div
+              style={{ fontSize: 15, fontWeight: 600, color: "#2c2a27", marginBottom: 5 }}
+            >
+              Open existing folder
+            </div>
+            <div style={{ fontSize: 12.5, color: "#8c8980", lineHeight: 1.55 }}>
+              Open a folder that already contains markdown.
+            </div>
+          </button>
+        </div>
+
+        {/* Recent Bases section */}
+        <div className="w-full mb-[22px]">
+          <div
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: "0.13em",
+              color: "#b3b0a6",
+              textTransform: "uppercase",
+              marginBottom: 10,
+            }}
+          >
+            Recent Bases
+          </div>
+          {vaults.length === 0 ? (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                height: 46,
+                border: "1px dashed #e0ddd5",
+                borderRadius: 10,
+                padding: "0 16px",
+                color: "#bdb9ad",
+                fontSize: 12.5,
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#cbc8be" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2.5 7L8 2.5 13.5 7M4 6.2v7.3h8V6.2" />
+              </svg>
+              No Bases yet — create one above to get started.
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              {vaults.map((v) => {
+                const name = v.split("/").pop() ?? v;
+                return (
+                  <div key={v} className="group flex items-center gap-[10px] rounded-[10px] border border-[#e0ddd5] hover:border-[#2c2a27]" style={{ padding: "0 14px", height: 46 }}>
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8c8980" strokeWidth="1.3">
+                      <path d="M2 4.4c0-.5.4-.9.9-.9h2.4l1.1 1.3h6.7c.5 0 .9.4.9.9v6.1c0 .5-.4.9-.9.9H2.9c-.5 0-.9-.4-.9-.9z" />
+                    </svg>
+                    <button
+                      onClick={() => !scanning && openVault(v).catch((e) => setError(String(e)))}
+                      disabled={scanning}
+                      className="min-w-0 flex-1 truncate text-left"
+                      style={{ fontSize: 13.5, fontWeight: 500, color: "#2c2a27" }}
+                    >
+                      {name}
+                    </button>
+                    <span className="truncate text-[11.5px]" style={{ color: "#b3b0a6", maxWidth: 180 }}>{v}</span>
+                    <button
+                      onClick={() => removeVault(v)}
+                      className="hidden shrink-0 rounded p-[3px] text-[#bdb9ad] hover:text-[#c2705b] group-hover:block"
+                      title="Remove from list"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+                        <path d="M2 2l8 8M10 2l-8 8" />
+                      </svg>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <p
+          style={{
+            fontSize: 11.5,
+            color: "#bdb9ad",
+            fontFamily: "var(--font-mono)",
+            textAlign: "center",
+          }}
+        >
+          You can change your Base anytime in Settings › Base.
+        </p>
+
+        {scanning && (
+          <p style={{ marginTop: 16, fontSize: 13, color: "#8c8980" }}>
+            Scanning…
+          </p>
+        )}
+        {error && (
+          <p style={{ marginTop: 12, fontSize: 13, color: "#c2705b" }}>{error}</p>
+        )}
+      </div>
+    </div>
+  );
+}

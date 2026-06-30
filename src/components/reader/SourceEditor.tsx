@@ -1,0 +1,61 @@
+import { useEffect, useRef } from "react";
+import { EditorView } from "@codemirror/view";
+import { createSourceEditor } from "../../lib/editor";
+import { slugify } from "../../lib/markdown";
+
+// Edit-mode surface: whole doc as raw markdown, mono with a left ink rule
+// (design). Reports the heading nearest the cursor so read mode can land at the
+// same place, and scrolls to the incoming anchor on mount.
+export function SourceEditor({
+  initialSource,
+  initialCursor = 0,
+  scrollToSlug,
+  onChange,
+  onCursorHeading,
+}: {
+  initialSource: string;
+  initialCursor?: number;
+  scrollToSlug?: string | null;
+  onChange: (text: string) => void;
+  onCursorHeading?: (slug: string | null) => void;
+}) {
+  const host = useRef<HTMLDivElement>(null);
+  const cbs = useRef({ onChange, onCursorHeading });
+  cbs.current = { onChange, onCursorHeading };
+
+  useEffect(() => {
+    if (!host.current) return;
+    const view = createSourceEditor(host.current, initialSource, {
+      cursor: initialCursor,
+      onChange: (t) => cbs.current.onChange(t),
+      onCursorHeading: (s) => cbs.current.onCursorHeading?.(s),
+    });
+
+    // land at the heading we were reading, show 3 lines of context above
+    if (scrollToSlug) {
+      const lines = initialSource.split("\n");
+      let headingIdx = -1;
+      let headingPos = 0;
+      let acc = 0;
+      for (let i = 0; i < lines.length; i++) {
+        const m = lines[i].match(/^#{1,6}\s+(.*)/);
+        if (m && slugify(m[1]) === scrollToSlug) { headingIdx = i; headingPos = acc; break; }
+        acc += lines[i].length + 1;
+      }
+      if (headingIdx !== -1) {
+        const contextIdx = Math.max(0, headingIdx - 3);
+        let contextPos = 0;
+        for (let i = 0; i < contextIdx; i++) contextPos += lines[i].length + 1;
+        view.dispatch({
+          selection: { anchor: Math.min(headingPos, initialSource.length) },
+          effects: EditorView.scrollIntoView(Math.min(contextPos, initialSource.length), { y: "start" }),
+        });
+      }
+    }
+    view.focus();
+    return () => view.destroy();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return <div ref={host} />;
+}
