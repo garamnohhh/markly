@@ -29,3 +29,7 @@ demo-vault/.markly/
 *.njsproj
 *.sln
 *.sw?
+
+# Dev artifacts
+.playwright-mcp/
+.vite/
