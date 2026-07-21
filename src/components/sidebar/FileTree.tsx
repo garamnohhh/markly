@@ -1,5 +1,8 @@
-import { useMemo, useState, useCallback } from "react";
-import { useStore, useDocs } from "../../store";
+import { useMemo, useState, useCallback, useEffect, useRef } from "react";
+import { ask } from "@tauri-apps/plugin-dialog";
+import { revealItemInDir } from "@tauri-apps/plugin-opener";
+import { useStore, useDocs, useNonMdFiles, useAllDirs } from "../../store";
+import { api } from "../../lib/invoke";
 import { unreadCount } from "../../lib/types";
 import { DocContextMenu } from "../ui/DocContextMenu";
 import type { CtxMenu } from "../ui/DocContextMenu";
@@ -9,12 +12,16 @@ interface TreeNode {
   name: string;
   children: Map<string, TreeNode>;
   doc?: DocEntry;
+  filePath?: string; // non-md file relative path
 }
 
-function buildTree(docs: DocEntry[]): TreeNode {
+type FileCtxMenu = { x: number; y: number; relPath: string; name: string; kind: "file" | "folder" };
+
+function buildTree(docs: DocEntry[], files: string[], dirs: string[]): TreeNode {
   const root: TreeNode = { name: "", children: new Map() };
-  for (const d of docs) {
-    const parts = d.path.split("/");
+
+  function insertPath(path: string, setLeaf: (node: TreeNode) => void) {
+    const parts = path.split("/");
     let node = root;
     parts.forEach((part, i) => {
       const isLeaf = i === parts.length - 1;
@@ -23,20 +30,55 @@ function buildTree(docs: DocEntry[]): TreeNode {
         child = { name: part, children: new Map() };
         node.children.set(part, child);
       }
-      if (isLeaf) child.doc = d;
+      if (isLeaf) setLeaf(child);
       node = child;
     });
   }
+
+  for (const d of docs) insertPath(d.path, (n) => { n.doc = d; });
+  for (const f of files) insertPath(f, (n) => { n.filePath = f; });
+  for (const dir of dirs) insertPath(dir, () => {});
   return root;
 }
 
 function countFiles(node: TreeNode): number {
   let n = 0;
   for (const child of node.children.values()) {
-    if (child.doc) n++;
+    if (child.doc || child.filePath) n++;
     else n += countFiles(child);
   }
   return n;
+}
+
+// Extension → badge color
+const EXT_COLORS: Record<string, string> = {
+  pdf: "#c2705b",
+  png: "#8250df", jpg: "#8250df", jpeg: "#8250df", gif: "#8250df", webp: "#8250df", svg: "#8250df",
+  json: "#d0834a", yaml: "#d0834a", yml: "#d0834a", toml: "#d0834a",
+  js: "#4a78b0", ts: "#4a78b0", jsx: "#4a78b0", tsx: "#4a78b0",
+  py: "#6a9a5b", go: "#6a9a5b", rs: "#d0834a",
+  csv: "#6a9a5b",
+  sh: "#56534d", bash: "#56534d",
+  html: "#c2705b", css: "#4a78b0", scss: "#4a78b0",
+};
+
+function ExtBadge({ name }: { name: string }) {
+  const ext = name.includes(".") ? name.split(".").pop()!.toLowerCase() : "";
+  if (!ext) return null;
+  const color = EXT_COLORS[ext] ?? "var(--color-mid)";
+  return (
+    <span
+      style={{
+        fontSize: "9.5px", fontWeight: 700, letterSpacing: "0.04em",
+        color, background: `${color}18`,
+        border: `1px solid ${color}30`,
+        borderRadius: 4, padding: "1px 5px",
+        flexShrink: 0, textTransform: "uppercase",
+      }}
+    >
+      {ext}
+    </span>
+  );
 }
 
 // Icons
@@ -66,38 +108,51 @@ const FileIcon = ({ active }: { active?: boolean }) => (
 
 export function FileTree() {
   const allDocs = useDocs();
+  const nonMdFiles = useNonMdFiles();
+  const allDirs = useAllDirs();
   const vaultRoot = useStore((s) => s.vaultRoot);
   const baseName = vaultRoot?.split("/").pop() ?? "Base";
 
-  const tree = useMemo(() => buildTree(allDocs), [allDocs]);
+  const tree = useMemo(() => buildTree(allDocs, nonMdFiles, allDirs), [allDocs, nonMdFiles, allDirs]);
   const [ctxMenu, setCtxMenu] = useState<CtxMenu | null>(null);
+  const [fileCtxMenu, setFileCtxMenu] = useState<FileCtxMenu | null>(null);
 
   const onCtx = useCallback((x: number, y: number, doc: DocEntry) => {
     setCtxMenu({ x, y, doc });
   }, []);
 
+  const onFileCtx = useCallback((x: number, y: number, relPath: string, name: string, kind: "file" | "folder") => {
+    setFileCtxMenu({ x, y, relPath, name, kind });
+  }, []);
+
   return (
-    <div className="flex flex-col" style={{ gap: 1 }}>
+    <div data-find-exclude className="flex flex-col" style={{ gap: 1 }}>
       <div className="mb-[2px] flex items-center" style={{ height: 26, paddingLeft: 9, paddingRight: 9 }}>
         <span className="text-[10px] font-bold uppercase text-mid" style={{ letterSpacing: "0.13em" }}>
           {baseName}
         </span>
       </div>
-      <NodeChildren node={tree} depth={0} pathPrefix="" onCtx={onCtx} />
+      <NodeChildren node={tree} depth={0} pathPrefix="" onCtx={onCtx} onFileCtx={onFileCtx} />
       <DocContextMenu menu={ctxMenu} onClose={() => setCtxMenu(null)} />
+      <NonDocCtxMenu menu={fileCtxMenu} vaultRoot={vaultRoot} onClose={() => setFileCtxMenu(null)} />
     </div>
   );
 }
 
 type OnCtx = (x: number, y: number, doc: DocEntry) => void;
+type OnFileCtx = (x: number, y: number, relPath: string, name: string, kind: "file" | "folder") => void;
 
-function NodeChildren({ node, depth, pathPrefix, onCtx }: { node: TreeNode; depth: number; pathPrefix: string; onCtx: OnCtx }) {
+function NodeChildren({
+  node, depth, pathPrefix, onCtx, onFileCtx,
+}: { node: TreeNode; depth: number; pathPrefix: string; onCtx: OnCtx; onFileCtx: OnFileCtx }) {
   const openDoc = useStore((s) => s.openDoc);
+  const openFile = useStore((s) => s.openFile);
   const openId = useStore((s) => s.openDocId);
+  const openFilePath = useStore((s) => s.openFilePath);
 
   const entries = [...node.children.values()].sort((a, b) => {
-    const af = a.doc ? 1 : 0;
-    const bf = b.doc ? 1 : 0;
+    const af = (a.doc || a.filePath) ? 1 : 0;
+    const bf = (b.doc || b.filePath) ? 1 : 0;
     if (af !== bf) return af - bf;
     return a.name.localeCompare(b.name);
   });
@@ -106,25 +161,41 @@ function NodeChildren({ node, depth, pathPrefix, onCtx }: { node: TreeNode; dept
     <>
       {entries.map((child) => {
         const childPath = pathPrefix ? `${pathPrefix}/${child.name}` : child.name;
-        return child.doc ? (
-          <FileRow
-            key={child.name}
-            doc={child.doc}
-            name={child.name.replace(/\.md$/i, "")}
-            depth={depth}
-            openId={openId}
-            openDoc={openDoc}
-            onCtx={onCtx}
-          />
-        ) : (
-          <FolderRow key={child.name} node={child} depth={depth} path={childPath} onCtx={onCtx} />
-        );
+        if (child.doc) {
+          return (
+            <DocFileRow
+              key={child.name}
+              doc={child.doc}
+              name={child.name.replace(/\.md$/i, "")}
+              depth={depth}
+              active={openId === child.doc.docId}
+              openDoc={openDoc}
+              onCtx={onCtx}
+            />
+          );
+        }
+        if (child.filePath) {
+          return (
+            <RawFileRow
+              key={child.name}
+              name={child.name}
+              relPath={child.filePath}
+              depth={depth}
+              active={openFilePath === child.filePath}
+              openFile={openFile}
+              onFileCtx={onFileCtx}
+            />
+          );
+        }
+        return <FolderRow key={child.name} node={child} depth={depth} path={childPath} onCtx={onCtx} onFileCtx={onFileCtx} />;
       })}
     </>
   );
 }
 
-function FolderRow({ node, depth, path, onCtx }: { node: TreeNode; depth: number; path: string; onCtx: OnCtx }) {
+function FolderRow({
+  node, depth, path, onCtx, onFileCtx,
+}: { node: TreeNode; depth: number; path: string; onCtx: OnCtx; onFileCtx: OnFileCtx }) {
   const expandedFolders = useStore((s) => s.expandedFolders);
   const toggleFolder = useStore((s) => s.toggleFolder);
   const open = expandedFolders.includes(path);
@@ -134,6 +205,7 @@ function FolderRow({ node, depth, path, onCtx }: { node: TreeNode; depth: number
     <>
       <button
         onClick={() => toggleFolder(path)}
+        onContextMenu={(e) => { e.preventDefault(); onFileCtx(e.clientX, e.clientY, path, node.name, "folder"); }}
         className="flex w-full items-center rounded-[8px] text-left hover:bg-tertiary"
         style={{
           gap: 7,
@@ -154,27 +226,17 @@ function FolderRow({ node, depth, path, onCtx }: { node: TreeNode; depth: number
           </span>
         )}
       </button>
-      {open && <NodeChildren node={node} depth={depth + 1} pathPrefix={path} onCtx={onCtx} />}
+      {open && <NodeChildren node={node} depth={depth + 1} pathPrefix={path} onCtx={onCtx} onFileCtx={onFileCtx} />}
     </>
   );
 }
 
-function FileRow({
-  doc,
-  name,
-  depth,
-  openId,
-  openDoc,
-  onCtx,
+function DocFileRow({
+  doc, name, depth, active, openDoc, onCtx,
 }: {
-  doc: DocEntry;
-  name: string;
-  depth: number;
-  openId: string | null;
-  openDoc: (id: string) => void;
-  onCtx: OnCtx;
+  doc: DocEntry; name: string; depth: number; active: boolean;
+  openDoc: (id: string) => void; onCtx: OnCtx;
 }) {
-  const active = openId === doc.docId;
   const hasUnread = unreadCount(doc) > 0;
   const pl = depth === 0 ? 9 + 18 : 9 + depth * 21;
 
@@ -184,21 +246,155 @@ function FileRow({
       onContextMenu={(e) => { e.preventDefault(); onCtx(e.clientX, e.clientY, doc); }}
       className="flex w-full items-center rounded-[8px] text-left hover:bg-tertiary"
       style={{
-        gap: 7,
-        height: 30,
-        paddingLeft: pl,
-        paddingRight: 9,
+        gap: 7, height: 30, paddingLeft: pl, paddingRight: 9,
         background: active ? "var(--color-row-active)" : undefined,
         color: active ? "var(--color-ink)" : "var(--color-slate)",
-        fontWeight: active ? 500 : 400,
-        fontSize: "13.5px",
+        fontWeight: active ? 500 : 400, fontSize: "13.5px",
       }}
     >
       <FileIcon active={active} />
       <span className="min-w-0 flex-1 truncate">{name}</span>
-      {hasUnread && (
-        <span className="size-[5px] shrink-0 rounded-full bg-gold" />
-      )}
+      {hasUnread && <span className="size-[5px] shrink-0 rounded-full bg-gold" />}
     </button>
+  );
+}
+
+function RawFileRow({
+  name, relPath, depth, active, openFile, onFileCtx,
+}: {
+  name: string; relPath: string; depth: number; active: boolean;
+  openFile: (relPath: string) => void; onFileCtx: OnFileCtx;
+}) {
+  const pl = depth === 0 ? 9 + 18 : 9 + depth * 21;
+  const displayName = name.includes(".") ? name.substring(0, name.lastIndexOf(".")) : name;
+
+  return (
+    <button
+      onClick={() => openFile(relPath)}
+      onContextMenu={(e) => { e.preventDefault(); onFileCtx(e.clientX, e.clientY, relPath, name, "file"); }}
+      className="flex w-full items-center rounded-[8px] text-left hover:bg-tertiary"
+      style={{
+        gap: 7, height: 30, paddingLeft: pl, paddingRight: 9,
+        background: active ? "var(--color-row-active)" : undefined,
+        color: active ? "var(--color-ink)" : "var(--color-slate)",
+        fontWeight: active ? 500 : 400, fontSize: "13.5px",
+      }}
+    >
+      <FileIcon active={active} />
+      <span className="min-w-0 flex-1 truncate">{displayName}</span>
+      <ExtBadge name={name} />
+    </button>
+  );
+}
+
+function NonDocCtxMenu({
+  menu, vaultRoot, onClose,
+}: {
+  menu: FileCtxMenu | null;
+  vaultRoot: string | null;
+  onClose: () => void;
+}) {
+  const [renaming, setRenaming] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!menu) return;
+    setRenaming(false);
+    const close = () => onClose();
+    window.addEventListener("mousedown", close);
+    return () => window.removeEventListener("mousedown", close);
+  }, [menu, onClose]);
+
+  useEffect(() => {
+    if (renaming) inputRef.current?.select();
+  }, [renaming]);
+
+  if (!menu) return null;
+
+  const { relPath, name, kind } = menu;
+  const absPath = `${vaultRoot}/${relPath}`;
+
+  async function handleReveal() {
+    onClose();
+    try { await revealItemInDir(absPath); } catch { /* silent */ }
+  }
+
+  async function handleCopyPath() {
+    onClose();
+    try { await navigator.clipboard.writeText(absPath); } catch { /* silent */ }
+  }
+
+  async function handleDelete() {
+    onClose();
+    const yes = await ask(`Delete "${name}"?\nThis cannot be undone.`, { title: "Delete file", kind: "warning" });
+    if (!yes) return;
+    try { await api.deleteRawFile(relPath); } catch { /* silent */ }
+  }
+
+  async function submitRename(value: string) {
+    const newName = value.trim();
+    onClose();
+    if (!newName || newName === name) return;
+    try { await api.renameRawFile(relPath, newName); } catch { /* silent */ }
+  }
+
+  return (
+    <div
+      onMouseDown={(e) => e.stopPropagation()}
+      className="fixed z-50 overflow-hidden rounded-[8px] border border-line bg-paper"
+      style={{ top: menu.y, left: menu.x, minWidth: 180, boxShadow: "0 8px 24px -4px rgba(0,0,0,0.18)" }}
+    >
+      {kind === "file" && renaming ? (
+        <div className="px-[10px] py-[8px]">
+          <input
+            ref={inputRef}
+            defaultValue={name}
+            className="w-full rounded-[5px] border border-line bg-surface px-2 py-1 text-[13px] text-ink focus:outline-none focus:ring-1 focus:ring-[var(--color-gold)]"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") void submitRename((e.target as HTMLInputElement).value);
+              if (e.key === "Escape") onClose();
+              e.stopPropagation();
+            }}
+            onBlur={(e) => void submitRename(e.target.value)}
+            autoFocus
+          />
+        </div>
+      ) : (
+        <>
+          {kind === "file" && (
+            <button
+              onClick={() => setRenaming(true)}
+              className="flex w-full items-center px-[13px] py-[8px] text-left text-[13px] text-ink hover:bg-tertiary"
+            >
+              Rename
+            </button>
+          )}
+          <button
+            onClick={() => void handleReveal()}
+            className="flex w-full items-center px-[13px] py-[8px] text-left text-[13px] text-ink hover:bg-tertiary"
+          >
+            Show in Finder
+          </button>
+          <button
+            onClick={() => void handleCopyPath()}
+            className="flex w-full items-center px-[13px] py-[8px] text-left text-[13px] text-ink hover:bg-tertiary"
+          >
+            Copy Path
+          </button>
+          {kind === "file" && (
+            <>
+              <div className="mx-[8px] border-t border-line" />
+              <button
+                onClick={() => void handleDelete()}
+                className="flex w-full items-center px-[13px] py-[8px] text-left text-[13px] hover:bg-tertiary"
+                style={{ color: "#c2705b" }}
+              >
+                Delete
+              </button>
+            </>
+          )}
+        </>
+      )}
+    </div>
   );
 }

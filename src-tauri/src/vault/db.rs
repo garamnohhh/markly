@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
+use super::hash;
 
 #[derive(Serialize, Deserialize, Clone, Default)]
 #[serde(rename_all = "camelCase")]
@@ -71,9 +72,15 @@ pub fn markly_dir(root: &Path) -> PathBuf {
 }
 
 // Storage-safe key for snapshot dirs / change files.
-// ponytail: flat slash-escape, collides only if a real name contains "__".
+// ponytail: flat slash-escape; if the result exceeds 200 chars (macOS NAME_MAX=255),
+// truncate to 190 and append 16-char sha256 suffix to stay unique.
 pub fn storage_key(doc_id: &str) -> String {
-    doc_id.replace('/', "__")
+    let base = doc_id.replace('/', "__");
+    if base.len() <= 200 {
+        return base;
+    }
+    let h = &hash::sha256_hex(doc_id)[..16];
+    format!("{}__{h}", &base[..190])
 }
 
 pub fn load(root: &Path) -> Db {

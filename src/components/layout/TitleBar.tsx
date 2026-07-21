@@ -5,6 +5,25 @@ import { AppIcon } from "../ui/AppIcon";
 import { docName, docDirs } from "../../lib/types";
 import type { DocEntry } from "../../lib/types";
 
+const EXT_COLORS: Record<string, string> = {
+  pdf: "#c2705b",
+  png: "#8250df", jpg: "#8250df", jpeg: "#8250df", gif: "#8250df", webp: "#8250df", svg: "#8250df",
+  json: "#d0834a", yaml: "#d0834a", yml: "#d0834a", toml: "#d0834a",
+  js: "#4a78b0", ts: "#4a78b0", jsx: "#4a78b0", tsx: "#4a78b0",
+  py: "#6a9a5b", go: "#6a9a5b", rs: "#d0834a",
+  csv: "#6a9a5b", sh: "#56534d", bash: "#56534d",
+  html: "#c2705b", css: "#4a78b0", scss: "#4a78b0",
+};
+function FileExtBadge({ ext }: { ext: string }) {
+  if (!ext) return null;
+  const color = EXT_COLORS[ext] ?? "var(--color-mid)";
+  return (
+    <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.04em", color, background: `${color}18`, border: `1px solid ${color}30`, borderRadius: 4, padding: "2px 5px", textTransform: "uppercase" }}>
+      {ext}
+    </span>
+  );
+}
+
 export function TitleBar() {
   const toggleSidebar = useStore((s) => s.toggleSidebar);
   const toggleToc = useStore((s) => s.toggleToc);
@@ -15,6 +34,9 @@ export function TitleBar() {
   const mode = useStore((s) => s.mode);
   const toggleMode = useStore((s) => s.toggleMode);
   const openDocId = useStore((s) => s.openDocId);
+  const openFilePath = useStore((s) => s.openFilePath);
+  const fileEditMode = useStore((s) => s.fileEditMode);
+  const toggleFileEditMode = useStore((s) => s.toggleFileEditMode);
   const activeTag = useStore((s) => s.activeTag);
   const rabbitTrail = useStore((s) => s.rabbitTrail);
   const doc = useStore((s) => (openDocId && s.db ? s.db.docs[openDocId] : undefined));
@@ -22,12 +44,17 @@ export function TitleBar() {
     s.rabbitTrail[0] && s.db ? s.db.docs[s.rabbitTrail[0]] : undefined,
   );
   const inReader = view === "reader" && !!doc;
+  const inFileViewer = view === "file-viewer" && !!openFilePath;
   const isSecondaryView =
     view === "settings" || view === "diff" || view === "tag-results" || view === "rabbit-hole";
+
+  const fileName = openFilePath?.split("/").pop() ?? "";
+  const fileExt = fileName.includes(".") ? fileName.split(".").pop()!.toLowerCase() : "";
 
   return (
     <header
       data-tauri-drag-region
+      data-find-exclude
       className="flex h-[38px] shrink-0 items-center gap-3 border-b border-line bg-surface px-[18px] select-none"
     >
       <TrafficLights />
@@ -46,6 +73,19 @@ export function TitleBar() {
         {/* Reader / RabbitHole: AppIcon lives inside the breadcrumb so logo + path center together */}
         {inReader && doc
           ? <ReaderBreadcrumb doc={doc} onGoInbox={goInbox} />
+          : inFileViewer
+          ? (
+            <>
+              <button onClick={goInbox} title="Base" className="flex shrink-0 items-center rounded-control p-0.5 hover:bg-tertiary">
+                <AppIcon size={18} />
+              </button>
+              <Sep />
+              <span className="truncate rounded-control px-1 py-0.5 font-medium text-ink" style={{ maxWidth: 320 }}>
+                {fileName.includes(".") ? fileName.slice(0, fileName.lastIndexOf(".")) : fileName}
+              </span>
+              <FileExtBadge ext={fileExt} />
+            </>
+          )
           : view === "rabbit-hole" && rabbitStartDoc
           ? <RabbitHoleBreadcrumb doc={rabbitStartDoc} onGoInbox={goInbox} />
           : (
@@ -107,6 +147,20 @@ export function TitleBar() {
           >
             {mode === "edit" ? null : <PencilIcon />}
             {mode === "edit" ? "Done" : "Edit"}
+          </button>
+        )}
+        {inFileViewer && (
+          <button
+            onClick={toggleFileEditMode}
+            title={fileEditMode ? "View mode (⌘E)" : "Edit mode (⌘E)"}
+            className={`flex items-center gap-1.5 rounded-control px-2.5 py-1 text-[12px] font-medium transition-colors ${
+              fileEditMode
+                ? "text-[#5a8a5a] hover:bg-tertiary"
+                : "text-slate hover:bg-tertiary hover:text-ink"
+            }`}
+          >
+            {fileEditMode ? null : <PencilIcon />}
+            {fileEditMode ? "Done" : "Edit"}
           </button>
         )}
         {inReader && (

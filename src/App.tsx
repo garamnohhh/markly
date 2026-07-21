@@ -7,6 +7,7 @@ import { useDarkMode } from "./hooks/useDarkMode";
 import { Onboarding } from "./screens/Onboarding";
 import { MainApp } from "./screens/MainApp";
 import { CommandPalette } from "./components/ui/CommandPalette";
+import { FindBar } from "./components/ui/FindBar";
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { caught: boolean }> {
   state = { caught: false };
@@ -84,6 +85,7 @@ function App() {
     <ErrorBoundary>
       <MainApp />
       <CommandPalette />
+      <FindBar />
     </ErrorBoundary>
   );
 }

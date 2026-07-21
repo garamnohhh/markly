@@ -30,4 +30,5 @@ hex = "0.4"
 similar = "2"
 walkdir = "2"
 notify = "6"
+base64 = "0.22"
 

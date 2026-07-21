@@ -6,7 +6,7 @@ import type { Db, DocEntry } from "../lib/types";
 
 export type Theme = "light" | "dark";
 export type SidebarTab = "queue" | "files";
-export type View = "onboarding" | "inbox" | "reader" | "diff" | "settings" | "tag-results" | "rabbit-hole";
+export type View = "onboarding" | "inbox" | "reader" | "file-viewer" | "diff" | "settings" | "tag-results" | "rabbit-hole";
 export type Mode = "read" | "edit";
 
 export interface ShortcutsMap {
@@ -94,10 +94,14 @@ interface AppState {
   // vault data
   db: Db | null;
   scanning: boolean;
+  nonMdFiles: string[];
+  allDirs: string[];
   // navigation / reader
   view: View;
   previousView: View | null;
   openDocId: string | null;
+  openFilePath: string | null;
+  fileEditMode: boolean;
   mode: Mode;
   readLockVersion: number | null;
   diffTarget: DiffTarget | null;
@@ -107,6 +111,7 @@ interface AppState {
   sidebarTab: SidebarTab;
   tocVisible: boolean;
   cmdPaletteOpen: boolean;
+  findOpen: boolean;
   relatedOpen: boolean;
   relatedSelectedDocId: string | null;
   activeTag: string | null;
@@ -124,6 +129,7 @@ interface AppState {
   setSidebarTab: (t: SidebarTab) => void;
   toggleToc: () => void;
   setCmdPalette: (open: boolean) => void;
+  setFindOpen: (open: boolean) => void;
   toggleRelated: () => void;
   setRelatedSelectedDocId: (id: string | null) => void;
   setShortcut: (key: keyof ShortcutsMap, combo: string) => void;
@@ -147,6 +153,9 @@ interface AppState {
   removeVault: (path: string) => void;
   rescan: () => Promise<void>;
   openDoc: (docId: string) => void;
+  openFile: (relPath: string) => void;
+  toggleFileEditMode: () => void;
+  loadNonMdFiles: () => Promise<void>;
   goInbox: () => void;
   openDiff: (docId: string, from: number, to: number) => void;
   markRead: (docId: string) => Promise<void>;
@@ -158,7 +167,7 @@ interface AppState {
 const docsList = (db: Db | null): DocEntry[] =>
   db ? Object.values(db.docs) : [];
 
-export const useStore = create<AppState>()(
+function _build() { return create<AppState>()(
   persist(
     (set, get) => ({
       theme: "light",
@@ -175,9 +184,13 @@ export const useStore = create<AppState>()(
       templates: DEFAULT_TEMPLATES,
       db: null,
       scanning: false,
+      nonMdFiles: [],
+      allDirs: [],
       view: "onboarding",
       previousView: null,
       openDocId: null,
+      openFilePath: null,
+      fileEditMode: false,
       mode: "read",
       readLockVersion: null,
       diffTarget: null,
@@ -186,6 +199,7 @@ export const useStore = create<AppState>()(
       sidebarTab: "queue",
       tocVisible: true,
       cmdPaletteOpen: false,
+      findOpen: false,
       relatedOpen: false,
       relatedSelectedDocId: null,
       activeTag: null,
@@ -213,6 +227,7 @@ export const useStore = create<AppState>()(
       setSidebarTab: (sidebarTab) => set({ sidebarTab }),
       toggleToc: () => set((s) => ({ tocVisible: !s.tocVisible })),
       setCmdPalette: (cmdPaletteOpen) => set({ cmdPaletteOpen }),
+      setFindOpen: (findOpen) => set({ findOpen }),
       toggleRelated: () => set((s) => ({ relatedOpen: !s.relatedOpen, relatedSelectedDocId: null })),
       setRelatedSelectedDocId: (relatedSelectedDocId) => set({ relatedSelectedDocId }),
       setShortcut: (key, combo) =>
@@ -254,6 +269,13 @@ export const useStore = create<AppState>()(
 
       applyDb: (db) => set({ db }),
 
+      loadNonMdFiles: async () => {
+        try {
+          const [files, dirs] = await Promise.all([api.listFiles(), api.listDirs()]);
+          set({ nonMdFiles: files, allDirs: dirs });
+        } catch { /* silent */ }
+      },
+
       openVault: async (path) => {
         set({ scanning: true });
         try {
@@ -265,7 +287,9 @@ export const useStore = create<AppState>()(
             scanning: false,
             view: docsList(db).length ? "inbox" : "onboarding",
             openDocId: null,
+            openFilePath: null,
           }));
+          await get().loadNonMdFiles();
         } catch (e) {
           set({ scanning: false });
           throw e;
@@ -290,6 +314,7 @@ export const useStore = create<AppState>()(
         try {
           const db = await api.scanVault(root);
           set({ db });
+          await get().loadNonMdFiles();
         } finally {
           set({ scanning: false });
         }
@@ -299,12 +324,19 @@ export const useStore = create<AppState>()(
         const doc = get().db?.docs[docId];
         set({
           openDocId: docId,
+          openFilePath: null,
           view: "reader",
           mode: "read",
           readLockVersion: doc?.lastReadVersion ?? doc?.currentVersion ?? null,
           relatedOpen: false,
         });
       },
+
+      openFile: (relPath) => {
+        set({ openFilePath: relPath, openDocId: null, view: "file-viewer", fileEditMode: false });
+      },
+
+      toggleFileEditMode: () => set((s) => ({ fileEditMode: !s.fileEditMode })),
 
       goInbox: () => set({ view: "inbox", openDocId: null }),
 
@@ -386,13 +418,15 @@ export const useStore = create<AppState>()(
       },
     },
   ),
-);
+); }
+// ponytail: stable across HMR — reuse first store instance so all modules share one object
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const _w = window as any;
+export const useStore: ReturnType<typeof _build> = _w.__ms ?? (_w.__ms = _build());
 
 // Selectors
 // useShallow: docsList builds a fresh array each call; without a shallow compare
 // zustand v5 sees a new reference every render → infinite re-render loop.
 export const useDocs = () => useStore(useShallow((s) => docsList(s.db)));
-
-if (import.meta.env.DEV) {
-  (window as unknown as { __store?: typeof useStore }).__store = useStore;
-}
+export const useNonMdFiles = () => useStore(useShallow((s) => s.nonMdFiles));
+export const useAllDirs = () => useStore(useShallow((s) => s.allDirs));

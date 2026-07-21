@@ -19,6 +19,8 @@ pub fn run() {
                 if let Some(win) = app.get_webview_window("main") {
                     let _ = win.set_icon(icon);
                 }
+                // Remove default macOS menu to prevent ⌘E/other shortcut interception
+                let _ = app.remove_menu();
             }
             Ok(())
         })
@@ -37,6 +39,12 @@ pub fn run() {
             commands::accept_change,
             commands::decide_version,
             commands::copy_diagram_image,
+            commands::list_files,
+            commands::list_dirs,
+            commands::read_raw_file,
+            commands::write_raw_file,
+            commands::rename_raw_file,
+            commands::delete_raw_file,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

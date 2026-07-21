@@ -101,6 +101,22 @@ cd src-tauri && cargo test      # 2 passed
 - **타이틀바 높이 46→38px**(VSCode/Obsidian 수준), **신호등 11→12px(표준 macOS 컬러 유지)**, 타이틀바 아이콘 15→16px, 좌우 패딩 18px.
 - ⚠️ window 설정(transparent/decorations) → **tauri dev 재시작 필요**. transparent+decorations:false라 엣지 리사이즈 제약 가능(필요 시 커스텀 리사이즈 핸들).
 
+## 7차 수정 (단축키·검색·HTML 프리뷰·긴 경로)
+- **단축키 전부 먹통 (근본 원인)** — Vite HMR가 zustand store 새 인스턴스 생성 → useKeymap 리스너가 옛 store 참조. `window.__ms` 싱글턴으로 첫 인스턴스 재사용(store/index.ts). main.tsx 전역 리스너도 같은 HMR 함정 → dedup 처리.
+- **HTML 뷰어에서 Esc = Inbox 이동** — useKeymap Escape에서 `view==="file-viewer"→goInbox` 제거.
+- **⌘F 검색 재작성**(FindBar.tsx 신규) — `window.find()` 폐기, Range 기반 TreeWalker.
+  - 본문만 검색: `.doc-scroll` 루트 + `data-find-exclude`(사이드바 FileTree/타이틀바 제외).
+  - CSS Custom Highlight API(`CSS.highlights.set`)로 **현재 매치만** 하이라이트(누적 X). index.css `::highlight(markly-find)`.
+  - "X / Y" 카운트·"없음" 표시. Enter=다음, Shift+Enter=이전. 입력 중엔 검색 안 함(1글자 먹통 해결).
+  - 한계: DOM 엘리먼트 걸친 텍스트(구문강조 코드 토큰 등)는 못 찾음.
+- **베이스 추가 시 "file name too long (os error 63)"** — `storage_key()`(vault/db.rs)가 긴 doc_id로 255바이트 초과 디렉토리명 생성. 200자 이하는 그대로(하위호환), 초과 시 190자 절단 + sha256 16자 접미. `use super::hash`.
+- **HTML 프리뷰 iframe** (FileViewer.tsx HtmlPreview):
+  - 사이드바 링크 클릭 → file:// 네비게이션 에러. `cw.document` click 캡처로 non-`#` href 차단(#앵커는 허용).
+  - **`[promise] __TAURI_INTERNALS__.transformCallback undefined`로 앱 전체 백지** — Tauri IPC-init 스크립트가 same-origin iframe(allow-same-origin)에도 주입돼 실패, WKWebView가 top window rejection으로 보고 → main.tsx showFatal이 #root 통째 교체. **main.tsx에서 `__TAURI_INTERNALS__` 포함 rejection/error는 무시**(isTauriFrameNoise)로 해결.
+    - allow-same-origin 제거 시도 실패: srcdoc iframe에서 #앵커 네비까지 막혀 프레임 백지 → 유지 필수.
+    - iframe 내부 guard 주입은 Tauri document_start 스크립트보다 먼저 못 떠서 무효 → 폐기, 부모 필터가 유일 방어점.
+  - ⚠️ main.tsx는 엔트리 → HMR 부분적용 안 됨. **tauri dev 완전 재시작 필요.**
+
 ## 알려진 이슈
 - 이전 세션 orphan 프로세스 PID 49545 (target/debug/markly-app, ppid=1) 떠 있을 수 있음 — 불필요하면 사용자가 종료.
 - 패키지/크레이트명 여전히 `markly-app` (productName만 Markly). 원하면 정리.

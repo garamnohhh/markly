@@ -52,7 +52,12 @@ pub fn scan_vault(
         if let Ok(ev) = res {
             let relevant = ev.paths.iter().any(|p| {
                 !p.starts_with(&markly)
-                    && p.extension().map(|e| e == "md").unwrap_or(false)
+                    && p.file_name().map(|n| n != ".DS_Store").unwrap_or(true)
+                    && !p.components().any(|c| {
+                        c.as_os_str().to_str()
+                            .map(|s| s.starts_with('.') && s.len() > 1)
+                            .unwrap_or(false)
+                    })
             });
             if relevant {
                 let now = std::time::SystemTime::now()
@@ -147,6 +152,110 @@ pub fn accept_change(doc_id: String, state: State<VaultState>) -> Result<Db, Str
 #[tauri::command]
 pub fn decide_version(doc_id: String, version: u32, state: State<VaultState>) -> Result<Db, String> {
     vault::decide_version(&get_root(&state)?, &doc_id, version)
+}
+
+#[tauri::command]
+pub fn list_files(state: State<VaultState>) -> Result<Vec<String>, String> {
+    let root = get_root(&state)?;
+    let markly = root.join(".markly");
+    let mut files: Vec<String> = Vec::new();
+    for entry in walkdir::WalkDir::new(&root)
+        .follow_links(false)
+        .into_iter()
+        .filter_entry(|e| {
+            let name = e.file_name().to_str().unwrap_or("");
+            // Allow root; block hidden dirs and .markly subtree
+            e.depth() == 0
+                || (!name.starts_with('.') && !e.path().starts_with(&markly))
+        })
+    {
+        let Ok(e) = entry else { continue };
+        if !e.file_type().is_file() { continue }
+        let p = e.path();
+        if p.extension().map(|e| e == "md").unwrap_or(false) { continue }
+        if p.file_name().map(|n| n == ".DS_Store").unwrap_or(false) { continue }
+        if let Ok(rel) = p.strip_prefix(&root) {
+            if let Some(s) = rel.to_str() {
+                files.push(s.to_string());
+            }
+        }
+    }
+    files.sort();
+    Ok(files)
+}
+
+#[tauri::command]
+pub fn read_raw_file(rel_path: String, state: State<VaultState>) -> Result<String, String> {
+    use base64::Engine;
+    let root = get_root(&state)?;
+    let abs = root.join(&rel_path);
+    if !abs.starts_with(&root) {
+        return Err("invalid path".to_string());
+    }
+    let bytes = std::fs::read(&abs).map_err(|e| e.to_string())?;
+    Ok(base64::engine::general_purpose::STANDARD.encode(&bytes))
+}
+
+#[tauri::command]
+pub fn write_raw_file(rel_path: String, content: String, state: State<VaultState>) -> Result<(), String> {
+    let root = get_root(&state)?;
+    let abs = root.join(&rel_path);
+    if !abs.starts_with(&root) {
+        return Err("invalid path".to_string());
+    }
+    std::fs::write(&abs, content.as_bytes()).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn list_dirs(state: State<VaultState>) -> Result<Vec<String>, String> {
+    let root = get_root(&state)?;
+    let markly = root.join(".markly");
+    let mut dirs: Vec<String> = Vec::new();
+    for entry in walkdir::WalkDir::new(&root)
+        .min_depth(1)
+        .follow_links(false)
+        .into_iter()
+        .filter_entry(|e| {
+            let name = e.file_name().to_str().unwrap_or("");
+            !name.starts_with('.') && !e.path().starts_with(&markly)
+        })
+    {
+        let Ok(e) = entry else { continue };
+        if !e.file_type().is_dir() { continue }
+        if let Ok(rel) = e.path().strip_prefix(&root) {
+            if let Some(s) = rel.to_str() {
+                dirs.push(s.to_string());
+            }
+        }
+    }
+    dirs.sort();
+    Ok(dirs)
+}
+
+#[tauri::command]
+pub fn rename_raw_file(rel_path: String, new_name: String, state: State<VaultState>) -> Result<(), String> {
+    let root = get_root(&state)?;
+    let old = root.join(&rel_path);
+    if !old.starts_with(&root) {
+        return Err("invalid path".to_string());
+    }
+    let new = old.parent()
+        .ok_or_else(|| "no parent".to_string())?
+        .join(&new_name);
+    if !new.starts_with(&root) {
+        return Err("invalid path".to_string());
+    }
+    std::fs::rename(&old, &new).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn delete_raw_file(rel_path: String, state: State<VaultState>) -> Result<(), String> {
+    let root = get_root(&state)?;
+    let abs = root.join(&rel_path);
+    if !abs.starts_with(&root) {
+        return Err("invalid path".to_string());
+    }
+    std::fs::remove_file(&abs).map_err(|e| e.to_string())
 }
 
 #[tauri::command]

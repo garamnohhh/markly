@@ -12,8 +12,18 @@ export function useKeymap() {
         if (modalStack.depth > 0) return;
         const s = useStore.getState();
         if (s.cmdPaletteOpen) { s.setCmdPalette(false); return; }
+        if (s.findOpen) { s.setFindOpen(false); return; }
         if (s.relatedOpen) { s.toggleRelated(); return; }
         if (["settings", "diff", "tag-results", "rabbit-hole"].includes(s.view)) { s.goBack(); return; }
+        return;
+      }
+
+      if (e.metaKey && !e.shiftKey && !e.altKey && !e.ctrlKey && e.key === "f") {
+        const s = useStore.getState();
+        if (!["settings", "onboarding"].includes(s.view)) {
+          e.preventDefault();
+          s.setFindOpen(true);
+        }
         return;
       }
 
@@ -34,6 +44,9 @@ export function useKeymap() {
         if (s.view === "reader" && s.openDocId) {
           e.preventDefault();
           s.toggleMode();
+        } else if (s.view === "file-viewer" && s.openFilePath) {
+          e.preventDefault();
+          s.toggleFileEditMode();
         }
         return;
       }

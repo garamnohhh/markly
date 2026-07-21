@@ -85,6 +85,12 @@ export function DocContextMenu({
     }
   }
 
+  async function handleCopyPath() {
+    onClose();
+    if (!vaultRoot) return;
+    try { await navigator.clipboard.writeText(`${vaultRoot}/${doc.path}`); } catch { /* silent */ }
+  }
+
   return (
     <div
       onMouseDown={(e) => e.stopPropagation()}
@@ -119,6 +125,12 @@ export function DocContextMenu({
             className="flex w-full items-center px-[13px] py-[8px] text-left text-[13px] text-ink hover:bg-tertiary"
           >
             Show in Finder
+          </button>
+          <button
+            onClick={() => void handleCopyPath()}
+            className="flex w-full items-center px-[13px] py-[8px] text-left text-[13px] text-ink hover:bg-tertiary"
+          >
+            Copy Path
           </button>
           <div className="mx-[8px] border-t border-line" />
           <button

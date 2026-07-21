@@ -24,4 +24,16 @@ export const api = {
     invoke<Db>("accept_change", { docId }),
   decideVersion: (docId: string, version: number) =>
     invoke<Db>("decide_version", { docId, version }),
+  listFiles: () =>
+    invoke<string[]>("list_files"),
+  listDirs: () =>
+    invoke<string[]>("list_dirs"),
+  readRawFile: (relPath: string) =>
+    invoke<string>("read_raw_file", { relPath }),
+  writeRawFile: (relPath: string, content: string) =>
+    invoke<void>("write_raw_file", { relPath, content }),
+  renameRawFile: (relPath: string, newName: string) =>
+    invoke<void>("rename_raw_file", { relPath, newName }),
+  deleteRawFile: (relPath: string) =>
+    invoke<void>("delete_raw_file", { relPath }),
 };

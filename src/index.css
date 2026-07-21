@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+::highlight(markly-find) {
+  background-color: oklch(88% 0.14 85);
+  color: var(--color-ink);
+}
+
 @font-face {
   font-family: "D2Coding";
   src: url("/fonts/D2Coding-Ver1.3.2-20180524.ttf") format("truetype");
@@ -310,6 +315,20 @@ body {
 /* Hide scrollbar in editor */
 .doc-scroll::-webkit-scrollbar { display: none; }
 .doc-scroll { scrollbar-width: none; }
+
+/* FileViewer: shiki tokens without code-block box */
+.file-raw-shiki pre.shiki {
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  font-family: var(--font-mono) !important;
+  font-size: 14px !important;
+  line-height: 1.85 !important;
+  overflow-x: auto !important;
+}
+.file-raw-shiki code { background: transparent !important; }
 
 /* Shiki code blocks (read mode) — Markly design, Shiki token colors */
 .shiki-block {
