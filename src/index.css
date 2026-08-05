@@ -1,10 +1,5 @@
 @import "tailwindcss";
 
-::highlight(markly-find) {
-  background-color: oklch(88% 0.14 85);
-  color: var(--color-ink);
-}
-
 @font-face {
   font-family: "D2Coding";
   src: url("/fonts/D2Coding-Ver1.3.2-20180524.ttf") format("truetype");
@@ -122,7 +117,13 @@ body {
 }
 
 ::selection {
-  background: #dedcd4;
+  background: rgba(255, 210, 74, 0.72);
+  color: inherit;
+}
+
+.cm-editor .cm-selectionBackground,
+.cm-editor.cm-focused .cm-selectionBackground {
+  background: rgba(255, 210, 74, 0.58) !important;
 }
 
 /* Rendered markdown body — reading typography (design system scale) */
@@ -161,6 +162,17 @@ body {
 }
 .md-body strong {
   font-weight: 600;
+}
+/* Wiki links [[...]] — resolved vs unresolved (missing target) */
+.md-body a.wikilink {
+  color: var(--color-gold);
+  text-decoration: none;
+  border-bottom: 1px solid var(--color-line);
+}
+.md-body a.wikilink-unresolved {
+  color: var(--color-red);
+  border-bottom: 1px dashed var(--color-red);
+  opacity: 0.85;
 }
 .md-body mark {
   background: #f3e8cf;
@@ -218,6 +230,79 @@ body {
 .md-body th {
   background: var(--color-surface);
   font-weight: 600;
+}
+
+/* Wide-table handling: keep tables inside doc width (scroll, never break the
+   page layout), cells wrap instead of splitting chars vertically. The wrap +
+   toolbar are added imperatively in MarkdownRenderer. */
+.md-table-wrap {
+  position: relative;
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 1em 0;
+  border-radius: var(--radius-card);
+}
+.md-table-wrap table {
+  margin: 0;
+  width: auto;
+  min-width: 100%;
+}
+.md-table-wrap td,
+.md-table-wrap th {
+  max-width: 32ch;
+  overflow-wrap: break-word;
+}
+/* Expanded: fullscreen, natural width, no cramping. */
+.md-table-wrap.expanded {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  margin: 0;
+  max-width: none;
+  overflow: auto;
+  background: var(--color-paper);
+  padding: 2.75rem 1.5rem 1.5rem;
+}
+.md-table-wrap.expanded table {
+  min-width: 0;
+  width: max-content;
+}
+.md-table-wrap.expanded td,
+.md-table-wrap.expanded th {
+  max-width: none;
+  white-space: nowrap;
+}
+.md-table-bar {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.12s;
+  z-index: 1;
+}
+.md-table-wrap:hover .md-table-bar,
+.md-table-wrap.expanded .md-table-bar {
+  opacity: 1;
+}
+.md-table-wrap.expanded .md-table-bar {
+  position: fixed;
+  top: 10px;
+  left: 12px;
+}
+.md-table-btn {
+  font-size: 12px;
+  line-height: 1;
+  padding: 4px 7px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--color-ink);
+}
+.md-table-btn:hover {
+  background: var(--color-tertiary);
 }
 .md-body hr {
   border: none;
