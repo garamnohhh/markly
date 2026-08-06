@@ -250,6 +250,9 @@ body {
 .md-table-wrap td,
 .md-table-wrap th {
   max-width: 32ch;
+  /* keep-all stops Korean text from splitting one char per line; break-word
+     still breaks a single token too long to fit. */
+  word-break: keep-all;
   overflow-wrap: break-word;
 }
 /* Expanded: fullscreen, natural width, no cramping. */
@@ -272,24 +275,22 @@ body {
   max-width: none;
   white-space: nowrap;
 }
+/* Always visible (not hover-gated) so it can't be missed. Sits above the table
+   in normal flow; in the scroll box it stays pinned left while the table scrolls. */
 .md-table-bar {
-  position: absolute;
-  top: 4px;
-  left: 4px;
+  position: sticky;
+  left: 0;
   display: flex;
   gap: 4px;
-  opacity: 0;
-  transition: opacity 0.12s;
+  padding: 0 0 4px;
+  width: max-content;
   z-index: 1;
-}
-.md-table-wrap:hover .md-table-bar,
-.md-table-wrap.expanded .md-table-bar {
-  opacity: 1;
 }
 .md-table-wrap.expanded .md-table-bar {
   position: fixed;
   top: 10px;
   left: 12px;
+  padding: 0;
 }
 .md-table-btn {
   font-size: 12px;
