@@ -242,6 +242,11 @@ body {
   margin: 1em 0;
   border-radius: var(--radius-card);
 }
+/* Inner div only carries the table HTML; contents makes the table a direct
+   child of the scroll wrap so the width/scroll rules below apply. */
+.md-table-inner {
+  display: contents;
+}
 .md-table-wrap table {
   margin: 0;
   width: auto;

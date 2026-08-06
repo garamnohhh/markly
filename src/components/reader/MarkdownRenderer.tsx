@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { parseDoc } from "../../lib/markdown";
 import type { Heading } from "../../lib/markdown";
@@ -21,6 +21,52 @@ function tableToMarkdown(table: HTMLTableElement): string {
   const cols = rows[0].children.length;
   lines.splice(1, 0, `| ${Array(cols).fill("---").join(" | ")} |`);
   return lines.join("\n");
+}
+
+// React-owned table wrapper: the toolbar (expand/copy) is JSX so it can't be
+// wiped by a re-render, and the table HTML lives in its own inner div. Expand
+// toggles a fullscreen overlay; copy emits GFM markdown.
+function TableBlock({ html }: { html: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const innerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!expanded) return;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setExpanded(false);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [expanded]);
+
+  const copy = async () => {
+    const table = innerRef.current?.querySelector("table");
+    if (!table) return;
+    try {
+      await navigator.clipboard.writeText(tableToMarkdown(table as HTMLTableElement));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
+    } catch {
+      /* clipboard blocked — no-op */
+    }
+  };
+
+  return (
+    <div className={expanded ? "md-table-wrap expanded" : "md-table-wrap"}>
+      <div className="md-table-bar">
+        <button type="button" className="md-table-btn" title="펼치기 / 접기" onClick={() => setExpanded((v) => !v)}>
+          {expanded ? "✕" : "⤢"}
+        </button>
+        <button type="button" className="md-table-btn" title="Markdown 표로 복사" onClick={copy}>
+          {copied ? "✓" : "⧉"}
+        </button>
+      </div>
+      <div className="md-table-inner" ref={innerRef} dangerouslySetInnerHTML={{ __html: html }} />
+    </div>
+  );
 }
 
 // Open a vault-relative path inside Markly: markdown docs in the reader, any
@@ -55,55 +101,6 @@ export function MarkdownRenderer({ source, onHeadings, onSourceChange }: Props) 
   useEffect(() => {
     onHeadings?.(headings);
   }, [headings, onHeadings]);
-
-  // Wrap tables in a scroll box + toolbar (expand/copy). Imperative because
-  // tables live inside dangerouslySetInnerHTML; React re-sets innerHTML on
-  // source change, discarding these wraps, so we re-run on `segments`.
-  useEffect(() => {
-    const root = bodyRef.current;
-    if (!root) return;
-    let expandedWrap: HTMLElement | null = null;
-    root.querySelectorAll<HTMLTableElement>("table").forEach((table) => {
-      if (table.parentElement?.classList.contains("md-table-wrap")) return;
-      const wrap = document.createElement("div");
-      wrap.className = "md-table-wrap";
-      const bar = document.createElement("div");
-      bar.className = "md-table-bar";
-
-      const expand = document.createElement("button");
-      expand.type = "button";
-      expand.className = "md-table-btn";
-      expand.title = "펼치기 / 접기";
-      expand.textContent = "⤢";
-      expand.addEventListener("click", () => {
-        const on = wrap.classList.toggle("expanded");
-        document.body.style.overflow = on ? "hidden" : "";
-        expandedWrap = on ? wrap : null;
-      });
-
-      const copy = document.createElement("button");
-      copy.type = "button";
-      copy.className = "md-table-btn";
-      copy.title = "Markdown 표로 복사";
-      copy.textContent = "⧉";
-      copy.addEventListener("click", async () => {
-        try {
-          await navigator.clipboard.writeText(tableToMarkdown(table));
-          copy.textContent = "✓";
-          setTimeout(() => (copy.textContent = "⧉"), 1200);
-        } catch {
-          /* clipboard blocked — no-op */
-        }
-      });
-
-      bar.append(expand, copy);
-      table.parentNode!.insertBefore(wrap, table);
-      wrap.append(bar, table);
-    });
-    return () => {
-      if (expandedWrap) document.body.style.overflow = "";
-    };
-  }, [segments]);
 
   // Tag wiki links resolved/unresolved for styling (kept out of parse so it
   // reacts to db changes without re-parsing the whole doc).
@@ -188,6 +185,8 @@ export function MarkdownRenderer({ source, onHeadings, onSourceChange }: Props) 
           <MermaidDiagram key={i} code={seg.code} />
         ) : seg.kind === "code" ? (
           <ShikiCodeBlock key={i} code={seg.code} lang={seg.lang} />
+        ) : seg.kind === "table" ? (
+          <TableBlock key={i} html={seg.html} />
         ) : (
           <div key={i} dangerouslySetInnerHTML={{ __html: seg.html }} />
         ),

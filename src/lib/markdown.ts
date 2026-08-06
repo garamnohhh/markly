@@ -3,6 +3,7 @@ import MarkdownIt from "markdown-it";
 import taskLists from "markdown-it-task-lists";
 import katex from "@vscode/markdown-it-katex";
 import calloutPlugin from "./markdown-callouts";
+import { parseWikiInner, encodeLinkDestSpaces } from "./wiki";
 
 // Read-first renderer. html:false keeps raw HTML out (trust boundary — vault
 // files are local but may be AI-written or synced, so don't execute embedded HTML).
@@ -30,6 +31,27 @@ export const slugify = (s: string) =>
     .trim()
     .replace(/[<>"&]/g, "")
     .replace(/\s+/g, "-");
+
+// Headings only, via a cheap fence-aware line scan — no full markdown-it parse.
+// Used for the outline in both read and edit mode (edit mode has no rendered
+// tree). Skips '#' inside ``` / ~~~ code fences. Matches parseDoc's h1–h4 + slug.
+export function extractHeadings(src: string): Heading[] {
+  const { body } = splitFrontmatter(src);
+  const headings: Heading[] = [];
+  let inFence = false;
+  for (const line of body.split("\n")) {
+    if (/^\s*(`{3,}|~{3,})/.test(line)) { inFence = !inFence; continue; }
+    if (inFence) continue;
+    const m = line.match(/^(#{1,6})\s+(.*)/);
+    if (!m) continue;
+    const level = m[1].length;
+    if (level > 4) continue; // TOC shows h1–h4 only
+    const text = m[2].trim();
+    const slug = slugify(text) || `h${level}-${headings.length}`;
+    headings.push({ level, text, slug });
+  }
+  return headings;
+}
 
 // Strip a leading YAML frontmatter block; return it separately.
 export function splitFrontmatter(src: string): {
@@ -61,17 +83,22 @@ function collectHeadings(tokens: ReturnType<typeof md.parse>): Heading[] {
 export type Segment =
   | { kind: "html"; html: string }
   | { kind: "mermaid"; code: string }
-  | { kind: "code"; code: string; lang: string };
+  | { kind: "code"; code: string; lang: string }
+  | { kind: "table"; html: string };
 
 export function parseDoc(src: string): {
   segments: Segment[];
   headings: Heading[];
 } {
   const { body } = splitFrontmatter(src);
-  const preprocessed = body.replace(/\[\[([^\]]+)\]\]/g, (_, name) => {
-    const slug = name.trim().toLowerCase().replace(/\s+/g, "-");
-    return `[${name.trim()}](markly-wiki://${slug})`;
+  // Wiki links: [[target]], [[target|alias]], [[target#heading]], [[target#heading|alias]].
+  // Encode the raw "target#heading" into the href verbatim (no slugifying) so
+  // resolution can match real filenames incl. spaces; alias/target is the display.
+  const withWiki = body.replace(/\[\[([^\]]+)\]\]/g, (_, inner) => {
+    const { linkPart, display } = parseWikiInner(inner);
+    return `[${display}](markly-wiki://${encodeURIComponent(linkPart)})`;
   });
+  const preprocessed = encodeLinkDestSpaces(withWiki);
   const tokens = md.parse(preprocessed, {});
   const headings = collectHeadings(tokens);
 
@@ -83,7 +110,24 @@ export function parseDoc(src: string): {
       buffer = [];
     }
   };
+  // Tables get their own segment so the reader can own the wrapper/toolbar in
+  // React (imperative DOM mutation of dangerouslySetInnerHTML flickered away on
+  // re-render). No table nesting in markdown, so a flat open/close span is safe.
+  let tableBuf: typeof tokens | null = null;
   for (const t of tokens) {
+    if (tableBuf) {
+      tableBuf.push(t);
+      if (t.type === "table_close") {
+        segments.push({ kind: "table", html: md.renderer.render(tableBuf, md.options, {}) });
+        tableBuf = null;
+      }
+      continue;
+    }
+    if (t.type === "table_open") {
+      flush();
+      tableBuf = [t];
+      continue;
+    }
     const lang = t.info.trim().toLowerCase();
     if (t.type === "fence" && lang === "mermaid") {
       flush();
