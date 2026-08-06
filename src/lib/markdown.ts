@@ -86,6 +86,27 @@ export type Segment =
   | { kind: "code"; code: string; lang: string }
   | { kind: "table"; html: string };
 
+// Table cells parse as inline only, so `- [ ]` / `[x]` never reach the
+// task-list plugin (it only rewrites <li>). Turn those tokens into read-only
+// checkboxes in the rendered table HTML, skipping anything inside <code>.
+const CELL_CHECK_RE = /(?:- )?\[([ xX])\]/g;
+function checkboxifyCells(tableHtml: string): string {
+  return tableHtml.replace(/<td([^>]*)>([\s\S]*?)<\/td>/g, (_m, attrs, inner) => {
+    const out = inner
+      .split(/(<code[\s\S]*?<\/code>)/)
+      .map((part: string) =>
+        part.startsWith("<code")
+          ? part
+          : part.replace(CELL_CHECK_RE, (_t: string, mark: string) => {
+              const checked = mark.toLowerCase() === "x" ? " checked" : "";
+              return `<input type="checkbox" class="md-cell-check" disabled${checked}>`;
+            }),
+      )
+      .join("");
+    return `<td${attrs}>${out}</td>`;
+  });
+}
+
 export function parseDoc(src: string): {
   segments: Segment[];
   headings: Heading[];
@@ -118,7 +139,7 @@ export function parseDoc(src: string): {
     if (tableBuf) {
       tableBuf.push(t);
       if (t.type === "table_close") {
-        segments.push({ kind: "table", html: md.renderer.render(tableBuf, md.options, {}) });
+        segments.push({ kind: "table", html: checkboxifyCells(md.renderer.render(tableBuf, md.options, {})) });
         tableBuf = null;
       }
       continue;

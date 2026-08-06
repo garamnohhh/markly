@@ -231,6 +231,12 @@ body {
   background: var(--color-surface);
   font-weight: 600;
 }
+/* Read-only checkboxes synthesized from `- [ ]` / `[x]` inside table cells. */
+.md-body .md-cell-check {
+  margin: 0;
+  vertical-align: middle;
+  cursor: default;
+}
 
 /* Wide-table handling: keep tables inside doc width (scroll, never break the
    page layout), cells wrap instead of splitting chars vertically. The wrap +
