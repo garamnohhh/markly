@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { writeImage } from "@tauri-apps/plugin-clipboard-manager";
+import { toBlob } from "html-to-image";
 import { parseDoc } from "../../lib/markdown";
 import type { Heading } from "../../lib/markdown";
 import { MermaidDiagram } from "./MermaidDiagram";
@@ -26,9 +28,24 @@ function tableToMarkdown(table: HTMLTableElement): string {
 // React-owned table wrapper: the toolbar (expand/copy) is JSX so it can't be
 // wiped by a re-render, and the table HTML lives in its own inner div. Expand
 // toggles a fullscreen overlay; copy emits GFM markdown.
+// Render the table at full (expanded) width off-screen and return a PNG blob,
+// so the copied image is never cropped regardless of the collapsed UI state.
+async function tableToPng(table: HTMLTableElement): Promise<Blob | null> {
+  const stage = document.createElement("div");
+  stage.className = "md-table-capture";
+  stage.appendChild(table.cloneNode(true));
+  document.body.appendChild(stage);
+  try {
+    const bg = getComputedStyle(document.body).backgroundColor || "#ffffff";
+    return await toBlob(stage, { pixelRatio: 2, backgroundColor: bg });
+  } finally {
+    stage.remove();
+  }
+}
+
 function TableBlock({ html }: { html: string }) {
   const [expanded, setExpanded] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<false | "img" | "md">(false);
   const innerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -42,17 +59,37 @@ function TableBlock({ html }: { html: string }) {
     };
   }, [expanded]);
 
+  const flash = (kind: "img" | "md") => {
+    setCopied(kind);
+    setTimeout(() => setCopied(false), 1400);
+  };
+
+  // Copy the full-width rendered table as a PNG image. Tauri gives the most
+  // reliable image clipboard (writeImage); web falls back to ClipboardItem;
+  // if images can't be written at all, fall back to GFM markdown text.
   const copy = async () => {
-    const table = innerRef.current?.querySelector("table");
+    const table = innerRef.current?.querySelector("table") as HTMLTableElement | null;
     if (!table) return;
     try {
-      await navigator.clipboard.writeText(tableToMarkdown(table as HTMLTableElement));
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1200);
+      const blob = await tableToPng(table);
+      if (!blob) throw new Error("render failed");
+      if ("__TAURI_INTERNALS__" in window) {
+        await writeImage(new Uint8Array(await blob.arrayBuffer()));
+      } else {
+        await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+      }
+      flash("img");
     } catch {
-      /* clipboard blocked — no-op */
+      try {
+        await navigator.clipboard.writeText(tableToMarkdown(table));
+        flash("md");
+      } catch {
+        /* clipboard blocked — no-op */
+      }
     }
   };
+
+  const copyLabel = copied === "img" ? "🖼" : copied === "md" ? "✓" : "⧉";
 
   return (
     <div className={expanded ? "md-table-wrap expanded" : "md-table-wrap"}>
@@ -60,8 +97,8 @@ function TableBlock({ html }: { html: string }) {
         <button type="button" className="md-table-btn" title="펼치기 / 접기" onClick={() => setExpanded((v) => !v)}>
           {expanded ? "✕" : "⤢"}
         </button>
-        <button type="button" className="md-table-btn" title="Markdown 표로 복사" onClick={copy}>
-          {copied ? "✓" : "⧉"}
+        <button type="button" className="md-table-btn" title="펼친 표를 이미지로 복사" onClick={copy}>
+          {copyLabel}
         </button>
       </div>
       <div className="md-table-inner" ref={innerRef} dangerouslySetInnerHTML={{ __html: html }} />

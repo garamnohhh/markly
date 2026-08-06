@@ -22,6 +22,7 @@
     "@tauri-apps/plugin-dialog": "^2.7.1",
     "@tauri-apps/plugin-opener": "^2",
     "@vscode/markdown-it-katex": "^1.1.2",
+    "html-to-image": "^1.11.13",
     "katex": "^0.17.0",
     "markdown-it": "^14.2.0",
     "markdown-it-task-lists": "^2.1.1",

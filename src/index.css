@@ -310,6 +310,36 @@ body {
 .md-table-btn:hover {
   background: var(--color-tertiary);
 }
+
+/* Hidden stage used only to render the table at full width for image copy.
+   Kept at 0,0 behind the opaque page (z-index:-1) rather than off-screen —
+   html-to-image renders blank for far-off-screen nodes. Mirrors the base +
+   expanded cell styling so the PNG matches the reader. */
+.md-table-capture {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: -1;
+  pointer-events: none;
+  padding: 16px;
+  background: var(--color-paper);
+  font-size: 14px;
+}
+.md-table-capture table {
+  border-collapse: collapse;
+  width: max-content;
+}
+.md-table-capture th,
+.md-table-capture td {
+  border: 1px solid var(--color-line);
+  padding: 0.4em 0.7em;
+  text-align: left;
+  white-space: nowrap;
+}
+.md-table-capture th {
+  background: var(--color-surface);
+  font-weight: 600;
+}
 .md-body hr {
   border: none;
   border-top: 1px solid var(--color-line);
