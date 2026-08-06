@@ -89,7 +89,7 @@ function TableBlock({ html }: { html: string }) {
     }
   };
 
-  const copyLabel = copied === "img" ? "🖼" : copied === "md" ? "✓" : "⧉";
+  const copiedMsg = copied === "img" ? "이미지 복사됨" : copied === "md" ? "표 복사됨" : "";
 
   return (
     <div className={expanded ? "md-table-wrap expanded" : "md-table-wrap"}>
@@ -98,8 +98,9 @@ function TableBlock({ html }: { html: string }) {
           {expanded ? "✕" : "⤢"}
         </button>
         <button type="button" className="md-table-btn" title="펼친 표를 이미지로 복사" onClick={copy}>
-          {copyLabel}
+          ⧉
         </button>
+        {copiedMsg && <span className="md-table-toast">{copiedMsg}</span>}
       </div>
       <div className="md-table-inner" ref={innerRef} dangerouslySetInnerHTML={{ __html: html }} />
     </div>

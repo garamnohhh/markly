@@ -310,6 +310,18 @@ body {
 .md-table-btn:hover {
   background: var(--color-tertiary);
 }
+/* Transient "copied" confirmation next to the buttons; fades in then out. */
+.md-table-toast {
+  align-self: center;
+  font-size: 12px;
+  color: var(--color-muted);
+  animation: md-table-toast-fade 1.4s ease both;
+}
+@keyframes md-table-toast-fade {
+  0% { opacity: 0; }
+  12%, 75% { opacity: 1; }
+  100% { opacity: 0; }
+}
 
 /* Hidden stage used only to render the table at full width for image copy.
    Kept at 0,0 behind the opaque page (z-index:-1) rather than off-screen —
