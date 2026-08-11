@@ -200,6 +200,25 @@ pub fn write_doc(root: &Path, doc_id: &str, content: &str, source: &str) -> Resu
         return Ok(db); // nothing changed
     }
 
+    // In-app edits are not "changes" to review (Markly reviews external/AI edits
+    // only). No version bump: overwrite the current-version snapshot so it stays
+    // the baseline for the next external diff, sync hash/meta, done.
+    // Exception: a pending undecided external change (ldv < cv) — fall through to
+    // the full path so that version's content and timeline aren't destroyed.
+    if source == "in-app" && existing.last_decided_version == existing.current_version {
+        std::fs::write(root.join(&existing.path), content).map_err(|e| e.to_string())?;
+        snapshot::write_snapshot(root, doc_id, existing.current_version, content)?;
+        let (fm_pinned, fm_tags) = parse_frontmatter(content);
+        let e = db.docs.get_mut(doc_id).unwrap();
+        e.hash = h;
+        e.mtime = now();
+        e.title = title_from(content, doc_id);
+        e.pinned = fm_pinned;
+        e.tags = fm_tags;
+        db::save(root, &db)?;
+        return Ok(db);
+    }
+
     let new_v = existing.current_version + 1;
     let prev = snapshot::read_snapshot(root, doc_id, existing.current_version).unwrap_or_default();
     let (ops, stats) = diff::word_diff(&prev, content);
@@ -361,6 +380,30 @@ pub fn delete_doc(root: &Path, doc_id: &str) -> Result<Db, String> {
     Ok(db)
 }
 
+// Create an empty folder in the vault, then rescan. Rejects `..` traversal and
+// any path that would escape the vault root.
+pub fn create_folder(root: &Path, rel_path: &str) -> Result<Db, String> {
+    let rel = rel_path.trim_matches('/');
+    if rel.is_empty() {
+        return Err("empty path".to_string());
+    }
+    if Path::new(rel)
+        .components()
+        .any(|c| matches!(c, std::path::Component::ParentDir))
+    {
+        return Err("invalid path".to_string());
+    }
+    let target = root.join(rel);
+    if !target.starts_with(root) {
+        return Err("invalid path".to_string());
+    }
+    if target.exists() {
+        return Err(format!("already exists: {rel}"));
+    }
+    std::fs::create_dir_all(&target).map_err(|e| e.to_string())?;
+    scan(root)
+}
+
 // Create a brand-new markdown file in the vault, then rescan to index it.
 pub fn create_doc(root: &Path, rel_path: &str, content: &str) -> Result<Db, String> {
     let target = root.join(rel_path);
@@ -379,7 +422,11 @@ mod tests {
     use super::*;
 
     fn temp_vault() -> std::path::PathBuf {
-        let dir = std::env::temp_dir().join(format!("markly-test-{}", now() * 1000 + std::process::id() as u64));
+        use std::sync::atomic::{AtomicU64, Ordering};
+        static SEQ: AtomicU64 = AtomicU64::new(0);
+        let uniq = SEQ.fetch_add(1, Ordering::Relaxed);
+        let dir = std::env::temp_dir()
+            .join(format!("markly-test-{}-{}-{uniq}", std::process::id(), now()));
         std::fs::create_dir_all(&dir).unwrap();
         dir
     }
@@ -414,6 +461,67 @@ mod tests {
         assert!(r.ops.iter().any(|o| o.op == "del" && o.text.contains("world")));
         assert!(r.ops.iter().any(|o| o.op == "ins" && o.text.contains("rust")));
 
+        std::fs::remove_dir_all(&root).ok();
+    }
+
+    #[test]
+    fn in_app_save_makes_no_version_and_rebaselines_diff() {
+        let root = temp_vault();
+        std::fs::write(root.join("note.md"), "# Note\nhello world").unwrap();
+        let db = scan(&root).unwrap();
+        assert_eq!(db.docs["note.md"].current_version, 1);
+
+        // in-app edit: no version bump, no change record, hash synced
+        let db = write_doc(&root, "note.md", "# Note\nhello there", "in-app").unwrap();
+        let d = &db.docs["note.md"];
+        assert_eq!(d.current_version, 1, "in-app must not bump version");
+        assert_eq!(d.hash, hash::sha256_hex("# Note\nhello there"));
+        assert!(list_changes(&root, "note.md").is_empty(), "no change record");
+        assert_eq!(list_updates(&root).len(), 0, "not shown as an update");
+
+        // external edit now diffs against the user's in-app content ("there"),
+        // proving the baseline snapshot was rebased (not the stale "world").
+        std::fs::write(root.join("note.md"), "# Note\nhello everyone").unwrap();
+        scan(&root).unwrap();
+        let r = diff(&root, "note.md", 1, 2).unwrap();
+        assert!(r.ops.iter().any(|o| o.op == "del" && o.text.contains("there")));
+        assert!(r.ops.iter().any(|o| o.op == "ins" && o.text.contains("everyone")));
+        assert!(!r.ops.iter().any(|o| o.op == "del" && o.text.contains("world")));
+
+        std::fs::remove_dir_all(&root).ok();
+    }
+
+    #[test]
+    fn in_app_save_over_undecided_external_change_still_versions() {
+        let root = temp_vault();
+        std::fs::write(root.join("note.md"), "# Note\nv1").unwrap();
+        scan(&root).unwrap();
+
+        // external edit → v2, undecided (ldv=1 < cv=2)
+        std::fs::write(root.join("note.md"), "# Note\nv2").unwrap();
+        let db = scan(&root).unwrap();
+        let d = &db.docs["note.md"];
+        assert_eq!(d.current_version, 2);
+        assert!(d.last_decided_version < d.current_version);
+
+        // in-app edit on top must NOT clobber the undecided version → bumps to v3
+        let db = write_doc(&root, "note.md", "# Note\nv3", "in-app").unwrap();
+        assert_eq!(db.docs["note.md"].current_version, 3);
+
+        std::fs::remove_dir_all(&root).ok();
+    }
+
+    #[test]
+    fn create_folder_makes_dir_and_blocks_traversal() {
+        let root = temp_vault();
+        create_folder(&root, "a/b").unwrap();
+        assert!(root.join("a/b").is_dir());
+        // duplicate rejected
+        assert!(create_folder(&root, "a/b").is_err());
+        // traversal / empty rejected, nothing escapes root
+        assert!(create_folder(&root, "../evil").is_err());
+        assert!(create_folder(&root, "").is_err());
+        assert!(!root.parent().unwrap().join("evil").exists());
         std::fs::remove_dir_all(&root).ok();
     }
 }

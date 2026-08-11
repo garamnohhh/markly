@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useShallow } from "zustand/react/shallow";
 import { api } from "../lib/invoke";
+import { slugify } from "../lib/markdown";
+import { resolveWiki } from "../lib/wiki";
 import type { Db, DocEntry } from "../lib/types";
 
 export type Theme = "light" | "dark";
@@ -106,6 +108,7 @@ interface AppState {
   readLockVersion: number | null;
   diffTarget: DiffTarget | null;
   rabbitTrail: string[];
+  pendingScrollSlug: string | null; // heading to land on after a wiki #section jump
   // shell
   sidebarVisible: boolean;
   sidebarTab: SidebarTab;
@@ -135,6 +138,8 @@ interface AppState {
   setShortcut: (key: keyof ShortcutsMap, combo: string) => void;
   setTemplates: (t: Template[]) => void;
   newNote: () => Promise<void>;
+  createFileAt: (dir: string, name: string) => Promise<void>;
+  createFolderAt: (dir: string, name: string) => Promise<void>;
   setMode: (m: Mode) => void;
   toggleMode: () => void;
   openTag: (tag: string) => void;
@@ -153,6 +158,7 @@ interface AppState {
   removeVault: (path: string) => void;
   rescan: () => Promise<void>;
   openDoc: (docId: string) => void;
+  followWikiLink: (raw: string) => Promise<void>;
   openFile: (relPath: string) => void;
   toggleFileEditMode: () => void;
   loadNonMdFiles: () => Promise<void>;
@@ -195,6 +201,7 @@ function _build() { return create<AppState>()(
       readLockVersion: null,
       diffTarget: null,
       rabbitTrail: [],
+      pendingScrollSlug: null,
       sidebarVisible: true,
       sidebarTab: "queue",
       tocVisible: true,
@@ -245,6 +252,40 @@ function _build() { return create<AppState>()(
           set({ mode: "edit" });
         } catch (e) {
           console.error("newNote failed:", e);
+        }
+      },
+      // Create a file/folder at a chosen directory (dir = "" means vault root).
+      // Names are sanitized; file defaults to .md when no extension is given.
+      createFileAt: async (dir, rawName) => {
+        const name = rawName.trim().replace(/^\/+|\/+$/g, "");
+        if (!name || /[\\]/.test(name)) return;
+        const fname = /\.[^./]+$/.test(name) ? name : `${name}.md`;
+        const rel = dir ? `${dir.replace(/\/+$/, "")}/${fname}` : fname;
+        try {
+          const db = await api.createDoc(rel, "");
+          set({ db });
+          await get().loadNonMdFiles();
+          const id = rel.toLowerCase();
+          const docId = db.docs[id] ? id : Object.keys(db.docs).find((k) => k.endsWith(fname.toLowerCase())) ?? id;
+          get().openDoc(docId);
+          set({ mode: "edit" });
+        } catch (e) {
+          console.error("createFileAt failed:", e);
+        }
+      },
+      createFolderAt: async (dir, rawName) => {
+        const name = rawName.trim().replace(/^\/+|\/+$/g, "");
+        if (!name || /[\\]/.test(name)) return;
+        const rel = dir ? `${dir.replace(/\/+$/, "")}/${name}` : name;
+        try {
+          const db = await api.createFolder(rel);
+          set({ db });
+          await get().loadNonMdFiles();
+          set((s) => ({
+            expandedFolders: s.expandedFolders.includes(rel) ? s.expandedFolders : [...s.expandedFolders, rel],
+          }));
+        } catch (e) {
+          console.error("createFolderAt failed:", e);
         }
       },
       setMode: (mode) => set({ mode }),
@@ -330,6 +371,36 @@ function _build() { return create<AppState>()(
           readLockVersion: doc?.lastReadVersion ?? doc?.currentVersion ?? null,
           relatedOpen: false,
         });
+      },
+
+      followWikiLink: async (raw) => {
+        const [targetRaw, headingRaw] = raw.split("#");
+        const target = targetRaw.trim();
+        const slug = headingRaw?.trim() ? slugify(headingRaw.trim()) : null;
+        const s = get();
+        if (!s.db || !target) return;
+
+        const hit = resolveWiki(s.db, target, s.openDocId ?? undefined);
+        if (hit) {
+          set({ pendingScrollSlug: slug });
+          get().openDoc(hit);
+          return;
+        }
+
+        // Not found → create in the current doc's folder (Obsidian-style).
+        const cur = s.openDocId;
+        const curDir = cur && cur.includes("/") ? cur.slice(0, cur.lastIndexOf("/")) : "";
+        let rel = target.replace(/^\/+/, "");
+        if (!/\.md$/i.test(rel)) rel += ".md";
+        if (curDir && !rel.includes("/")) rel = `${curDir}/${rel}`;
+        try {
+          const db = await api.createDoc(rel, "");
+          set({ db, pendingScrollSlug: slug });
+          get().openDoc(rel.toLowerCase());
+          set({ mode: "edit" });
+        } catch (e) {
+          console.error("wiki create failed:", e);
+        }
       },
 
       openFile: (relPath) => {
@@ -423,6 +494,18 @@ function _build() { return create<AppState>()(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const _w = window as any;
 export const useStore: ReturnType<typeof _build> = _w.__ms ?? (_w.__ms = _build());
+
+// The singleton above freezes the action set: actions added to _build() after
+// the first instance won't appear on a hot update ("x is not a function").
+// On any hot update of this module, drop it and force a full reload so the store
+// rebuilds with every action. App re-scans the persisted vault on startup, so
+// the in-memory db is restored automatically.
+if (import.meta.hot) {
+  import.meta.hot.accept(() => {
+    delete _w.__ms;
+    import.meta.hot!.invalidate();
+  });
+}
 
 // Selectors
 // useShallow: docsList builds a fresh array each call; without a shallow compare

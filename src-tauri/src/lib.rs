@@ -19,8 +19,39 @@ pub fn run() {
                 if let Some(win) = app.get_webview_window("main") {
                     let _ = win.set_icon(icon);
                 }
-                // Remove default macOS menu to prevent ⌘E/other shortcut interception
-                let _ = app.remove_menu();
+                // Minimal macOS menu: standard app/edit/window items only.
+                // Removing the menu entirely (old approach) killed ⌘Q/⌘W/⌘H/⌘M; a full
+                // default menu intercepted our app shortcuts. These predefined items bind
+                // only ⌘Q/W/H/M/X/C/V/A/Z — never our ⌘E/⌘K/⌘F/⌘\ etc.
+                use tauri::menu::{MenuBuilder, SubmenuBuilder};
+                let app_menu = SubmenuBuilder::new(app, "Markly")
+                    .about(None)
+                    .separator()
+                    .hide()
+                    .hide_others()
+                    .show_all()
+                    .separator()
+                    .quit()
+                    .build()?;
+                let edit_menu = SubmenuBuilder::new(app, "Edit")
+                    .undo()
+                    .redo()
+                    .separator()
+                    .cut()
+                    .copy()
+                    .paste()
+                    .select_all()
+                    .build()?;
+                let window_menu = SubmenuBuilder::new(app, "Window")
+                    .minimize()
+                    .maximize()
+                    .separator()
+                    .close_window()
+                    .build()?;
+                let menu = MenuBuilder::new(app)
+                    .items(&[&app_menu, &edit_menu, &window_menu])
+                    .build()?;
+                app.set_menu(menu)?;
             }
             Ok(())
         })
@@ -34,6 +65,7 @@ pub fn run() {
             commands::list_changes,
             commands::revert,
             commands::create_doc,
+            commands::create_folder,
             commands::rename_doc,
             commands::delete_doc,
             commands::accept_change,

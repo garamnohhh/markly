@@ -16,6 +16,8 @@ export const api = {
     invoke<Db>("revert", { docId, version }),
   createDoc: (relPath: string, content: string) =>
     invoke<Db>("create_doc", { relPath, content }),
+  createFolder: (relPath: string) =>
+    invoke<Db>("create_folder", { relPath }),
   renameDoc: (docId: string, newRelPath: string) =>
     invoke<Db>("rename_doc", { docId, newRelPath }),
   deleteDoc: (docId: string) =>

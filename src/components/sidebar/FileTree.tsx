@@ -106,12 +106,83 @@ const FileIcon = ({ active }: { active?: boolean }) => (
   </svg>
 );
 
+// "+" affordance in the Files header: New file / New folder, created at `dir`
+// (current doc's folder, else root). Reuses the small inline-input pattern.
+function NewItemControl({ dir }: { dir: string }) {
+  const [mode, setMode] = useState<null | "menu" | "file" | "folder">(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (mode === "file" || mode === "folder") inputRef.current?.focus();
+  }, [mode]);
+  useEffect(() => {
+    if (!mode) return;
+    const close = () => setMode(null);
+    window.addEventListener("mousedown", close);
+    return () => window.removeEventListener("mousedown", close);
+  }, [mode]);
+
+  const submit = (val: string) => {
+    const kind = mode;
+    setMode(null);
+    const v = val.trim();
+    if (!v) return;
+    if (kind === "file") void useStore.getState().createFileAt(dir, v);
+    else if (kind === "folder") void useStore.getState().createFolderAt(dir, v);
+  };
+
+  const itemCls = "flex w-full items-center px-[13px] py-[7px] text-left text-[13px] text-ink hover:bg-tertiary";
+
+  return (
+    <div className="relative" onMouseDown={(e) => e.stopPropagation()}>
+      <button
+        title="New file or folder"
+        onClick={() => setMode((m) => (m ? null : "menu"))}
+        className="flex h-[20px] w-[20px] items-center justify-center rounded-[5px] text-[15px] leading-none text-muted hover:bg-tertiary hover:text-ink"
+      >
+        +
+      </button>
+      {mode === "menu" && (
+        <div
+          className="absolute right-0 z-50 mt-1 overflow-hidden rounded-[8px] border border-line bg-paper"
+          style={{ minWidth: 150, boxShadow: "0 8px 24px -4px rgba(0,0,0,0.18)" }}
+        >
+          <button className={itemCls} onClick={() => setMode("file")}>New file</button>
+          <button className={itemCls} onClick={() => setMode("folder")}>New folder</button>
+        </div>
+      )}
+      {(mode === "file" || mode === "folder") && (
+        <div
+          className="absolute right-0 z-50 mt-1 rounded-[8px] border border-line bg-paper px-[10px] py-[8px]"
+          style={{ minWidth: 190, boxShadow: "0 8px 24px -4px rgba(0,0,0,0.18)" }}
+        >
+          <input
+            ref={inputRef}
+            placeholder={mode === "file" ? "name.md" : "folder name"}
+            className="w-full rounded-[5px] border border-line bg-surface px-2 py-1 text-[13px] text-ink focus:outline-none focus:ring-1 focus:ring-[var(--color-gold)]"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") submit((e.target as HTMLInputElement).value);
+              if (e.key === "Escape") setMode(null);
+              e.stopPropagation();
+            }}
+          />
+          <div className="mt-1 text-[11px] text-muted">in {dir ? `${dir}/` : "root"}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function FileTree() {
   const allDocs = useDocs();
   const nonMdFiles = useNonMdFiles();
   const allDirs = useAllDirs();
   const vaultRoot = useStore((s) => s.vaultRoot);
   const baseName = vaultRoot?.split("/").pop() ?? "Base";
+
+  const openDocId = useStore((s) => s.openDocId);
+  // New-item target: current doc's folder, else vault root.
+  const currentDir = openDocId && openDocId.includes("/") ? openDocId.slice(0, openDocId.lastIndexOf("/")) : "";
 
   const tree = useMemo(() => buildTree(allDocs, nonMdFiles, allDirs), [allDocs, nonMdFiles, allDirs]);
   const [ctxMenu, setCtxMenu] = useState<CtxMenu | null>(null);
@@ -127,10 +198,13 @@ export function FileTree() {
 
   return (
     <div data-find-exclude className="flex flex-col" style={{ gap: 1 }}>
-      <div className="mb-[2px] flex items-center" style={{ height: 26, paddingLeft: 9, paddingRight: 9 }}>
+      <div className="mb-[2px] flex items-center" style={{ height: 26, paddingLeft: 9, paddingRight: 6 }}>
         <span className="text-[10px] font-bold uppercase text-mid" style={{ letterSpacing: "0.13em" }}>
           {baseName}
         </span>
+        <div className="ml-auto">
+          <NewItemControl dir={currentDir} />
+        </div>
       </div>
       <NodeChildren node={tree} depth={0} pathPrefix="" onCtx={onCtx} onFileCtx={onFileCtx} />
       <DocContextMenu menu={ctxMenu} onClose={() => setCtxMenu(null)} />
@@ -295,11 +369,13 @@ function NonDocCtxMenu({
   onClose: () => void;
 }) {
   const [renaming, setRenaming] = useState(false);
+  const [creating, setCreating] = useState<null | "file" | "folder">(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!menu) return;
     setRenaming(false);
+    setCreating(null);
     const close = () => onClose();
     window.addEventListener("mousedown", close);
     return () => window.removeEventListener("mousedown", close);
@@ -307,7 +383,8 @@ function NonDocCtxMenu({
 
   useEffect(() => {
     if (renaming) inputRef.current?.select();
-  }, [renaming]);
+    else if (creating) inputRef.current?.focus();
+  }, [renaming, creating]);
 
   if (!menu) return null;
 
@@ -338,6 +415,15 @@ function NonDocCtxMenu({
     try { await api.renameRawFile(relPath, newName); } catch { /* silent */ }
   }
 
+  function submitCreate(value: string) {
+    const kind2 = creating;
+    onClose();
+    const v = value.trim();
+    if (!v) return;
+    if (kind2 === "file") void useStore.getState().createFileAt(relPath, v);
+    else if (kind2 === "folder") void useStore.getState().createFolderAt(relPath, v);
+  }
+
   return (
     <div
       onMouseDown={(e) => e.stopPropagation()}
@@ -359,8 +445,40 @@ function NonDocCtxMenu({
             autoFocus
           />
         </div>
+      ) : creating ? (
+        <div className="px-[10px] py-[8px]">
+          <input
+            ref={inputRef}
+            placeholder={creating === "file" ? "name.md" : "folder name"}
+            className="w-full rounded-[5px] border border-line bg-surface px-2 py-1 text-[13px] text-ink focus:outline-none focus:ring-1 focus:ring-[var(--color-gold)]"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") submitCreate((e.target as HTMLInputElement).value);
+              if (e.key === "Escape") onClose();
+              e.stopPropagation();
+            }}
+            autoFocus
+          />
+          <div className="mt-1 text-[11px] text-muted">in {relPath}/</div>
+        </div>
       ) : (
         <>
+          {kind === "folder" && (
+            <>
+              <button
+                onClick={() => setCreating("file")}
+                className="flex w-full items-center px-[13px] py-[8px] text-left text-[13px] text-ink hover:bg-tertiary"
+              >
+                New file here
+              </button>
+              <button
+                onClick={() => setCreating("folder")}
+                className="flex w-full items-center px-[13px] py-[8px] text-left text-[13px] text-ink hover:bg-tertiary"
+              >
+                New folder here
+              </button>
+              <div className="mx-[8px] border-t border-line" />
+            </>
+          )}
           {kind === "file" && (
             <button
               onClick={() => setRenaming(true)}

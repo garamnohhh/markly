@@ -131,6 +131,11 @@ pub fn create_doc(
 }
 
 #[tauri::command]
+pub fn create_folder(rel_path: String, state: State<VaultState>) -> Result<Db, String> {
+    vault::create_folder(&get_root(&state)?, &rel_path)
+}
+
+#[tauri::command]
 pub fn rename_doc(
     doc_id: String,
     new_rel_path: String,
