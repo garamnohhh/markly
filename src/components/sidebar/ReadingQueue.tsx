@@ -16,6 +16,8 @@ function timeAgo(mtime: number): string {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+const fullTime = (secs: number) => new Date(secs * 1000).toLocaleString();
+
 export function ReadingQueue() {
   const docs = useDocs();
   const openDoc = useStore((s) => s.openDoc);
@@ -25,7 +27,10 @@ export function ReadingQueue() {
   const [ctxMenu, setCtxMenu] = useState<CtxMenu | null>(null);
 
   const changes = docs.filter((d) => d.currentVersion > d.lastDecidedVersion);
-  const unread = docs.filter((d) => unreadCount(d) > 0);
+  // Newest activity first: most recently modified / created docs on top.
+  const unread = docs
+    .filter((d) => unreadCount(d) > 0)
+    .sort((a, b) => Math.max(b.mtime, b.created) - Math.max(a.mtime, a.created));
   const pinned = docs.filter((d) => d.pinned);
   const recent = [...docs].sort((a, b) => b.mtime - a.mtime).slice(0, 12);
 
@@ -145,28 +150,39 @@ function UnreadRow({
 }) {
   const n = unreadCount(doc);
   const active = openId === doc.docId;
+  const isNew = doc.currentVersion === 1; // v1 = never externally changed → freshly added
   return (
     <button
       onClick={() => openDoc(doc.docId)}
       onContextMenu={(e) => { e.preventDefault(); onCtx(e.clientX, e.clientY); }}
-      className="flex w-full items-center gap-[9px] rounded-[8px] px-[11px] text-left hover:bg-tertiary"
-      style={{ minHeight: "34px", paddingTop: "5px", paddingBottom: "5px", background: rowBg(openId, doc.docId) }}
+      className="flex w-full items-start gap-[9px] rounded-[8px] px-[11px] text-left hover:bg-tertiary"
+      style={{ minHeight: "34px", paddingTop: "6px", paddingBottom: "6px", background: rowBg(openId, doc.docId) }}
     >
-      <span className="size-[6px] shrink-0 rounded-full bg-gold" />
-      <span
-        className="min-w-0 flex-1 truncate text-[13.5px]"
-        style={{ color: active ? "var(--color-ink)" : "var(--color-slate)", fontWeight: active ? 600 : 500 }}
-      >
-        {docName(doc)}
-      </span>
-      {n > 0 && (
-        <span
-          className="shrink-0 rounded-[5px] px-[6px] text-[10.5px] font-semibold"
-          style={{ background: "var(--color-warm-badge)", color: "var(--color-warm-mid)", paddingTop: "2px", paddingBottom: "2px" }}
-        >
-          {n} new
+      <span className="mt-[5px] size-[6px] shrink-0 rounded-full bg-gold" />
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-[6px]">
+          <span
+            className="min-w-0 flex-1 truncate text-[13.5px]"
+            style={{ color: active ? "var(--color-ink)" : "var(--color-slate)", fontWeight: active ? 600 : 500 }}
+          >
+            {docName(doc)}
+          </span>
+          <span
+            className="shrink-0 rounded-[5px] px-[6px] text-[10.5px] font-semibold"
+            style={{ background: "var(--color-warm-badge)", color: "var(--color-warm-mid)", paddingTop: "2px", paddingBottom: "2px" }}
+          >
+            {isNew ? "new" : `${n} edit${n > 1 ? "s" : ""}`}
+          </span>
         </span>
-      )}
+        <span
+          className="mt-[2px] block truncate text-[11px] text-muted"
+          title={`Modified ${fullTime(doc.mtime)} · Created ${fullTime(doc.created)}`}
+        >
+          {isNew
+            ? `created ${timeAgo(doc.created)}`
+            : `edited ${timeAgo(doc.mtime)} · created ${timeAgo(doc.created)}`}
+        </span>
+      </span>
     </button>
   );
 }

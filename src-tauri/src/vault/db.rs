@@ -20,6 +20,10 @@ pub struct DocEntry {
     pub tags: Vec<String>,
     pub hash: String,
     pub mtime: u64,
+    // First-indexed time (event-based, like mtime). Defaults to 0 for docs from
+    // pre-`created` DBs; scan backfills those to mtime.
+    #[serde(default)]
+    pub created: u64,
 }
 
 #[derive(Serialize, Deserialize, Clone)]

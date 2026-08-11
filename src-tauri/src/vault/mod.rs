@@ -91,6 +91,10 @@ pub fn scan(root: &Path) -> Result<Db, String> {
                 e.current_version
             };
         }
+        // Migration: `created` predates this field → seed from mtime.
+        if e.created == 0 {
+            e.created = e.mtime;
+        }
     }
 
     let markly = db::markly_dir(root);
@@ -131,6 +135,7 @@ pub fn scan(root: &Path) -> Result<Db, String> {
                         tags: fm_tags,
                         hash: h,
                         mtime: now(),
+                        created: now(),
                     },
                 );
             }

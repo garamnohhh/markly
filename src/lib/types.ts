@@ -10,6 +10,7 @@ export interface DocEntry {
   tags: string[];
   hash: string;
   mtime: number;
+  created: number;
 }
 
 export interface Settings {
