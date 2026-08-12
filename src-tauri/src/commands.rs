@@ -50,9 +50,12 @@ pub fn scan_vault(
 
     let mut w = notify::recommended_watcher(move |res: notify::Result<Event>| {
         if let Ok(ev) = res {
+            // Only markdown changes matter. Ignore everything else (e.g. a
+            // sqlite WAL / .db-shm / log churning inside the vault) so unrelated
+            // writes don't trigger a full re-hash-everything rescan storm.
             let relevant = ev.paths.iter().any(|p| {
-                !p.starts_with(&markly)
-                    && p.file_name().map(|n| n != ".DS_Store").unwrap_or(true)
+                p.extension().and_then(|e| e.to_str()) == Some("md")
+                    && !p.starts_with(&markly)
                     && !p.components().any(|c| {
                         c.as_os_str().to_str()
                             .map(|s| s.starts_with('.') && s.len() > 1)

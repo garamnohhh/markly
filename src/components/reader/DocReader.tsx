@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "../../store";
 import { api } from "../../lib/invoke";
-import { parseDoc, splitFrontmatter } from "../../lib/markdown";
+import { extractHeadings, splitFrontmatter } from "../../lib/markdown";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { SourceEditor } from "./SourceEditor";
 import { UpdateNoticeBar } from "./UpdateNoticeBar";
@@ -19,6 +19,8 @@ export function DocReader() {
   const tocVisible = useStore((s) => s.tocVisible);
   const doc = useStore((s) => (s.db ? s.db.docs[docId] : undefined));
 
+  const pendingScrollSlug = useStore((s) => s.pendingScrollSlug);
+
   const [source, setSource] = useState<string>("");
   const [contentReady, setContentReady] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -33,7 +35,7 @@ export function DocReader() {
   const lastSaved = useRef<string>("");
   const anchorSlug = useRef<string>(""); // heading we're parked on, for mode sync
 
-  const headings = useMemo(() => parseDoc(source).headings, [source]);
+  const headings = useMemo(() => extractHeadings(source), [source]);
 
   const bodyOffset = useMemo(() => {
     const { frontmatter, body } = splitFrontmatter(source);
@@ -67,6 +69,17 @@ export function DocReader() {
       cancelled = true;
     };
   }, [docId, goInbox]);
+
+  // Land on a heading requested by a wiki #section link, once content is ready.
+  useEffect(() => {
+    if (!contentReady || !pendingScrollSlug || mode !== "read") return;
+    requestAnimationFrame(() => {
+      scrollRef.current
+        ?.querySelector(`#${CSS.escape(pendingScrollSlug)}`)
+        ?.scrollIntoView({ behavior: "auto", block: "start" });
+      useStore.setState({ pendingScrollSlug: null });
+    });
+  }, [contentReady, pendingScrollSlug, mode]);
 
   const onInlineEdit = useCallback((newSource: string) => {
     setSource(newSource);

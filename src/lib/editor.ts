@@ -58,23 +58,43 @@ const mdHighlight = HighlightStyle.define([
   { tag: tags.attributeValue, color: "var(--hl-string)" },
 ]);
 
-function buildLineDecos(state: EditorState): DecorationSet {
-  const b = new RangeSetBuilder<Decoration>();
+const FENCE_RE = /^(`{3,}|~{3,})/;
+
+// Fence parity at the start of `lineNum`: are we inside a ``` block? Counts only
+// fence markers in lines above — cheap (line.text + regex, no allocation).
+function fenceStateBefore(state: EditorState, lineNum: number): boolean {
   let inFence = false;
+  for (let i = 1; i < lineNum; i++) {
+    if (FENCE_RE.test(state.doc.line(i).text)) inFence = !inFence;
+  }
+  return inFence;
+}
 
-  for (let i = 1; i <= state.doc.lines; i++) {
-    const line = state.doc.line(i);
-    const text = line.text;
+// Build line decorations for visible lines only. On big docs the old full-doc
+// scan ran on every keystroke; here work is bounded to the viewport.
+function buildLineDecos(view: EditorView): DecorationSet {
+  const { state } = view;
+  const b = new RangeSetBuilder<Decoration>();
 
-    if (/^(`{3,}|~{3,})/.test(text)) {
-      inFence = !inFence;
-      b.add(line.from, line.from, Decoration.line({ class: "cm-md-fence" }));
-    } else if (inFence) {
-      b.add(line.from, line.from, Decoration.line({ class: "cm-md-fence" }));
-    } else if (text === ">" || text.startsWith("> ")) {
-      b.add(line.from, line.from, Decoration.line({ class: "cm-md-quote" }));
-    } else if (isTableRow(text)) {
-      b.add(line.from, line.from, Decoration.line({ class: "cm-md-table" }));
+  for (const { from, to } of view.visibleRanges) {
+    const startLine = state.doc.lineAt(from).number;
+    const endLine = state.doc.lineAt(to).number;
+    let inFence = fenceStateBefore(state, startLine);
+
+    for (let i = startLine; i <= endLine; i++) {
+      const line = state.doc.line(i);
+      const text = line.text;
+
+      if (FENCE_RE.test(text)) {
+        inFence = !inFence;
+        b.add(line.from, line.from, Decoration.line({ class: "cm-md-fence" }));
+      } else if (inFence) {
+        b.add(line.from, line.from, Decoration.line({ class: "cm-md-fence" }));
+      } else if (text === ">" || text.startsWith("> ")) {
+        b.add(line.from, line.from, Decoration.line({ class: "cm-md-quote" }));
+      } else if (isTableRow(text)) {
+        b.add(line.from, line.from, Decoration.line({ class: "cm-md-table" }));
+      }
     }
   }
   return b.finish();
@@ -83,8 +103,10 @@ function buildLineDecos(state: EditorState): DecorationSet {
 const lineDecoPlugin = ViewPlugin.fromClass(
   class {
     decorations: DecorationSet;
-    constructor(view: EditorView) { this.decorations = buildLineDecos(view.state); }
-    update(u: ViewUpdate) { if (u.docChanged) this.decorations = buildLineDecos(u.state); }
+    constructor(view: EditorView) { this.decorations = buildLineDecos(view); }
+    update(u: ViewUpdate) {
+      if (u.docChanged || u.viewportChanged) this.decorations = buildLineDecos(u.view);
+    }
   },
   { decorations: (v) => v.decorations },
 );
@@ -114,15 +136,15 @@ export function createSourceEditor(
     onCursorHeading?: (slug: string | null) => void;
   },
 ): EditorView {
+  // Nearest heading at/above the cursor. Backward line scan with early-exit —
+  // no full-doc toString/split (runs on every keystroke and cursor move).
   const reportHeading = (view: EditorView) => {
     if (!opts.onCursorHeading) return;
-    const line = view.state.doc.lineAt(view.state.selection.main.head).number;
-    const text = view.state.doc.toString();
-    const lines = text.split("\n");
+    const curLine = view.state.doc.lineAt(view.state.selection.main.head).number;
     let slug: string | null = null;
-    for (let i = 0; i < line; i++) {
-      const m = lines[i].match(/^#{1,6}\s+(.*)/);
-      if (m) slug = slugify(m[1]);
+    for (let i = curLine; i >= 1; i--) {
+      const m = view.state.doc.line(i).text.match(/^#{1,6}\s+(.*)/);
+      if (m) { slug = slugify(m[1]); break; }
     }
     opts.onCursorHeading(slug);
   };

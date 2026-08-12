@@ -4,6 +4,8 @@ import { api } from "../../lib/invoke";
 import { getHighlighter, normalizeLang } from "../../lib/shiki";
 import { createFileEditor } from "../../lib/fileEditor";
 import { getMermaid } from "../../lib/mermaid";
+import { registerFindTarget } from "../../lib/find";
+import { EditorView } from "@codemirror/view";
 
 // svg moved out of IMAGE_EXTS so it becomes editable text
 const IMAGE_EXTS = new Set(["png", "jpg", "jpeg", "gif", "webp"]);
@@ -80,7 +82,18 @@ function FileEditorHost({
     const view = createFileEditor(host.current, filename, text, {
       onChange: (v) => cb.current(v),
     });
-    return () => view.destroy();
+    const unregisterFind = registerFindTarget({
+      getText: () => view.state.doc.toString(),
+      reveal: ({ from, to }, scroll = true) => {
+        if (!scroll) return [];
+        view.dispatch({
+          selection: { anchor: from, head: to },
+          effects: EditorView.scrollIntoView(from, { y: "center" }),
+        });
+        return [];
+      },
+    });
+    return () => { unregisterFind(); view.destroy(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -100,8 +113,15 @@ function HtmlPreview({ text, name }: { text: string; name: string }) {
   function forwardKeys() {
     const cw = iframeRef.current?.contentWindow;
     if (!cw) return;
+    if (!cw.document.querySelector("style[data-markly-find]")) {
+      const style = cw.document.createElement("style");
+      style.dataset.marklyFind = "";
+      style.textContent = "::selection{background:rgba(255,210,74,.72);color:inherit}";
+      cw.document.head.appendChild(style);
+    }
     // Forward keyboard events to parent window
     cw.addEventListener("keydown", (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "f") e.preventDefault();
       window.dispatchEvent(new KeyboardEvent("keydown", {
         key: e.key, code: e.code,
         metaKey: e.metaKey, ctrlKey: e.ctrlKey,
@@ -109,13 +129,22 @@ function HtmlPreview({ text, name }: { text: string; name: string }) {
         bubbles: true, cancelable: true,
       }));
     }, true);
-    // Block link navigation (file:// paths fail in Tauri); allow #anchor-only links
+    // In a srcdoc iframe, relative URLs (incl. bare "#frag") resolve against the PARENT
+    // document's base URL (tauri://localhost), so native anchor nav loads the whole app
+    // into the frame → onboarding screen. Intercept every anchor: scroll for in-page
+    // "#frag", block everything else (file:// paths fail in Tauri anyway).
     cw.document.addEventListener("click", (e) => {
       const a = (e.target as Element).closest("a");
       if (!a) return;
       const href = a.getAttribute("href") ?? "";
-      if (href.startsWith("#")) return; // in-page anchor: fine
+      if (!href.startsWith("#")) { e.preventDefault(); return; }
       e.preventDefault();
+      const id = decodeURIComponent(href.slice(1));
+      if (!id) { cw.scrollTo({ top: 0, behavior: "smooth" }); return; }
+      const target =
+        cw.document.getElementById(id) ??
+        cw.document.querySelector(`a[name="${id.replace(/"/g, '\\"')}"]`);
+      target?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, true);
   }
 

@@ -1,113 +1,80 @@
 import { useEffect, useRef, useState } from "react";
 import { useStore } from "../../store";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const w = window as any;
-
-function applyHL(r: Range | null) {
-  if (!w.CSS?.highlights || typeof w.Highlight === "undefined") return;
-  if (r) w.CSS.highlights.set("markly-find", new w.Highlight(r.cloneRange()));
-  else w.CSS.highlights.delete("markly-find");
-}
-
-function buildMatches(q: string): Range[] {
-  if (!q) return [];
-  const ql = q.toLowerCase();
-  // Search only the content area; fall back to body (with sidebar excluded via data-find-exclude)
-  const root = document.querySelector(".doc-scroll") ?? document.body;
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-    acceptNode: (node) =>
-      (node.parentElement as Element | null)?.closest("[data-find-exclude]")
-        ? NodeFilter.FILTER_REJECT
-        : NodeFilter.FILTER_ACCEPT,
-  });
-  const out: Range[] = [];
-  let n: Node | null;
-  while ((n = walker.nextNode())) {
-    const t = (n as Text).textContent ?? "";
-    const tl = t.toLowerCase();
-    let i = 0;
-    while (true) {
-      const j = tl.indexOf(ql, i);
-      if (j === -1) break;
-      const r = document.createRange();
-      r.setStart(n, j);
-      r.setEnd(n, j + q.length);
-      out.push(r);
-      i = j + 1;
-    }
-  }
-  return out;
-}
+import { findOccurrences, getFindTarget, wrapFindIndex, type FindMatch, type FindTarget } from "../../lib/find";
 
 export function FindBar() {
   const findOpen = useStore((s) => s.findOpen);
   const setFindOpen = useStore((s) => s.setFindOpen);
   const [query, setQuery] = useState("");
   const [info, setInfo] = useState({ total: 0, current: 0 });
+  const [searched, setSearched] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const matchesRef = useRef<Range[]>([]);
+  const matchesRef = useRef<FindMatch[]>([]);
+  const targetRef = useRef<FindTarget | null>(null);
   const idxRef = useRef(-1);
+
+  function revealCurrent() {
+    const r = matchesRef.current[idxRef.current];
+    const target = targetRef.current;
+    if (!r || !target) return;
+    target.reveal(r);
+  }
 
   useEffect(() => {
     if (findOpen) {
       setQuery("");
       setInfo({ total: 0, current: 0 });
+      setSearched(false);
       matchesRef.current = [];
+      targetRef.current = null;
       idxRef.current = -1;
-      applyHL(null);
       setTimeout(() => inputRef.current?.focus(), 0);
     } else {
-      applyHL(null);
+      matchesRef.current = [];
+      targetRef.current?.clear?.();
+      targetRef.current = null;
+      idxRef.current = -1;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [findOpen]);
 
   if (!findOpen) return null;
 
-  function showAt(matches: Range[], idx: number) {
-    idxRef.current = idx;
-    setInfo({ total: matches.length, current: idx + 1 });
-    applyHL(matches[idx]);
-    try {
-      matches[idx].startContainer.parentElement?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    } catch { /* node detached */ }
-  }
-
-  function doSearch(q: string, backward = false) {
-    const matches = buildMatches(q);
-    matchesRef.current = matches;
-    if (!matches.length) {
-      idxRef.current = -1;
-      setInfo({ total: 0, current: 0 });
-      applyHL(null);
-      return;
-    }
-    showAt(matches, backward ? matches.length - 1 : 0);
-  }
-
-  function doNavigate(backward = false) {
+  function showAt(idx: number) {
     const matches = matchesRef.current;
-    if (!matches.length) return;
-    const next = backward
-      ? (idxRef.current - 1 + matches.length) % matches.length
-      : (idxRef.current + 1) % matches.length;
-    showAt(matches, next);
+    const total = matches.length;
+    if (!total) return;
+    const i = wrapFindIndex(idx, total);
+    idxRef.current = i;
+    setInfo({ total, current: i + 1 });
+    revealCurrent();
   }
 
   function onFind(backward = false) {
     if (!query) return;
-    if (matchesRef.current.length > 0) doNavigate(backward);
-    else doSearch(query, backward);
+    if (matchesRef.current.length === 0) {
+      targetRef.current = getFindTarget();
+      matchesRef.current = findOccurrences(targetRef.current.getText(), query);
+      setSearched(true);
+      if (!matchesRef.current.length) {
+        idxRef.current = -1;
+        setInfo({ total: 0, current: 0 });
+        return;
+      }
+      showAt(backward ? -1 : 0);
+    } else {
+      showAt(idxRef.current + (backward ? -1 : 1));
+    }
   }
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const q = e.target.value;
-    setQuery(q);
-    // Reset when query changes — user must press Enter to search again
+    setQuery(e.target.value);
     matchesRef.current = [];
+    targetRef.current?.clear?.();
+    targetRef.current = null;
     idxRef.current = -1;
     setInfo({ total: 0, current: 0 });
-    applyHL(null);
+    setSearched(false);
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -116,10 +83,9 @@ export function FindBar() {
     if (e.key === "Enter") { e.preventDefault(); onFind(e.shiftKey); }
   }
 
-  const noResult = query && info.total === 0 && matchesRef.current !== undefined && idxRef.current === -1;
   const countLabel = info.total > 0
     ? `${info.current} / ${info.total}`
-    : noResult ? "없음" : "";
+    : searched && query ? "없음" : "";
 
   return (
     <div

@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { EditorView } from "@codemirror/view";
 import { createSourceEditor } from "../../lib/editor";
 import { slugify } from "../../lib/markdown";
+import { registerFindTarget } from "../../lib/find";
 
 // Edit-mode surface: whole doc as raw markdown, mono with a left ink rule
 // (design). Reports the heading nearest the cursor so read mode can land at the
@@ -30,6 +31,17 @@ export function SourceEditor({
       onChange: (t) => cbs.current.onChange(t),
       onCursorHeading: (s) => cbs.current.onCursorHeading?.(s),
     });
+    const unregisterFind = registerFindTarget({
+      getText: () => view.state.doc.toString(),
+      reveal: ({ from, to }, scroll = true) => {
+        if (!scroll) return [];
+        view.dispatch({
+          selection: { anchor: from, head: to },
+          effects: EditorView.scrollIntoView(from, { y: "center" }),
+        });
+        return [];
+      },
+    });
 
     // land at the heading we were reading, show 3 lines of context above
     if (scrollToSlug) {
@@ -53,7 +65,7 @@ export function SourceEditor({
       }
     }
     view.focus();
-    return () => view.destroy();
+    return () => { unregisterFind(); view.destroy(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

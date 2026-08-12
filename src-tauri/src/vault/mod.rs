@@ -100,7 +100,20 @@ pub fn scan(root: &Path) -> Result<Db, String> {
     let markly = db::markly_dir(root);
     let mut found = std::collections::HashSet::new();
 
-    for entry in WalkDir::new(root).into_iter().filter_map(|e| e.ok()) {
+    // Don't descend into .markly (holds 1000s of snapshot .md), VCS, or
+    // dependency/build dirs — keeps the walk small and avoids indexing stray
+    // README.md under node_modules/target.
+    let pruned = |name: &str| {
+        name == ".markly"
+            || name == "node_modules"
+            || name == "target"
+            || (name.starts_with('.') && name.len() > 1)
+    };
+    for entry in WalkDir::new(root)
+        .into_iter()
+        .filter_entry(|e| !(e.file_type().is_dir() && pruned(e.file_name().to_str().unwrap_or(""))))
+        .filter_map(|e| e.ok())
+    {
         let p = entry.path();
         if !p.is_file() || p.starts_with(&markly) {
             continue;
