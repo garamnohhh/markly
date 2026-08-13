@@ -42,10 +42,13 @@ function App() {
   const clearVault = useStore((s) => s.clearVault);
   const didStartScan = useRef(false);
 
-  // Real-time file watcher events from Rust
+  // Real-time file watcher events from Rust. Markdown edits need a full rescan
+  // (versioning); other files only need the non-md listing refreshed, which is
+  // cheap and keeps new .html/.csv visible without a restart.
   useEffect(() => {
     const p = listen("vault-changed", () => useStore.getState().rescan());
-    return () => { p.then((fn) => fn()); };
+    const q = listen("files-changed", () => useStore.getState().loadNonMdFiles());
+    return () => { p.then((fn) => fn()); q.then((fn) => fn()); };
   }, []);
 
   // Scan the persisted Base once on launch to catch changes made while closed.

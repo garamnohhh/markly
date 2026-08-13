@@ -32,6 +32,38 @@ fn get_root(state: &State<VaultState>) -> Result<PathBuf, String> {
         .ok_or_else(|| "no vault open".to_string())
 }
 
+/// Split watcher paths into "needs a full markdown rescan" vs "only the non-md
+/// file listing changed". Skips .markly, hidden dirs, .DS_Store and volatile
+/// sidecars (sqlite WAL, logs, temp) whose churn used to cause rescan storms.
+fn classify_paths(paths: &[PathBuf], markly: &std::path::Path) -> (bool, bool) {
+    const VOLATILE: &[&str] = &[
+        "db", "db-shm", "db-wal", "sqlite", "sqlite3", "log", "tmp", "temp", "swp", "lock",
+        "part", "crdownload",
+    ];
+    let (mut md, mut other) = (false, false);
+    for p in paths {
+        let ext = p.extension().and_then(|e| e.to_str()).unwrap_or("");
+        let visible = !p.starts_with(markly)
+            && !VOLATILE.contains(&ext)
+            && p.file_name().map(|n| n != ".DS_Store").unwrap_or(true)
+            && !p.components().any(|c| {
+                c.as_os_str()
+                    .to_str()
+                    .map(|s| s.starts_with('.') && s.len() > 1)
+                    .unwrap_or(false)
+            });
+        if !visible {
+            continue;
+        }
+        if ext == "md" {
+            md = true;
+        } else {
+            other = true;
+        }
+    }
+    (md, other)
+}
+
 #[tauri::command]
 pub fn scan_vault(
     path: String,
@@ -50,18 +82,8 @@ pub fn scan_vault(
 
     let mut w = notify::recommended_watcher(move |res: notify::Result<Event>| {
         if let Ok(ev) = res {
-            // Only markdown changes matter. Ignore everything else (e.g. a
-            // sqlite WAL / .db-shm / log churning inside the vault) so unrelated
-            // writes don't trigger a full re-hash-everything rescan storm.
-            let relevant = ev.paths.iter().any(|p| {
-                p.extension().and_then(|e| e.to_str()) == Some("md")
-                    && !p.starts_with(&markly)
-                    && !p.components().any(|c| {
-                        c.as_os_str().to_str()
-                            .map(|s| s.starts_with('.') && s.len() > 1)
-                            .unwrap_or(false)
-                    })
-            });
+            let (md_changed, file_changed) = classify_paths(&ev.paths, &markly);
+            let relevant = md_changed || file_changed;
             if relevant {
                 let now = std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
@@ -70,7 +92,11 @@ pub fn scan_vault(
                 let prev = last_ms3.load(Ordering::Relaxed);
                 if now.saturating_sub(prev) > 500 {
                     last_ms3.store(now, Ordering::Relaxed);
-                    app_h.emit("vault-changed", ()).ok();
+                    if md_changed {
+                        app_h.emit("vault-changed", ()).ok();
+                    } else {
+                        app_h.emit("files-changed", ()).ok();
+                    }
                 }
             }
         }
@@ -283,4 +309,29 @@ pub fn copy_diagram_image(app: tauri::AppHandle, svg: String) -> Result<(), Stri
     let png = pixmap.encode_png().map_err(|e| e.to_string())?;
     let image = tauri::image::Image::from_bytes(&png).map_err(|e| e.to_string())?;
     app.clipboard().write_image(&image).map_err(|e| e.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn classify_routes_md_vs_files_and_ignores_noise() {
+        let root = PathBuf::from("/v");
+        let markly = root.join(".markly");
+        let p = |s: &str| root.join(s);
+
+        // a new .html → cheap file-list refresh only (the bug: it was ignored)
+        assert_eq!(classify_paths(&[p("outputs/14-tool.html")], &markly), (false, true));
+        // markdown → full rescan
+        assert_eq!(classify_paths(&[p("notes/a.md")], &markly), (true, false));
+        // both in one event
+        assert_eq!(classify_paths(&[p("a.md"), p("b.csv")], &markly), (true, true));
+        // volatile sidecars / snapshots / hidden dirs / .DS_Store → nothing
+        for noisy in ["bus.db-shm", "bus.db-wal", "app.log", "x.tmp", ".DS_Store"] {
+            assert_eq!(classify_paths(&[p(noisy)], &markly), (false, false), "{noisy}");
+        }
+        assert_eq!(classify_paths(&[markly.join("snapshots/x.md")], &markly), (false, false));
+        assert_eq!(classify_paths(&[p(".git/index")], &markly), (false, false));
+    }
 }
