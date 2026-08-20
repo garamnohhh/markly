@@ -40,6 +40,11 @@ export function useKeymap() {
         s.toggleToc();
         return;
       }
+      if (matchShortcut(e, sc.focus)) {
+        e.preventDefault();
+        s.toggleFocus();
+        return;
+      }
       if (matchShortcut(e, sc.editMode)) {
         if (s.view === "reader" && s.openDocId) {
           e.preventDefault();

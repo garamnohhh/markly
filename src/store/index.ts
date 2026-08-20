@@ -14,6 +14,7 @@ export type Mode = "read" | "edit";
 export interface ShortcutsMap {
   sidebar: string;
   outline: string;
+  focus: string;
   editMode: string;
   palette: string;
   related: string;
@@ -26,6 +27,7 @@ export interface ShortcutsMap {
 export const DEFAULT_SHORTCUTS: ShortcutsMap = {
   sidebar: "Meta+\\",
   outline: "Meta+Shift+\\",
+  focus: "Meta+.",
   editMode: "Meta+e",
   palette: "Meta+k",
   related: "Meta+r",
@@ -111,6 +113,9 @@ interface AppState {
   pendingScrollSlug: string | null; // heading to land on after a wiki #section jump
   // shell
   sidebarVisible: boolean;
+  // Hides both side panels at once without forgetting their own toggles, so
+  // leaving focus mode puts the layout back exactly as it was.
+  focusMode: boolean;
   sidebarTab: SidebarTab;
   tocVisible: boolean;
   cmdPaletteOpen: boolean;
@@ -129,6 +134,7 @@ interface AppState {
   goChanges: () => void;
   goBack: () => void;
   toggleSidebar: () => void;
+  toggleFocus: () => void;
   setSidebarTab: (t: SidebarTab) => void;
   toggleToc: () => void;
   setCmdPalette: (open: boolean) => void;
@@ -203,6 +209,7 @@ function _build() { return create<AppState>()(
       rabbitTrail: [],
       pendingScrollSlug: null,
       sidebarVisible: true,
+      focusMode: false,
       sidebarTab: "queue",
       tocVisible: true,
       cmdPaletteOpen: false,
@@ -231,6 +238,7 @@ function _build() { return create<AppState>()(
         set({ view: prev ?? "inbox", previousView: null });
       },
       toggleSidebar: () => set((s) => ({ sidebarVisible: !s.sidebarVisible })),
+      toggleFocus: () => set((s) => ({ focusMode: !s.focusMode })),
       setSidebarTab: (sidebarTab) => set({ sidebarTab }),
       toggleToc: () => set((s) => ({ tocVisible: !s.tocVisible })),
       setCmdPalette: (cmdPaletteOpen) => set({ cmdPaletteOpen }),
@@ -468,6 +476,9 @@ function _build() { return create<AppState>()(
         acceptChangesOnClose: s.acceptChangesOnClose,
         markReadOnDocClose: s.markReadOnDocClose,
         expandedFolders: s.expandedFolders,
+        sidebarVisible: s.sidebarVisible,
+        tocVisible: s.tocVisible,
+        focusMode: s.focusMode,
         sidebarWidth: s.sidebarWidth,
         tocWidth: s.tocWidth,
         showEmptySections: s.showEmptySections,

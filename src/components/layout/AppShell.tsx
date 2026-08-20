@@ -12,12 +12,13 @@ export function AppShell({
   noSidebar?: boolean;
 }) {
   const sidebarVisible = useStore((s) => s.sidebarVisible);
+  const focusMode = useStore((s) => s.focusMode);
 
   return (
     <div className="flex h-full flex-col bg-paper text-ink">
       <TitleBar />
       <div className="flex min-h-0 flex-1">
-        {!noSidebar && sidebarVisible && <Sidebar />}
+        {!noSidebar && sidebarVisible && !focusMode && <Sidebar />}
         <main className={`min-w-0 flex-1 flex flex-col min-h-0 ${noPad ? "" : "overflow-y-auto"}`}>
           {children}
         </main>

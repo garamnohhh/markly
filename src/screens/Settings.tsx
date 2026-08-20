@@ -498,6 +498,7 @@ function ShortcutsTab() {
     { key: "editMode", label: "Toggle edit mode" },
     { key: "sidebar", label: "Toggle sidebar" },
     { key: "outline", label: "Toggle outline" },
+    { key: "focus", label: "Focus mode (hide both panels)" },
     { key: "related", label: "Related topics" },
     { key: "openRelated", label: "Open doc from Related (⌘O)" },
     { key: "markRead", label: "Mark as read" },

@@ -17,6 +17,7 @@ export function DocReader() {
   const applyDb = useStore((s) => s.applyDb);
   const editorWidth = useStore((s) => s.editorWidth);
   const tocVisible = useStore((s) => s.tocVisible);
+  const focusMode = useStore((s) => s.focusMode);
   const doc = useStore((s) => (s.db ? s.db.docs[docId] : undefined));
 
   const pendingScrollSlug = useStore((s) => s.pendingScrollSlug);
@@ -248,7 +249,7 @@ export function DocReader() {
         )}
       </div>
 
-      {tocVisible && (
+      {tocVisible && !focusMode && (
         <OutlinePanel
           headings={headings}
           progress={progress}

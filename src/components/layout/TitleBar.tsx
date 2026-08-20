@@ -14,6 +14,17 @@ const EXT_COLORS: Record<string, string> = {
   csv: "#6a9a5b", sh: "#56534d", bash: "#56534d",
   html: "#c2705b", css: "#4a78b0", scss: "#4a78b0",
 };
+function FocusIcon({ on }: { on?: boolean }) {
+  return (
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none"
+         stroke={on ? "var(--color-gold)" : "currentColor"} strokeWidth="1.4" strokeLinecap="round">
+      {/* corners closing in on the text column */}
+      <path d="M2 5V2.6h2.4M11.6 2h2.4v2.4M14 11.6V14h-2.4M4.4 14H2v-2.4" />
+      <path d="M6 6h4M6 8.5h4M6 11h2.5" />
+    </svg>
+  );
+}
+
 function FileExtBadge({ ext }: { ext: string }) {
   if (!ext) return null;
   const color = EXT_COLORS[ext] ?? "var(--color-mid)";
@@ -26,6 +37,8 @@ function FileExtBadge({ ext }: { ext: string }) {
 
 export function TitleBar() {
   const toggleSidebar = useStore((s) => s.toggleSidebar);
+  const focusMode = useStore((s) => s.focusMode);
+  const toggleFocus = useStore((s) => s.toggleFocus);
   const toggleToc = useStore((s) => s.toggleToc);
   const setView = useStore((s) => s.setView);
   const goInbox = useStore((s) => s.goInbox);
@@ -62,6 +75,14 @@ export function TitleBar() {
       {!isSecondaryView && (
         <IconButton label="Toggle sidebar (⌘\)" onClick={toggleSidebar}>
           <SidebarIcon />
+        </IconButton>
+      )}
+      {!isSecondaryView && (
+        <IconButton
+          label={focusMode ? "Show side panels (⌘.)" : "Focus mode — text only (⌘.)"}
+          onClick={toggleFocus}
+        >
+          <FocusIcon on={focusMode} />
         </IconButton>
       )}
 
