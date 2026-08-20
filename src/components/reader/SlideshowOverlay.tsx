@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { modalStack } from "../../lib/modalStack";
 import type { SlideKind } from "../../lib/slides";
 
@@ -42,6 +43,23 @@ export function SlideshowOverlay({
   useEffect(() => {
     modalStack.push();
     return () => modalStack.pop();
+  }, []);
+
+  // Take the whole screen, not just the window: this overlay already covers the
+  // app's own title bar, but not the macOS menu bar — and that's the strip still
+  // showing during a presentation.
+  //
+  // Deliberately unconditional in both directions. Reading isFullscreen() first
+  // and skipping when already fullscreen looked tidier, but the value goes stale
+  // across a cycle: after one enter/exit, the second slideshow opened windowed.
+  // Set it, then clear it. The cleanup runs however this component goes away
+  // (Escape, the close button, navigation, an error boundary), so no path can
+  // strand the window fullscreen.
+  useEffect(() => {
+    if (!("__TAURI_INTERNALS__" in window)) return;
+    const win = getCurrentWindow();
+    void win.setFullscreen(true).catch(() => {});
+    return () => { void win.setFullscreen(false).catch(() => {}); };
   }, []);
 
   // Escape closes. Arrows page only when we own paging — a deck handles its own,
