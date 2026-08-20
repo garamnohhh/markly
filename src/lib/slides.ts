@@ -42,18 +42,29 @@ export type SlideKind =
   | { kind: "pdf" }
   | null;
 
-// Ordered most-specific first. A long article matches none of these, and then the
-// slideshow button never appears — we don't invent slide breaks for prose.
-const SLIDE_SELECTORS = ["section[data-label]", ".slide", "body > section"];
+// Only explicit slide markers. `body > section` was tried and dropped: across the
+// 51 HTML files in the real vault it never once matched an actual deck, and did
+// match two ordinary reports that happen to be split into sections.
+const SLIDE_SELECTORS = ["section[data-label]", ".slide"];
 
-export function detectSlides(html: string): SlideKind {
-  const doc = new DOMParser().parseFromString(html, "text/html");
-  if (doc.querySelector('x-import[component-from-global-scope="deck-stage"]')) {
-    return { kind: "deck" };
-  }
+// `x-import` is the authored form; `deck-stage` is what it becomes once the
+// document's own script upgrades it.
+const DECK_SELECTOR = 'x-import[component-from-global-scope="deck-stage"], deck-stage';
+
+// Detect against a LIVE document, not the source text. Single-file deck exports
+// carry their slides inside a script string and only build the DOM when they run,
+// so parsing the raw HTML finds nothing at all — that's how a 10-slide deck was
+// getting no slideshow button.
+export function detectSlidesIn(doc: Document): SlideKind {
+  if (doc.querySelector(DECK_SELECTOR)) return { kind: "deck" };
   for (const selector of SLIDE_SELECTORS) {
     const n = doc.querySelectorAll(selector).length;
     if (n >= 2) return { kind: "elements", selector, count: n };
   }
   return null;
+}
+
+// Static form, for documents that need no script to exist (and for tests).
+export function detectSlides(html: string): SlideKind {
+  return detectSlidesIn(new DOMParser().parseFromString(html, "text/html"));
 }

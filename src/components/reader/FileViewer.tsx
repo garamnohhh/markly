@@ -5,7 +5,7 @@ import { getHighlighter, normalizeLang } from "../../lib/shiki";
 import { createFileEditor } from "../../lib/fileEditor";
 import { getMermaid } from "../../lib/mermaid";
 import { registerFindTarget } from "../../lib/find";
-import { detectSlides, withAssetBase } from "../../lib/slides";
+import { detectSlidesIn, withAssetBase } from "../../lib/slides";
 import type { SlideKind } from "../../lib/slides";
 import { SlideshowOverlay } from "./SlideshowOverlay";
 import { EditorView } from "@codemirror/view";
@@ -115,7 +115,7 @@ function FileEditorHost({
 // Tauri injects its IPC-init script into this same-origin iframe too; it fails there
 // ("__TAURI_INTERNALS__.transformCallback undefined") and WKWebView surfaces the
 // rejection on the top window. That's swallowed in main.tsx (see isTauriFrameNoise).
-function HtmlPreview({ text, name }: { text: string; name: string }) {
+function HtmlPreview({ text, name, onDetect }: { text: string; name: string; onDetect?: (k: SlideKind) => void }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [src, setSrc] = useState<string | null>(null);
 
@@ -131,6 +131,20 @@ function HtmlPreview({ text, name }: { text: string; name: string }) {
   function forwardKeys() {
     const cw = iframeRef.current?.contentWindow;
     if (!cw) return;
+    // Slide detection runs against the live document, and a single-file deck
+    // export builds its slides from script — so re-check for a while instead of
+    // deciding once at load.
+    if (onDetect) {
+      let found = false;
+      for (const delay of [0, 300, 1200, 2500]) {
+        setTimeout(() => {
+          if (found || !iframeRef.current) return;
+          const doc = iframeRef.current.contentDocument;
+          const kind = doc ? detectSlidesIn(doc) : null;
+          if (kind) { found = true; onDetect(kind); }
+        }, delay);
+      }
+    }
     if (!cw.document.querySelector("style[data-markly-find]")) {
       const style = cw.document.createElement("style");
       style.dataset.marklyFind = "";
@@ -282,8 +296,8 @@ function MmdPreview({ text }: { text: string }) {
   );
 }
 
-function RenderView({ text, fileExt, name }: { text: string; fileExt: string; name: string }) {
-  if (fileExt === "html" || fileExt === "htm") return <HtmlPreview text={text} name={name} />;
+function RenderView({ text, fileExt, name, onDetect }: { text: string; fileExt: string; name: string; onDetect?: (k: SlideKind) => void }) {
+  if (fileExt === "html" || fileExt === "htm") return <HtmlPreview text={text} name={name} onDetect={onDetect} />;
   if (fileExt === "svg") return <SvgPreview text={text} name={name} />;
   if (fileExt === "csv" || fileExt === "tsv") return <CsvPreview text={text} fileExt={fileExt} />;
   if (fileExt === "mmd") return <MmdPreview text={text} />;
@@ -332,11 +346,10 @@ export function FileViewer() {
 
   // Slideshow is offered only for HTML that actually looks like slides, and for
   // PDFs (already paginated). Prose HTML gets no button — we don't guess breaks.
-  const slideKind: SlideKind = useMemo(() => {
-    if (isPdf) return { kind: "pdf" };
-    if (!isHtml || !text) return null;
-    return detectSlides(text);
-  }, [isPdf, isHtml, text]);
+  // HTML is judged by the rendered preview (see HtmlPreview), not by its source.
+  const [htmlKind, setHtmlKind] = useState<SlideKind>(null);
+  useEffect(() => { setHtmlKind(null); }, [relPath]);
+  const slideKind: SlideKind = isPdf ? { kind: "pdf" } : isHtml ? htmlKind : null;
 
   const maxW = editorWidth === "wide" ? "var(--spacing-reading-wide)" : "var(--spacing-reading)";
 
@@ -414,7 +427,7 @@ export function FileViewer() {
     if (RENDER_EXTS.has(fileExt) && !fileEditMode) {
       return (
         <div className="relative flex min-w-0 flex-1">
-          <RenderView text={isHtml ? htmlText : text} fileExt={fileExt} name={name} />
+          <RenderView text={isHtml ? htmlText : text} fileExt={fileExt} name={name} onDetect={setHtmlKind} />
           {slideshow}
         </div>
       );
