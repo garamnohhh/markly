@@ -102,13 +102,25 @@ function FileEditorHost({
 
 // HTML preview — forwards keydown from iframe to outer window so useKeymap works.
 //
+// Served from a blob: URL rather than srcdoc. In a srcdoc frame the document is
+// `about:srcdoc`, so relative URLs (incl. bare "#frag") resolve against the PARENT
+// (tauri://localhost) and the frame cannot own a hash at all — history/hash writes
+// throw SecurityError. That left hash-routed single-file docs (nav links driving
+// `hashchange`) completely dead. A blob URL gives the frame a real origin, so
+// in-page anchors and hashchange routing work natively, like in a browser.
+//
 // Tauri injects its IPC-init script into this same-origin iframe too; it fails there
 // ("__TAURI_INTERNALS__.transformCallback undefined") and WKWebView surfaces the
-// rejection on the top window. That's swallowed in main.tsx (see isTauriFrameNoise) —
-// no per-iframe guard needed, and none can run before Tauri's document_start script
-// anyway. allow-same-origin stays: dropping it blanks the frame on #anchor clicks.
+// rejection on the top window. That's swallowed in main.tsx (see isTauriFrameNoise).
 function HtmlPreview({ text, name }: { text: string; name: string }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [src, setSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    const url = URL.createObjectURL(new Blob([text], { type: "text/html" }));
+    setSrc(url);
+    return () => URL.revokeObjectURL(url);
+  }, [text]);
 
   function forwardKeys() {
     const cw = iframeRef.current?.contentWindow;
@@ -129,29 +141,24 @@ function HtmlPreview({ text, name }: { text: string; name: string }) {
         bubbles: true, cancelable: true,
       }));
     }, true);
-    // In a srcdoc iframe, relative URLs (incl. bare "#frag") resolve against the PARENT
-    // document's base URL (tauri://localhost), so native anchor nav loads the whole app
-    // into the frame → onboarding screen. Intercept every anchor: scroll for in-page
-    // "#frag", block everything else (file:// paths fail in Tauri anyway).
+    // In-page anchors and hash routing are native here. Only block navigation
+    // that would replace the preview (external/file links); those can't load in
+    // the frame anyway.
     cw.document.addEventListener("click", (e) => {
       const a = (e.target as Element).closest("a");
       if (!a) return;
       const href = a.getAttribute("href") ?? "";
-      if (!href.startsWith("#")) { e.preventDefault(); return; }
+      if (!href || href.startsWith("#")) return; // let the document handle it
       e.preventDefault();
-      const id = decodeURIComponent(href.slice(1));
-      if (!id) { cw.scrollTo({ top: 0, behavior: "smooth" }); return; }
-      const target =
-        cw.document.getElementById(id) ??
-        cw.document.querySelector(`a[name="${id.replace(/"/g, '\\"')}"]`);
-      target?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, true);
   }
+
+  if (!src) return <div style={{ flex: 1 }} />;
 
   return (
     <iframe
       ref={iframeRef}
-      srcDoc={text}
+      src={src}
       onLoad={forwardKeys}
       sandbox="allow-scripts allow-same-origin allow-forms"
       style={{ flex: 1, border: "none", width: "100%", height: "100%" }}
