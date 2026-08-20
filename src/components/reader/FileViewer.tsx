@@ -1,10 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "../../store";
 import { api } from "../../lib/invoke";
 import { getHighlighter, normalizeLang } from "../../lib/shiki";
 import { createFileEditor } from "../../lib/fileEditor";
 import { getMermaid } from "../../lib/mermaid";
 import { registerFindTarget } from "../../lib/find";
+import { detectSlides, withAssetBase } from "../../lib/slides";
+import type { SlideKind } from "../../lib/slides";
+import { SlideshowOverlay } from "./SlideshowOverlay";
 import { EditorView } from "@codemirror/view";
 
 // svg moved out of IMAGE_EXTS so it becomes editable text
@@ -121,6 +124,9 @@ function HtmlPreview({ text, name }: { text: string; name: string }) {
     setSrc(url);
     return () => URL.revokeObjectURL(url);
   }, [text]);
+  // `text` already carries a <base> pointing at the file's directory (see
+  // FileViewer) — a blob: URL has no directory of its own, so without it the
+  // document's relative stylesheets, scripts and images never load.
 
   function forwardKeys() {
     const cw = iframeRef.current?.contentWindow;
@@ -164,6 +170,26 @@ function HtmlPreview({ text, name }: { text: string; name: string }) {
       style={{ flex: 1, border: "none", width: "100%", height: "100%" }}
       title={name}
     />
+  );
+}
+
+// Entry point for the slideshow. Rendered only next to an HTML deck or a PDF —
+// see `slideKind` in FileViewer.
+function SlideButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      title="Slideshow"
+      className="absolute right-3 top-3 z-10 flex items-center gap-1.5 rounded-control px-2.5 py-1 text-[12px] font-medium text-slate transition-colors hover:bg-tertiary hover:text-ink"
+      style={{ background: "var(--color-surface)", border: "1px solid var(--color-line)" }}
+    >
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round">
+        <rect x="2" y="3" width="12" height="8" rx="1.5" />
+        <path d="M6.6 5.8v3.4l3-1.7z" fill="currentColor" stroke="none" />
+        <path d="M5.5 13.5h5" strokeLinecap="round" />
+      </svg>
+      Slides
+    </button>
   );
 }
 
@@ -270,6 +296,8 @@ export function FileViewer() {
   const relPath = useStore((s) => s.openFilePath)!;
   const fileEditMode = useStore((s) => s.fileEditMode);
   const editorWidth = useStore((s) => s.editorWidth);
+  const vaultRoot = useStore((s) => s.vaultRoot);
+  const [showSlides, setShowSlides] = useState(false);
 
   const [b64, setB64] = useState<string | null>(null);
   const [text, setText] = useState<string>("");
@@ -291,6 +319,24 @@ export function FileViewer() {
   const isText = TEXT_EXTS.has(fileExt) || fileExt === "";
   const isImage = IMAGE_EXTS.has(fileExt);
   const isPdf = fileExt === "pdf";
+  const isHtml = fileExt === "html" || fileExt === "htm";
+
+  // Absolute directory of this file, used as the <base> for its sibling assets.
+  const assetDir = vaultRoot
+    ? [vaultRoot.replace(/\/$/, ""), ...relPath.split("/").slice(0, -1)].join("/")
+    : null;
+  const htmlText = useMemo(
+    () => (isHtml && assetDir ? withAssetBase(text, assetDir) : text),
+    [isHtml, assetDir, text],
+  );
+
+  // Slideshow is offered only for HTML that actually looks like slides, and for
+  // PDFs (already paginated). Prose HTML gets no button — we don't guess breaks.
+  const slideKind: SlideKind = useMemo(() => {
+    if (isPdf) return { kind: "pdf" };
+    if (!isHtml || !text) return null;
+    return detectSlides(text);
+  }, [isPdf, isHtml, text]);
 
   const maxW = editorWidth === "wide" ? "var(--spacing-reading-wide)" : "var(--spacing-reading)";
 
@@ -335,18 +381,43 @@ export function FileViewer() {
     </div>
   );
 
+  const pdfSrc = isPdf ? `data:application/pdf;base64,${b64}` : undefined;
+
+  const slideshow = slideKind && (
+    <>
+      <SlideButton onClick={() => setShowSlides(true)} />
+      {showSlides && (
+        <SlideshowOverlay
+          kind={slideKind}
+          html={isHtml ? htmlText : undefined}
+          pdfSrc={pdfSrc}
+          name={name}
+          onClose={() => setShowSlides(false)}
+        />
+      )}
+    </>
+  );
+
   if (isPdf) return (
-    <iframe
-      src={`data:application/pdf;base64,${b64}`}
-      style={{ flex: 1, border: "none", width: "100%" }}
-      title={name}
-    />
+    <div className="relative min-w-0 flex-1">
+      <iframe
+        src={pdfSrc}
+        style={{ flex: 1, border: "none", width: "100%", height: "100%" }}
+        title={name}
+      />
+      {slideshow}
+    </div>
   );
 
   if (isText) {
     // Render mode: view = visual render, edit = raw code
     if (RENDER_EXTS.has(fileExt) && !fileEditMode) {
-      return <RenderView text={text} fileExt={fileExt} name={name} />;
+      return (
+        <div className="relative flex min-w-0 flex-1">
+          <RenderView text={isHtml ? htmlText : text} fileExt={fileExt} name={name} />
+          {slideshow}
+        </div>
+      );
     }
 
     return (
