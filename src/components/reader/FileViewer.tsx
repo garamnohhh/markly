@@ -5,7 +5,7 @@ import { getHighlighter, normalizeLang } from "../../lib/shiki";
 import { createFileEditor } from "../../lib/fileEditor";
 import { getMermaid } from "../../lib/mermaid";
 import { registerFindTarget } from "../../lib/find";
-import { detectSlidesIn, withAssetBase } from "../../lib/slides";
+import { detectSlidesIn, needsAssetBase, withAssetBase } from "../../lib/slides";
 import type { SlideKind } from "../../lib/slides";
 import { SlideshowOverlay } from "./SlideshowOverlay";
 import { EditorView } from "@codemirror/view";
@@ -168,7 +168,25 @@ function HtmlPreview({ text, name, onDetect }: { text: string; name: string; onD
       const a = (e.target as Element).closest("a");
       if (!a) return;
       const href = a.getAttribute("href") ?? "";
-      if (!href || href.startsWith("#")) return; // let the document handle it
+      // Drive in-page fragments ourselves. Native handling resolves "#frag"
+      // against the <base> when one is present, which points at a different
+      // document and makes the link do nothing at all. Assigning location.hash
+      // both scrolls and fires hashchange, so plain anchors and hash-routed
+      // documents keep working whether or not a base was injected.
+      if (href.startsWith("#")) {
+        e.preventDefault();
+        const frag = href.slice(1);
+        if (!frag) { cw.scrollTo({ top: 0, behavior: "smooth" }); return; }
+        if (cw.location.hash === href) {
+          // Re-clicking the current target: the setter is a no-op, so scroll.
+          cw.document.getElementById(decodeURIComponent(frag))
+            ?.scrollIntoView({ behavior: "smooth", block: "start" });
+          return;
+        }
+        cw.location.hash = frag;
+        return;
+      }
+      if (!href) return;
       e.preventDefault();
     }, true);
   }
@@ -339,8 +357,11 @@ export function FileViewer() {
   const assetDir = vaultRoot
     ? [vaultRoot.replace(/\/$/, ""), ...relPath.split("/").slice(0, -1)].join("/")
     : null;
+  // Only documents that reference sibling files get a <base>. It is what makes
+  // their assets load, but it also re-points bare "#frag" links at the base URL,
+  // so a self-contained document is left exactly as authored.
   const htmlText = useMemo(
-    () => (isHtml && assetDir ? withAssetBase(text, assetDir) : text),
+    () => (isHtml && assetDir && needsAssetBase(text) ? withAssetBase(text, assetDir) : text),
     [isHtml, assetDir, text],
   );
 

@@ -32,6 +32,21 @@ export function withAssetBase(html: string, absDir: string): string {
   return `<head>${tag}</head>\n${html}`;
 }
 
+// Does this document actually reference a sibling file? A <base> is what makes
+// those resolve, but it also re-points every bare "#frag" at the base URL, so a
+// self-contained document is strictly better off without one.
+const RELATIVE_REF =
+  /<(?:link|script|img|source|iframe|video|audio|embed)\b[^>]*?\b(?:href|src)\s*=\s*["']([^"'#][^"']*)["']/gi;
+const ABSOLUTE = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
+
+export function needsAssetBase(html: string): boolean {
+  RELATIVE_REF.lastIndex = 0;
+  for (let m = RELATIVE_REF.exec(html); m; m = RELATIVE_REF.exec(html)) {
+    if (!ABSOLUTE.test(m[1])) return true;
+  }
+  return false;
+}
+
 export type SlideKind =
   // The document ships its own slide runtime (deck-stage) and its own key
   // handling. We give it the screen and stay out of the way.

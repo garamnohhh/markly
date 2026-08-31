@@ -1,4 +1,4 @@
-import { assetBaseHref, withAssetBase } from "./slides.ts";
+import { assetBaseHref, needsAssetBase, withAssetBase } from "./slides.ts";
 
 function equal(actual: unknown, expected: unknown) {
   if (JSON.stringify(actual) !== JSON.stringify(expected)) {
@@ -33,5 +33,15 @@ equal(withAssetBase("<html><body>x</body></html>", "/d").includes("<head><base")
 // An author-supplied <base> is left alone.
 const authored = '<html><head><base href="https://x/"></head></html>';
 equal(withAssetBase(authored, "/d"), authored);
+
+// A <base> is only worth its side effects when something actually needs it.
+// Injecting one into a self-contained document re-points bare "#frag" links at
+// the base URL and kills in-page navigation — the bug this guard prevents.
+equal(needsAssetBase('<html><body><a href="#index">x</a></body></html>'), false);
+equal(needsAssetBase('<link rel="stylesheet" href="https://cdn/x.css">'), false);
+equal(needsAssetBase('<script src="//cdn/x.js"></script>'), false);
+equal(needsAssetBase('<script src="./support.js"></script>'), true);
+equal(needsAssetBase('<link rel="stylesheet" href="_ds/styles.css">'), true);
+equal(needsAssetBase('<img src="assets/logo.svg">'), true);
 
 console.log("slides tests passed");
