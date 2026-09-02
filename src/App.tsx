@@ -51,6 +51,17 @@ function App() {
     return () => { p.then((fn) => fn()); q.then((fn) => fn()); };
   }, []);
 
+  // Safety net for the events macOS drops on its own (sleep/wake, heavy load,
+  // cloud-synced folders): refresh the listing whenever the window comes back.
+  // Only the cheap walk — measured at ~50ms against a 6,000-file Base, where a
+  // full markdown rescan costs ~630ms and would stutter every window switch.
+  // Markdown changes are covered by the watcher, so they don't need this.
+  useEffect(() => {
+    const onFocus = () => { void useStore.getState().loadNonMdFiles(); };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, []);
+
   // Scan the persisted Base once on launch to catch changes made while closed.
   // A missing/unreadable Base must not strand the app on "Loading…" — fall
   // back to onboarding so there's always a way forward.

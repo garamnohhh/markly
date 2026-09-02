@@ -5,13 +5,14 @@ use crate::vault::diff::DiffResult;
 use crate::vault::DocContent;
 use notify::{Event, RecommendedWatcher, RecursiveMode, Watcher};
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use tauri::{Emitter, State};
 
 pub struct VaultState {
     pub root: Mutex<Option<PathBuf>>,
     watcher: Mutex<Option<RecommendedWatcher>>,
+    pending: Arc<Mutex<Coalescer>>,
+    flusher_started: Mutex<bool>,
 }
 
 impl Default for VaultState {
@@ -19,7 +20,58 @@ impl Default for VaultState {
         Self {
             root: Mutex::new(None),
             watcher: Mutex::new(None),
+            pending: Arc::new(Mutex::new(Coalescer::default())),
+            flusher_started: Mutex::new(false),
         }
+    }
+}
+
+fn now_ms() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis() as u64
+}
+
+/// How long the filesystem must be quiet before we announce what changed.
+const QUIET_MS: u64 = 400;
+
+/// Remembers what kinds of thing changed and releases them only once the
+/// filesystem has gone quiet.
+///
+/// The previous rule announced the FIRST event of a burst and then ignored
+/// everything for 500ms. One user action arrives as a burst — creating a folder
+/// holding two notes produced 11 events in the same millisecond — so the first
+/// event decided the whole burst and the rest were dropped for good. When that
+/// first event happened to be the folder rather than a note, only
+/// "files-changed" was sent and the new markdown never appeared. The leading
+/// edge was wrong for a second reason too: the frontend re-read the vault while
+/// the remaining files were still landing.
+#[derive(Default)]
+struct Coalescer {
+    md: bool,
+    other: bool,
+    last_ms: u64,
+}
+
+impl Coalescer {
+    fn note(&mut self, md: bool, other: bool, now: u64) {
+        if !(md || other) {
+            return;
+        }
+        self.md |= md;
+        self.other |= other;
+        self.last_ms = now;
+    }
+
+    fn take_if_quiet(&mut self, now: u64, quiet: u64) -> Option<(bool, bool)> {
+        if !(self.md || self.other) || now.saturating_sub(self.last_ms) < quiet {
+            return None;
+        }
+        let out = (self.md, self.other);
+        self.md = false;
+        self.other = false;
+        Some(out)
     }
 }
 
@@ -74,31 +126,18 @@ pub fn scan_vault(
     let db = vault::scan(&r)?;
     *state.root.lock().unwrap() = Some(r.clone());
 
-    // (Re)start file watcher — debounce 500ms to avoid scan storms
+    // (Re)start the file watcher. Events are coalesced and announced once the
+    // filesystem goes quiet — see Coalescer for why the leading edge lost changes.
     let markly = r.join(".markly");
-    let app_h = app.clone();
-    let last_ms2 = Arc::new(AtomicU64::new(0));
-    let last_ms3 = last_ms2.clone();
+    let pending = state.pending.clone();
 
     let mut w = notify::recommended_watcher(move |res: notify::Result<Event>| {
         if let Ok(ev) = res {
             let (md_changed, file_changed) = classify_paths(&ev.paths, &markly);
-            let relevant = md_changed || file_changed;
-            if relevant {
-                let now = std::time::SystemTime::now()
-                    .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap_or_default()
-                    .as_millis() as u64;
-                let prev = last_ms3.load(Ordering::Relaxed);
-                if now.saturating_sub(prev) > 500 {
-                    last_ms3.store(now, Ordering::Relaxed);
-                    if md_changed {
-                        app_h.emit("vault-changed", ()).ok();
-                    } else {
-                        app_h.emit("files-changed", ()).ok();
-                    }
-                }
-            }
+            pending
+                .lock()
+                .unwrap()
+                .note(md_changed, file_changed, now_ms());
         }
     })
     .map_err(|e| e.to_string())?;
@@ -106,6 +145,30 @@ pub fn scan_vault(
     w.watch(&r, RecursiveMode::Recursive)
         .map_err(|e| e.to_string())?;
     *state.watcher.lock().unwrap() = Some(w);
+
+    // One flusher for the app's lifetime; switching vaults replaces the watcher
+    // above but keeps writing into the same pending state.
+    {
+        let mut started = state.flusher_started.lock().unwrap();
+        if !*started {
+            *started = true;
+            let pending = state.pending.clone();
+            let app_h = app.clone();
+            std::thread::spawn(move || loop {
+                std::thread::sleep(std::time::Duration::from_millis(100));
+                let ready = pending.lock().unwrap().take_if_quiet(now_ms(), QUIET_MS);
+                if let Some((md, other)) = ready {
+                    // A markdown rescan refreshes the file listing too, so the
+                    // heavier event stands in for both.
+                    if md {
+                        app_h.emit("vault-changed", ()).ok();
+                    } else if other {
+                        app_h.emit("files-changed", ()).ok();
+                    }
+                }
+            });
+        }
+    }
 
     Ok(db)
 }
@@ -311,9 +374,47 @@ pub fn copy_diagram_image(app: tauri::AppHandle, svg: String) -> Result<(), Stri
     app.clipboard().write_image(&image).map_err(|e| e.to_string())
 }
 
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // One user action arrives as a burst. Measured against a real watcher,
+    // creating a folder holding a .html and two .md files produced 11 events in
+    // the same millisecond, folder first. The old leading-edge rule announced
+    // only that first event, so the new notes were never announced at all.
+    #[test]
+    fn a_burst_announces_every_kind_it_contained() {
+        let mut c = Coalescer::default();
+        c.note(false, true, 1000); // newfolder
+        c.note(false, true, 1000); // a.html
+        c.note(true, false, 1000); // b.md
+        c.note(true, false, 1000); // c.md
+
+        // Nothing escapes while the filesystem is still busy.
+        assert_eq!(c.take_if_quiet(1200, QUIET_MS), None);
+        // Once quiet, both kinds are reported — not just the first one seen.
+        assert_eq!(c.take_if_quiet(1500, QUIET_MS), Some((true, true)));
+        // And the pending state is cleared, so it fires once per burst.
+        assert_eq!(c.take_if_quiet(9000, QUIET_MS), None);
+    }
+
+    #[test]
+    fn trailing_events_extend_the_quiet_window() {
+        let mut c = Coalescer::default();
+        c.note(false, true, 1000);
+        assert_eq!(c.take_if_quiet(1300, QUIET_MS), None);
+        c.note(false, true, 1350); // still arriving — wait longer
+        assert_eq!(c.take_if_quiet(1600, QUIET_MS), None);
+        assert_eq!(c.take_if_quiet(1800, QUIET_MS), Some((false, true)));
+    }
+
+    #[test]
+    fn ignored_paths_never_arm_the_flush() {
+        let mut c = Coalescer::default();
+        c.note(false, false, 1000); // .markly snapshot, sqlite WAL, .DS_Store…
+        assert_eq!(c.take_if_quiet(9000, QUIET_MS), None);
+    }
 
     #[test]
     fn classify_routes_md_vs_files_and_ignores_noise() {
