@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { LogoTile } from "../components/ui/Logo";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { useStore, formatShortcut, DEFAULT_SHORTCUTS, DEFAULT_TEMPLATES } from "../store";
 import type { Template } from "../store";
@@ -726,22 +727,11 @@ function AboutTab() {
         About
       </div>
       <div
-        className="flex items-center gap-[14px] rounded-[12px] border border-line bg-surface"
+        className="flex items-center gap-[14px] border border-line bg-surface"
         style={{ padding: 16 }}
       >
-        <div
-          style={{
-            width: 52, height: 52, borderRadius: "24%",
-            background: "linear-gradient(150deg,var(--color-tertiary),var(--color-paper))",
-            position: "relative", display: "flex", alignItems: "center",
-            justifyContent: "center", flexShrink: 0,
-          }}
-        >
-          <svg width="28" height="28" viewBox="0 0 48 48" fill="none" stroke="var(--color-surface)" strokeWidth="4.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M11 36V12l13 22 13-22v24" />
-          </svg>
-          <span style={{ position: "absolute", top: 10, right: 10, width: 6.5, height: 6.5, borderRadius: "50%", background: "var(--color-gold)" }} />
-        </div>
+        {/* The one screen that carries the full 128px tile (handoff, 16 · 설정 — 정보). */}
+        <LogoTile size={128} />
         <div style={{ flex: 1 }}>
           <div className="text-ink" style={{ fontSize: 15, fontWeight: 600 }}>
             Markly{" "}
