@@ -35,7 +35,7 @@ export function OutlinePanel({
       {/* Drag handle — left edge */}
       <div
         onMouseDown={onDragStart}
-        className="absolute left-0 top-0 h-full w-[4px] cursor-col-resize hover:bg-[#caa53d20]"
+        className="absolute left-0 top-0 h-full w-[4px] cursor-col-resize hover:bg-[var(--color-gold)20]"
         style={{ zIndex: 1 }}
       />
       <div

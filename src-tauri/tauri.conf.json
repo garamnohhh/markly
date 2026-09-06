@@ -16,7 +16,7 @@
         "title": "Markly",
         "width": 1280,
         "height": 800,
-        "minWidth": 900,
+        "minWidth": 960,
         "minHeight": 600,
         "decorations": false,
         "transparent": true,

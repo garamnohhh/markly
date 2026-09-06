@@ -6,13 +6,13 @@ import { docName, docDirs } from "../../lib/types";
 import type { DocEntry } from "../../lib/types";
 
 const EXT_COLORS: Record<string, string> = {
-  pdf: "#c2705b",
+  pdf: "var(--color-red)",
   png: "#8250df", jpg: "#8250df", jpeg: "#8250df", gif: "#8250df", webp: "#8250df", svg: "#8250df",
   json: "#d0834a", yaml: "#d0834a", yml: "#d0834a", toml: "#d0834a",
   js: "#4a78b0", ts: "#4a78b0", jsx: "#4a78b0", tsx: "#4a78b0",
-  py: "#6a9a5b", go: "#6a9a5b", rs: "#d0834a",
-  csv: "#6a9a5b", sh: "#56534d", bash: "#56534d",
-  html: "#c2705b", css: "#4a78b0", scss: "#4a78b0",
+  py: "var(--color-green)", go: "var(--color-green)", rs: "#d0834a",
+  csv: "var(--color-green)", sh: "var(--color-slate)", bash: "var(--color-slate)",
+  html: "var(--color-red)", css: "#4a78b0", scss: "#4a78b0",
 };
 function FocusIcon({ on }: { on?: boolean }) {
   return (
@@ -68,7 +68,7 @@ export function TitleBar() {
     <header
       data-tauri-drag-region
       data-find-exclude
-      className="flex h-[38px] shrink-0 items-center gap-3 border-b border-line bg-surface px-[18px] select-none"
+      className="flex h-[54px] shrink-0 items-center gap-3 border-b border-line bg-surface px-[18px] select-none"
     >
       <TrafficLights />
 
@@ -162,7 +162,7 @@ export function TitleBar() {
             title={mode === "edit" ? "Read mode (⌘E)" : "Edit mode (⌘E)"}
             className={`flex items-center gap-1.5 rounded-control px-2.5 py-1 text-[12px] font-medium transition-colors ${
               mode === "edit"
-                ? "text-[#5a8a5a] hover:bg-tertiary"
+                ? "text-[var(--color-green)] hover:bg-tertiary"
                 : "text-slate hover:bg-tertiary hover:text-ink"
             }`}
           >
@@ -176,7 +176,7 @@ export function TitleBar() {
             title={fileEditMode ? "View mode (⌘E)" : "Edit mode (⌘E)"}
             className={`flex items-center gap-1.5 rounded-control px-2.5 py-1 text-[12px] font-medium transition-colors ${
               fileEditMode
-                ? "text-[#5a8a5a] hover:bg-tertiary"
+                ? "text-[var(--color-green)] hover:bg-tertiary"
                 : "text-slate hover:bg-tertiary hover:text-ink"
             }`}
           >
@@ -486,9 +486,9 @@ function TrafficLights() {
   const win = () => getCurrentWindow();
   return (
     <div className="flex items-center gap-2">
-      <Dot color="#ff5f57" hover="#e0443e" label="Close" onClick={() => win().close()} />
-      <Dot color="#febc2e" hover="#d89e25" label="Minimize" onClick={() => win().minimize()} />
-      <Dot color="#28c840" hover="#1fa732" label="Zoom" onClick={() => win().toggleMaximize()} />
+      <Dot color="#ff5f57" hover="var(--color-red)" label="Close" onClick={() => win().close()} />
+      <Dot color="#febc2e" hover="var(--color-gold)" label="Minimize" onClick={() => win().minimize()} />
+      <Dot color="#28c840" hover="var(--color-green)" label="Zoom" onClick={() => win().toggleMaximize()} />
     </div>
   );
 }

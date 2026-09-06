@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useViewport } from "../../hooks/useViewport";
 import { useStore } from "../../store";
 import { api } from "../../lib/invoke";
 import { extractHeadings, splitFrontmatter } from "../../lib/markdown";
@@ -18,6 +19,7 @@ export function DocReader() {
   const editorWidth = useStore((s) => s.editorWidth);
   const tocVisible = useStore((s) => s.tocVisible);
   const focusMode = useStore((s) => s.focusMode);
+  const { panelFits } = useViewport();
   const doc = useStore((s) => (s.db ? s.db.docs[docId] : undefined));
 
   const pendingScrollSlug = useStore((s) => s.pendingScrollSlug);
@@ -242,14 +244,14 @@ export function DocReader() {
           <div
             className="pointer-events-none absolute inset-[10px] rounded-[13px]"
             style={{
-              border: "1.5px solid #cfcbc1",
+              border: "1.5px solid var(--color-line)",
               boxShadow: "inset 0 0 0 3px rgba(44,42,39,0.025)",
             }}
           />
         )}
       </div>
 
-      {tocVisible && !focusMode && (
+      {tocVisible && !focusMode && panelFits && (
         <OutlinePanel
           headings={headings}
           progress={progress}
@@ -280,7 +282,7 @@ export function DocReader() {
           >
             {mode === "edit" ? (
               <>
-                <span className="inline-block size-[6px] shrink-0 rounded-full bg-[#9cc59c]" />
+                <span className="inline-block size-[6px] shrink-0 rounded-full bg-[var(--color-green)]" />
                 <span>
                   Editing ·{" "}
                   <span
