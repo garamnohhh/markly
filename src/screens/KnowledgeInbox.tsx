@@ -161,8 +161,8 @@ export function KnowledgeInbox() {
                   height: 20,
                   padding: "0 7px",
                   borderRadius: 10,
-                  background: "#caa53d",
-                  color: "#1b1a18",
+                  background: "var(--color-gold)",
+                  color: "var(--color-surface)",
                   fontSize: 11,
                   fontWeight: 700,
                 }}
@@ -253,9 +253,9 @@ export function KnowledgeInbox() {
           {/* Pinned */}
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 12 }}>
-              <svg width="13" height="13" viewBox="0 0 16 16" fill="#caa53d">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="var(--color-gold)">
                 <path d="M5 2.5h6l-.6 4 2.1 2.2H3.5L5.6 6.5z" />
-                <path d="M8 10.7V13.5" stroke="#caa53d" strokeWidth="1.4" strokeLinecap="round" />
+                <path d="M8 10.7V13.5" stroke="var(--color-gold)" strokeWidth="1.4" strokeLinecap="round" />
               </svg>
               <span className="text-muted" style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>
                 Pinned

@@ -162,7 +162,7 @@ export function Sidebar() {
           className="flex w-full items-center gap-2 rounded-[9px] border border-line bg-paper px-[11px] text-left hover:border-mid"
           style={{ height: "34px" }}
         >
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#a9a69c" strokeWidth="1.5">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="var(--color-mid)" strokeWidth="1.5">
             <circle cx="7" cy="7" r="4.5" />
             <path d="M11 11l3 3" strokeLinecap="round" />
           </svg>
@@ -248,7 +248,7 @@ export function Sidebar() {
       {/* Drag handle — right edge */}
       <div
         onMouseDown={onDragStart}
-        className="absolute right-0 top-0 h-full w-[4px] cursor-col-resize hover:bg-[#caa53d20]"
+        className="absolute right-0 top-0 h-full w-[4px] cursor-col-resize hover:bg-[var(--color-gold)20]"
         style={{ zIndex: 1 }}
       />
     </aside>

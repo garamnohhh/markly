@@ -52,14 +52,14 @@ function countFiles(node: TreeNode): number {
 
 // Extension → badge color
 const EXT_COLORS: Record<string, string> = {
-  pdf: "#c2705b",
+  pdf: "var(--color-red)",
   png: "#8250df", jpg: "#8250df", jpeg: "#8250df", gif: "#8250df", webp: "#8250df", svg: "#8250df",
   json: "#d0834a", yaml: "#d0834a", yml: "#d0834a", toml: "#d0834a",
   js: "#4a78b0", ts: "#4a78b0", jsx: "#4a78b0", tsx: "#4a78b0",
-  py: "#6a9a5b", go: "#6a9a5b", rs: "#d0834a",
-  csv: "#6a9a5b",
-  sh: "#56534d", bash: "#56534d",
-  html: "#c2705b", css: "#4a78b0", scss: "#4a78b0",
+  py: "var(--color-green)", go: "var(--color-green)", rs: "#d0834a",
+  csv: "var(--color-green)",
+  sh: "var(--color-slate)", bash: "var(--color-slate)",
+  html: "var(--color-red)", css: "#4a78b0", scss: "#4a78b0",
 };
 
 function ExtBadge({ name }: { name: string }) {
@@ -505,7 +505,7 @@ function NonDocCtxMenu({
               <button
                 onClick={() => void handleDelete()}
                 className="flex w-full items-center px-[13px] py-[8px] text-left text-[13px] hover:bg-tertiary"
-                style={{ color: "#c2705b" }}
+                style={{ color: "var(--color-red)" }}
               >
                 Delete
               </button>

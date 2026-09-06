@@ -13,7 +13,7 @@ getHighlighter();
 function showFatal(msg: string) {
   const el = document.getElementById("root");
   if (el)
-    el.innerHTML = `<pre style="white-space:pre-wrap;padding:24px;font:13px monospace;color:#c2705b">${msg}</pre>`;
+    el.innerHTML = `<pre style="white-space:pre-wrap;padding:24px;font:13px monospace;color:var(--color-red)">${msg}</pre>`;
 }
 // Tauri's IPC-init script runs in every frame, including sandboxed HTML-preview
 // iframes (same-origin via allow-same-origin). In a frame it never registers with,

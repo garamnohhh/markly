@@ -182,15 +182,15 @@ const docsList = (db: Db | null): DocEntry[] =>
 function _build() { return create<AppState>()(
   persist(
     (set, get) => ({
-      theme: "light",
+      theme: "dark",
       vaultRoot: null,
       vaults: [],
       editorWidth: "normal",
       acceptChangesOnClose: false,
       markReadOnDocClose: false,
       expandedFolders: [],
-      sidebarWidth: 380,
-      tocWidth: 360,
+      sidebarWidth: 268,
+      tocWidth: 268,
       showEmptySections: true,
       shortcuts: DEFAULT_SHORTCUTS,
       templates: DEFAULT_TEMPLATES,
@@ -311,7 +311,7 @@ function _build() { return create<AppState>()(
             : [...s.expandedFolders, path],
         })),
       setSidebarWidth: (w) =>
-        set({ sidebarWidth: Math.min(380, Math.max(256, w)) }),
+        set({ sidebarWidth: Math.min(380, Math.max(212, w)) }),
       setTocWidth: (w) =>
         set({ tocWidth: Math.min(360, Math.max(212, w)) }),
       setShowEmptySections: (showEmptySections) => set({ showEmptySections }),
@@ -494,6 +494,10 @@ function _build() { return create<AppState>()(
           ...current,
           ...p,
           vaults: root && !vaults.includes(root) ? [root, ...vaults] : vaults,
+          // Panel widths move to the handoff's 268px. Only the previous
+          // defaults are migrated — a width the user dragged to is theirs.
+          sidebarWidth: p.sidebarWidth === 380 ? 268 : (p.sidebarWidth ?? 268),
+          tocWidth: p.tocWidth === 360 ? 268 : (p.tocWidth ?? 268),
           shortcuts: { ...DEFAULT_SHORTCUTS, ...(p.shortcuts ?? {}) },
           templates: p.templates ?? DEFAULT_TEMPLATES,
         };

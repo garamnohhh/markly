@@ -426,7 +426,7 @@ function PinIcon() {
       height="12"
       viewBox="0 0 16 16"
       fill="none"
-      stroke="#caa53d"
+      stroke="var(--color-gold)"
       strokeWidth="1.3"
       strokeLinecap="round"
       strokeLinejoin="round"

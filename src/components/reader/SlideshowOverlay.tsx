@@ -140,7 +140,7 @@ export function SlideshowOverlay({
         {paging && count > 0 && (
           <span
             className="rounded-control px-2 py-1 text-[11px] tabular-nums"
-            style={{ background: "rgba(0,0,0,0.55)", color: "#e8e6e1", fontFamily: "var(--font-mono)" }}
+            style={{ background: "rgba(0,0,0,0.55)", color: "var(--color-ink)", fontFamily: "var(--font-mono)" }}
           >
             {index + 1} / {count}
           </span>
@@ -148,7 +148,7 @@ export function SlideshowOverlay({
         <button
           onClick={onClose}
           className="pointer-events-auto rounded-control px-2 py-1 text-[11px] font-medium"
-          style={{ background: "rgba(0,0,0,0.55)", color: "#e8e6e1", fontFamily: "var(--font-mono)" }}
+          style={{ background: "rgba(0,0,0,0.55)", color: "var(--color-ink)", fontFamily: "var(--font-mono)" }}
           title="Exit slideshow (Esc)"
         >
           esc

@@ -55,7 +55,7 @@ export function ReadingQueue() {
           {changes.length > 0 && (
             <span
               className="inline-flex min-w-[20px] items-center justify-center rounded-[10px] px-[6px] text-[11px] font-bold"
-              style={{ height: "20px", background: "#caa53d", color: "#1b1a18" }}
+              style={{ height: "20px", background: "var(--color-gold)", color: "var(--color-surface)" }}
             >
               {changes.length}
             </span>
@@ -205,7 +205,7 @@ function PinnedRow({
       className="flex w-full items-center gap-[9px] rounded-[8px] px-[11px] text-left hover:bg-tertiary"
       style={{ minHeight: "32px", background: rowBg(openId, doc.docId) }}
     >
-      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#caa53d" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="var(--color-gold)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
         <path d="M5 2.5h6l-.6 4 2.1 2.2H3.5L5.6 6.5z" />
         <path d="M8 10.7V13.5" />
       </svg>

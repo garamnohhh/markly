@@ -36,7 +36,7 @@ async function tableToPng(table: HTMLTableElement): Promise<Blob | null> {
   stage.appendChild(table.cloneNode(true));
   document.body.appendChild(stage);
   try {
-    const bg = getComputedStyle(document.body).backgroundColor || "#ffffff";
+    const bg = getComputedStyle(document.body).backgroundColor || "var(--color-surface)";
     return await toBlob(stage, { pixelRatio: 2, backgroundColor: bg });
   } finally {
     stage.remove();

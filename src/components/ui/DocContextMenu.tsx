@@ -136,7 +136,7 @@ export function DocContextMenu({
           <button
             onClick={handleDelete}
             className="flex w-full items-center px-[13px] py-[8px] text-left text-[13px] hover:bg-tertiary"
-            style={{ color: "#c2705b" }}
+            style={{ color: "var(--color-red)" }}
           >
             Delete
           </button>

@@ -21,7 +21,7 @@ export function EmptyVault() {
   return (
     <div
       className="flex h-full flex-col items-center justify-center"
-      style={{ background: "#fcfbf9", padding: "0 40px" }}
+      style={{ background: "var(--color-paper)", padding: "0 40px" }}
     >
       {/* Icon */}
       <div
@@ -29,7 +29,7 @@ export function EmptyVault() {
           width: 46,
           height: 46,
           borderRadius: 12,
-          border: "1.5px solid #e0ddd5",
+          border: "1.5px solid var(--color-line)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -41,7 +41,7 @@ export function EmptyVault() {
           height="20"
           viewBox="0 0 16 16"
           fill="none"
-          stroke="#bdb9ad"
+          stroke="var(--color-mid)"
           strokeWidth="1.4"
           strokeLinecap="round"
         >
@@ -53,7 +53,7 @@ export function EmptyVault() {
         style={{
           fontSize: 17,
           fontWeight: 600,
-          color: "#3a3833",
+          color: "var(--color-line)",
           marginBottom: 8,
           textAlign: "center",
         }}
@@ -63,7 +63,7 @@ export function EmptyVault() {
       <div
         style={{
           fontSize: 13.5,
-          color: "#8c8980",
+          color: "var(--color-muted)",
           marginBottom: 24,
           textAlign: "center",
           lineHeight: 1.6,
@@ -76,12 +76,12 @@ export function EmptyVault() {
       <div className="flex gap-[10px] mb-[26px]">
         <button
           onClick={createNote}
-          className="flex items-center gap-[7px] hover:bg-[#1c1a18] transition-colors"
+          className="flex items-center gap-[7px] hover:bg-[var(--color-ink)] transition-colors"
           style={{
             height: 38,
             padding: "0 18px",
-            background: "#2c2a27",
-            color: "#f6f5f2",
+            background: "var(--color-ink)",
+            color: "var(--color-surface)",
             borderRadius: 9,
             fontSize: 13.5,
             fontWeight: 500,
@@ -95,9 +95,9 @@ export function EmptyVault() {
             alignItems: "center",
             height: 38,
             padding: "0 18px",
-            background: "#fcfbf9",
-            border: "1px solid #e0ddd5",
-            color: "#3a3833",
+            background: "var(--color-paper)",
+            border: "1px solid var(--color-line)",
+            color: "var(--color-line)",
             borderRadius: 9,
             fontSize: 13.5,
             fontWeight: 500,
@@ -116,8 +116,8 @@ export function EmptyVault() {
               onClick={() => s().openDoc(d.docId)}
               style={{
                 fontSize: 12,
-                color: "#8c8980",
-                background: "#f1f0ea",
+                color: "var(--color-muted)",
+                background: "var(--color-tertiary)",
                 borderRadius: 6,
                 padding: "5px 11px",
               }}

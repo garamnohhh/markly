@@ -177,7 +177,7 @@ export function DiffView() {
                     }}>
                       {docName(d)}
                     </span>
-                    {active && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#caa53d", flexShrink: 0 }} />}
+                    {active && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--color-gold)", flexShrink: 0 }} />}
                   </div>
                   <div className="flex items-center gap-[9px]" style={{ marginTop: 7, paddingLeft: 20 }}>
                     <span style={{ fontSize: 11, color: active ? "var(--color-warm-hi)" : "var(--color-muted)", fontFamily: "var(--font-mono)" }}>
@@ -452,12 +452,12 @@ function DiffLineRow({ line }: { line: DiffLine }) {
 
   if (line.kind === "ins") {
     return (
-      <div style={{ display: "flex", background: "#eef5e9" }}>
-        <span style={{ ...numStyle, color: "#9ec089", background: "#e3efd9", borderRight: "1px solid #d3e6c5" }}>
+      <div style={{ display: "flex", background: "var(--color-warm-surface)" }}>
+        <span style={{ ...numStyle, color: "var(--color-green)", background: "var(--color-warm-surface)", borderRight: "1px solid var(--color-warm-border)" }}>
           {line.num}
         </span>
-        <span style={{ padding: "2px 18px", color: "#3f6a37" }}>
-          <span style={{ color: "#7faa66", marginRight: 8 }}>+</span>
+        <span style={{ padding: "2px 18px", color: "var(--color-green)" }}>
+          <span style={{ color: "var(--color-green)", marginRight: 8 }}>+</span>
           {line.segments.map((s) => s.text).join(" ")}
         </span>
       </div>
@@ -466,13 +466,13 @@ function DiffLineRow({ line }: { line: DiffLine }) {
 
   if (line.kind === "del") {
     return (
-      <div style={{ display: "flex", background: "#fbf0ec" }}>
-        <span style={{ ...numStyle, color: "#d8b9ab", background: "#f7e3da", borderRight: "1px solid #f0d4c8" }}>
+      <div style={{ display: "flex", background: "var(--color-warm-surface)" }}>
+        <span style={{ ...numStyle, color: "var(--color-warm-lo)", background: "var(--color-warm-surface)", borderRight: "1px solid var(--color-warm-border)" }}>
           {line.num}
         </span>
-        <span style={{ padding: "2px 18px", color: "#9c5648" }}>
-          <span style={{ color: "#c6917c", marginRight: 8 }}>−</span>
-          <span style={{ textDecoration: "line-through", textDecorationColor: "#d9b3a6" }}>
+        <span style={{ padding: "2px 18px", color: "var(--color-red)" }}>
+          <span style={{ color: "var(--color-warm-mid)", marginRight: 8 }}>−</span>
+          <span style={{ textDecoration: "line-through", textDecorationColor: "var(--color-warm-lo)" }}>
             {line.segments.map((s) => s.text).join(" ")}
           </span>
         </span>
@@ -482,22 +482,22 @@ function DiffLineRow({ line }: { line: DiffLine }) {
 
   // chg: word-level inline highlights
   return (
-    <div style={{ display: "flex", background: "#fbf3ef" }}>
-      <span style={{ ...numStyle, color: "#d8b9ab", background: "#f7e9e2", borderRight: "1px solid #f0d9cf" }}>
+    <div style={{ display: "flex", background: "var(--color-warm-surface)" }}>
+      <span style={{ ...numStyle, color: "var(--color-warm-lo)", background: "var(--color-warm-surface)", borderRight: "1px solid var(--color-warm-border)" }}>
         {line.num}
       </span>
       <span style={{ padding: "2px 18px" }}>
         {line.segments.map((seg, i) => {
           if (seg.op === "del") {
             return (
-              <span key={i} style={{ background: "#ecccc2", color: "#9c5648", textDecoration: "line-through", borderRadius: 3, padding: "0 2px" }}>
+              <span key={i} style={{ background: "var(--color-warm-border)", color: "var(--color-red)", textDecoration: "line-through", borderRadius: 3, padding: "0 2px" }}>
                 {seg.text}
               </span>
             );
           }
           if (seg.op === "ins") {
             return (
-              <span key={i} style={{ background: "#cfe6c4", color: "#3f6a37", borderRadius: 3, padding: "0 2px" }}>
+              <span key={i} style={{ background: "var(--color-warm-border)", color: "var(--color-green)", borderRadius: 3, padding: "0 2px" }}>
                 {seg.text}
               </span>
             );

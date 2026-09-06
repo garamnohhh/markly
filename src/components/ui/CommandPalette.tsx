@@ -20,7 +20,7 @@ const NoteIcon = ({ active }: { active?: boolean }) => (
     height="14"
     viewBox="0 0 16 16"
     fill="none"
-    stroke={active ? "#8c8980" : "#bdb9ad"}
+    stroke={active ? "var(--color-muted)" : "var(--color-mid)"}
     strokeWidth="1.3"
   >
     <path d="M4 2h5l3 3v9H4z" />
@@ -47,7 +47,7 @@ export function CommandPalette() {
         group: "Actions",
         kbd: "⌘N",
         icon: (
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#56534d" strokeWidth="1.5" strokeLinecap="round">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--color-slate)" strokeWidth="1.5" strokeLinecap="round">
             <path d="M8 3v10M3 8h10" />
           </svg>
         ),
@@ -68,7 +68,7 @@ export function CommandPalette() {
         group: "Actions",
         kbd: "⌘E",
         icon: (
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#56534d" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--color-slate)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
             <path d="M11 2.5l2.5 2.5L6 12.5l-3 .5.5-3z" />
           </svg>
         ),
@@ -79,7 +79,7 @@ export function CommandPalette() {
         label: "Go to Knowledge Inbox",
         group: "Actions",
         icon: (
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#56534d" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--color-slate)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
             <path d="M2 8h3l1.5 2.5L9 4.5 10.5 8H14" />
           </svg>
         ),
@@ -90,7 +90,7 @@ export function CommandPalette() {
         label: "Re-scan Base",
         group: "Actions",
         icon: (
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#56534d" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--color-slate)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M2.5 8a5.5 5.5 0 1 1 1.6 3.9" />
             <path d="M2.5 13v-3h3" />
           </svg>
@@ -103,7 +103,7 @@ export function CommandPalette() {
         group: "Actions",
         kbd: "⌘\\",
         icon: (
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#56534d" strokeWidth="1.4" strokeLinecap="round">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--color-slate)" strokeWidth="1.4" strokeLinecap="round">
             <path d="M14 4h-7M14 8h-7M14 12h-5" />
             <path d="M3 4v8" strokeWidth="1.6" />
           </svg>
@@ -115,7 +115,7 @@ export function CommandPalette() {
         label: "Open Settings",
         group: "Actions",
         icon: (
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#56534d" strokeWidth="1.4" strokeLinecap="round">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--color-slate)" strokeWidth="1.4" strokeLinecap="round">
             <path d="M2.5 5h6M11 5h2.5M2.5 11h2.5M8 11h5.5" />
             <circle cx="9.5" cy="5" r="1.7" />
             <circle cx="6.5" cy="11" r="1.7" />
@@ -177,8 +177,8 @@ export function CommandPalette() {
       <div
         style={{
           width: 460,
-          background: "#fcfbf9",
-          border: "1px solid #e0ddd5",
+          background: "var(--color-paper)",
+          border: "1px solid var(--color-line)",
           borderRadius: 14,
           boxShadow: "0 30px 60px -20px rgba(44,42,39,0.45)",
           overflow: "hidden",
@@ -188,14 +188,14 @@ export function CommandPalette() {
         {/* Input row */}
         <div
           className="flex items-center gap-[11px]"
-          style={{ padding: "15px 18px", borderBottom: "1px solid #eeece6" }}
+          style={{ padding: "15px 18px", borderBottom: "1px solid var(--color-tertiary)" }}
         >
           <svg
             width="17"
             height="17"
             viewBox="0 0 16 16"
             fill="none"
-            stroke={q ? "#56534d" : "#a9a69c"}
+            stroke={q ? "var(--color-slate)" : "var(--color-mid)"}
             strokeWidth="1.5"
           >
             <circle cx="7" cy="7" r="4.5" />
@@ -224,7 +224,7 @@ export function CommandPalette() {
             }}
             placeholder="Search notes or type a command…"
             className="flex-1 bg-transparent focus:outline-none"
-            style={{ fontSize: 16, color: q ? "#2c2a27" : "#bdb9ad" }}
+            style={{ fontSize: 16, color: q ? "var(--color-ink)" : "var(--color-mid)" }}
           />
           <button
             onClick={() => setOpen(false)}
@@ -238,7 +238,7 @@ export function CommandPalette() {
         {/* Results */}
         <div style={{ padding: "8px 8px 10px", maxHeight: "50vh", overflowY: "auto" }}>
           {filtered.length === 0 && (
-            <div style={{ padding: "12px", fontSize: 13, color: "#a9a69c" }}>
+            <div style={{ padding: "12px", fontSize: 13, color: "var(--color-mid)" }}>
               No matches
             </div>
           )}
@@ -253,7 +253,7 @@ export function CommandPalette() {
                     fontSize: 10,
                     fontWeight: 700,
                     letterSpacing: "0.12em",
-                    color: "#b3b0a6",
+                    color: "var(--color-mid)",
                     textTransform: "uppercase",
                     padding: "8px 12px 6px",
                   }}
@@ -271,14 +271,14 @@ export function CommandPalette() {
                       className="flex items-center gap-[11px] w-full text-left rounded-[9px]"
                       style={{
                         padding: "9px 12px",
-                        background: isActive ? "#f1f0ea" : undefined,
+                        background: isActive ? "var(--color-tertiary)" : undefined,
                       }}
                     >
                       <span style={{ flexShrink: 0 }}>{it.icon}</span>
                       <span
                         style={{
                           fontSize: 14,
-                          color: isActive ? "#2c2a27" : "#3a3833",
+                          color: isActive ? "var(--color-ink)" : "var(--color-line)",
                           flex: 1,
                           minWidth: 0,
                           overflow: "hidden",
@@ -293,8 +293,8 @@ export function CommandPalette() {
                           style={{
                             fontSize: 10.5,
                             fontWeight: 600,
-                            color: "#9a7b34",
-                            background: "#f3e8cf",
+                            color: "var(--color-warm-mid)",
+                            background: "var(--color-warm-badge)",
                             borderRadius: 5,
                             padding: "2px 7px",
                             flexShrink: 0,
@@ -307,7 +307,7 @@ export function CommandPalette() {
                         <span
                           style={{
                             fontSize: 11,
-                            color: "#c8c5bc",
+                            color: "var(--color-line)",
                             fontFamily: "var(--font-mono)",
                             flexShrink: 0,
                           }}
@@ -319,7 +319,7 @@ export function CommandPalette() {
                         <span
                           style={{
                             fontSize: 11,
-                            color: "#c8c5bc",
+                            color: "var(--color-line)",
                             fontFamily: "var(--font-mono)",
                             flexShrink: 0,
                           }}
@@ -340,8 +340,8 @@ export function CommandPalette() {
           className="flex items-center gap-4"
           style={{
             padding: "10px 18px",
-            borderTop: "1px solid #eeece6",
-            background: "#faf9f6",
+            borderTop: "1px solid var(--color-tertiary)",
+            background: "var(--color-paper)",
           }}
         >
           {[
@@ -349,8 +349,8 @@ export function CommandPalette() {
             { key: "↵", label: "open" },
             { key: "⌘↵", label: "open in split" },
           ].map(({ key, label }) => (
-            <span key={key} style={{ fontSize: 11.5, color: "#a9a69c" }}>
-              <span style={{ fontFamily: "var(--font-mono)", color: "#8c8980" }}>
+            <span key={key} style={{ fontSize: 11.5, color: "var(--color-mid)" }}>
+              <span style={{ fontFamily: "var(--font-mono)", color: "var(--color-muted)" }}>
                 {key}
               </span>{" "}
               {label}

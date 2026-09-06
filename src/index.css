@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Bundled, not CDN — this is an offline desktop app, so the design system's
+   @import of Google Fonts and jsDelivr would simply not render. */
+@import "pretendard/dist/web/variable/pretendardvariable.css";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
+
 @font-face {
   font-family: "D2Coding";
   src: url("/fonts/D2Coding-Ver1.3.2-20180524.ttf") format("truetype");
@@ -11,42 +17,71 @@
 /* class-based dark mode (toggled via settings, not OS) */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Design tokens — single source of truth (design_handoff_markly/CLAUDE.md) */
+/* Design tokens — 2026.09.06 handoff (design_handoff_markly_2026-09-06/).
+   The existing --color-* names are kept so every component keeps working; only
+   the values move to the handoff's palette. Names map to the design system's
+   own tokens as follows:
+
+     paper→--bg  surface→--surface  tertiary→--bg-2  line→--line
+     mid→--text-3  muted→--text-2  slate→--text-2  ink→--text
+     gold→--accent  green→--ok  red→--err
+
+   :root carries the LIGHT values and .dark overrides them, matching how the
+   theme class already works. The default setting is dark (store), which is what
+   the handoff specifies. */
 @theme {
-  --color-paper: #fcfbf9;
-  --color-surface: #f6f5f2;
-  --color-tertiary: #efeee9;
-  --color-line: #e7e5e0;
-  --color-mid: #bdb9ad;
-  --color-muted: #8c8980;
-  --color-slate: #56534d;
-  --color-ink: #2c2a27;
+  /* light — [data-theme="light"] in the handoff */
+  --color-paper: #f4f6f4;
+  --color-surface: #ffffff;
+  --color-tertiary: #e8ebe8;
+  --color-line: #d3dad4;
+  --color-mid: #6e7a72;
+  --color-muted: #59635c;
+  --color-slate: #59635c;
+  --color-ink: #101413;
 
-  --color-gold: #caa53d;
-  --color-green: #6a9a5b;
-  --color-red: #c2705b;
+  /* accent — the flat green is surface-only in both themes; text and hairlines
+     use the pressed-down variant, per the handoff's colors.css */
+  --color-gold: #3ed49c;
+  --color-accent-text: #0b6b4a;
+  --color-accent-weak: #dcf2e8;
+  --color-accent-deep: #2bc189;
+  --color-on-accent: #08090a;
 
-  --radius-control: 7px;
-  --radius-input: 9px;
-  --radius-card: 12px;
-  --radius-container: 14px;
+  --color-green: #0b6b4a;
+  --color-red: #b03a30;
+  --color-warn: #8a6410;
+  --color-info: #2a5f7d;
 
-  --font-ui: "Avenir Next", "Mulish", system-ui, sans-serif;
-  --font-mono: "SF Mono", "JetBrains Mono", ui-monospace, monospace;
+  /* Square corners are the system; curvature carries no meaning. Kept as
+     tokens so a future exception has one place to live. */
+  --radius-control: 0px;
+  --radius-input: 0px;
+  --radius-card: 0px;
+  --radius-container: 0px;
+
+  --font-ui: "Pretendard Variable", Pretendard, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
 
   --spacing-reading: 660px;
   --spacing-reading-wide: 920px;
 
-  /* Warm gold-tint surfaces — UpdateNoticeBar, Updates banner */
-  --color-warm-surface: #faf3e6;
-  --color-warm-border: #ecdcba;
-  --color-warm-hi: #7a5b20;
-  --color-warm-mid: #9a7b34;
-  --color-warm-lo: #bfae87;
-  --color-warm-badge: #f3e8cf;
+  /* shell dimensions */
+  --spacing-topbar: 54px;
+  --spacing-sidebar: 268px;
+  --spacing-panel: 268px;
+
+  /* Accent-tinted surfaces — UpdateNoticeBar, Updates banner. Formerly warm
+     gold; the handoff drops the paper palette entirely. */
+  --color-warm-surface: #dcf2e8;
+  --color-warm-border: #b6e0cd;
+  --color-warm-hi: #0b6b4a;
+  --color-warm-mid: #0b6b4a;
+  --color-warm-lo: #6e7a72;
+  --color-warm-badge: #c8ead9;
 
   /* Row states */
-  --color-row-active: #e9e7e1;
+  --color-row-active: #e8ebe8;
 }
 
 /* Syntax highlighting tokens (editor code fences) */
@@ -64,23 +99,33 @@
 
 /* Dark theme: override the same token vars so every utility flips automatically */
 .dark {
-  --color-paper: #171614;
-  --color-surface: #1b1a18;
-  --color-tertiary: #211f1c;
-  --color-line: #2a2825;
-  --color-mid: #56534d;
-  --color-muted: #7a766d;
-  --color-slate: #a6a299;
-  --color-ink: #e7e4dd;
+  --color-paper: #08090a;
+  --color-surface: #0b0e0d;
+  --color-tertiary: #131917;
+  --color-line: #1e2422;
+  --color-mid: #6b776f;
+  --color-muted: #8b968e;
+  --color-slate: #8b968e;
+  --color-ink: #e6ebe6;
 
-  --color-warm-surface: #2a2316;
-  --color-warm-border: #4a3f24;
-  --color-warm-hi: #e0c074;
-  --color-warm-mid: #d6b15e;
-  --color-warm-lo: #8c7a4e;
-  --color-warm-badge: #3a3016;
+  /* dark presses nothing down — accent reads as itself on text too */
+  --color-accent-text: #3ed49c;
+  --color-accent-weak: #12281f;
+  --color-accent-deep: #7ce7bd;
 
-  --color-row-active: #262420;
+  --color-green: #3ed49c;
+  --color-red: #e0685f;
+  --color-warn: #e0b64a;
+  --color-info: #7fb8d9;
+
+  --color-warm-surface: #12281f;
+  --color-warm-border: #1e4433;
+  --color-warm-hi: #7ce7bd;
+  --color-warm-mid: #3ed49c;
+  --color-warm-lo: #6b776f;
+  --color-warm-badge: #123024;
+
+  --color-row-active: #131917;
 
   /* dark mode syntax tokens */
   --hl-keyword:  #ff7b72;
@@ -108,7 +153,7 @@ body {
 }
 
 #root {
-  border-radius: 12px;
+  border-radius: var(--radius-container);
   overflow: hidden;
   background: var(--color-paper);
   font-family: var(--font-ui);
@@ -117,13 +162,13 @@ body {
 }
 
 ::selection {
-  background: rgba(255, 210, 74, 0.72);
+  background: color-mix(in srgb, var(--color-gold) 34%, transparent);
   color: inherit;
 }
 
 .cm-editor .cm-selectionBackground,
 .cm-editor.cm-focused .cm-selectionBackground {
-  background: rgba(255, 210, 74, 0.58) !important;
+  background: color-mix(in srgb, var(--color-gold) 26%, transparent) !important;
 }
 
 /* Rendered markdown body — reading typography (design system scale) */
@@ -176,7 +221,7 @@ body {
 }
 .md-body mark {
   background: #f3e8cf;
-  border-radius: 3px;
+  border-radius: var(--radius-control);
   padding: 0 2px;
 }
 .md-body blockquote {
@@ -199,7 +244,7 @@ body {
   font-family: var(--font-mono);
   font-size: 13px;
   background: var(--color-tertiary);
-  border-radius: 4px;
+  border-radius: var(--radius-control);
   padding: 0.1em 0.35em;
 }
 .md-body pre {
@@ -309,7 +354,7 @@ body {
   padding: 4px 7px;
   background: var(--color-surface);
   border: 1px solid var(--color-line);
-  border-radius: 4px;
+  border-radius: var(--radius-control);
   cursor: pointer;
   color: var(--color-ink);
 }
@@ -553,12 +598,86 @@ body {
   background: #fbeae6;
   color: #9a4632;
   text-decoration: line-through;
-  border-radius: 3px;
+  border-radius: var(--radius-control);
   padding: 0 1px;
 }
 .word-ins {
   background: #eef5e9;
   color: #3f6a37;
-  border-radius: 3px;
+  border-radius: var(--radius-control);
   padding: 0 1px;
+}
+
+/* ── Brand mark ────────────────────────────────────────────────────────────
+   From design_handoff_markly_2026-09-06/assets/snippets.md. The mark is
+   typeset, not a symbol: JetBrains Mono 400 plus a square accent dot. Drawn in
+   code rather than shipped as an image so it follows theme, resolution and
+   size changes. Do not restyle — the handoff forbids uppercase, other faces,
+   round dots, other dot colours, italics, weight changes, shadows, gradients
+   and rounded corners. */
+.markly-wordmark {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 15px;              /* inline floor */
+  letter-spacing: -0.02em;
+  line-height: 1;
+  position: relative;
+  display: inline-block;
+  padding-right: 0.36em;        /* where the dot sits */
+}
+.markly-wordmark > i {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0.27em;
+  height: 0.27em;
+  background: var(--color-gold);
+}
+
+/* One dot blinks per page — the titlebar wordmark, nothing else. */
+.markly-wordmark--live > i {
+  animation: markly-blink 1.06s steps(1, end) infinite;
+}
+@keyframes markly-blink {
+  0%, 49% { opacity: 1 }
+  50%, 100% { opacity: 0 }
+}
+@media (prefers-reduced-motion: reduce) {
+  .markly-wordmark--live > i { animation: none }
+}
+
+/* Logo tile — 64px and up carries the whole name. font-size = tile × 0.192. */
+.markly-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-ink);
+  flex-shrink: 0;
+}
+.markly-tile > .markly-wordmark {
+  letter-spacing: -0.035em;     /* fixed inside a tile, at any size */
+  color: var(--color-paper);
+}
+
+/* Small mark — 32px and below. Six letters stop reading, so only the `m` and
+   the dot remain, re-typeset against x-height = tile / 4. */
+.markly-mark {
+  position: relative;
+  display: block;
+  flex-shrink: 0;
+}
+.markly-mark > b {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 1em;
+  line-height: 1;
+  left: -0.066em;               /* m ink, left edge */
+  color: var(--color-paper);
+}
+.markly-mark > i {
+  position: absolute;
+  left: 0.468em;                /* m ink, right edge */
+  top: 0;
+  background: var(--color-gold);
 }

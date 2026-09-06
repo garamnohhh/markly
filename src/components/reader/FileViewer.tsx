@@ -474,7 +474,7 @@ export function FileViewer() {
           <div
             className="pointer-events-none absolute inset-[10px] rounded-[13px]"
             style={{
-              border: "1.5px solid #cfcbc1",
+              border: "1.5px solid var(--color-line)",
               boxShadow: "inset 0 0 0 3px rgba(44,42,39,0.025)",
             }}
           />
@@ -490,7 +490,7 @@ export function FileViewer() {
                 boxShadow: "0 8px 20px -6px rgba(44,42,39,0.45)",
               }}
             >
-              <span className="inline-block size-[6px] shrink-0 rounded-full bg-[#9cc59c]" />
+              <span className="inline-block size-[6px] shrink-0 rounded-full bg-[var(--color-green)]" />
               <span>
                 Editing ·{" "}
                 <span style={{ fontFamily: "var(--font-mono)", color: "var(--color-mid)" }}>⌘E</span>

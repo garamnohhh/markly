@@ -23,7 +23,7 @@ export function Onboarding() {
   return (
     <div
       className="grid h-full place-items-center"
-      style={{ background: "#fcfbf9" }}
+      style={{ background: "var(--color-paper)" }}
     >
       <div
         style={{
@@ -44,7 +44,7 @@ export function Onboarding() {
               width: 40,
               height: 40,
               borderRadius: "24%",
-              background: "linear-gradient(150deg,#2c2823,#171614)",
+              background: "linear-gradient(150deg,var(--color-tertiary),var(--color-paper))",
               flexShrink: 0,
             }}
           >
@@ -52,13 +52,13 @@ export function Onboarding() {
               <g transform="translate(24,24.8) scale(0.8) translate(-24,-24)">
                 <path
                   d="M11 36V12l13 22 13-22v24"
-                  stroke="#f3f1ec"
+                  stroke="var(--color-surface)"
                   strokeWidth="6.25"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
               </g>
-              <circle cx="40" cy="8" r="3.7" fill="#caa53d" />
+              <circle cx="40" cy="8" r="3.7" fill="var(--color-gold)" />
             </svg>
           </span>
           <span
@@ -66,7 +66,7 @@ export function Onboarding() {
               fontSize: 27,
               fontWeight: 600,
               letterSpacing: "-0.02em",
-              color: "#2c2a27",
+              color: "var(--color-ink)",
             }}
           >
             Welcome to Markly
@@ -76,7 +76,7 @@ export function Onboarding() {
         <p
           style={{
             fontSize: 14,
-            color: "#8c8980",
+            color: "var(--color-muted)",
             marginBottom: 32,
             textAlign: "center",
           }}
@@ -91,14 +91,14 @@ export function Onboarding() {
           <button
             onClick={() => chooseBase("new")}
             disabled={scanning}
-            className="flex-1 text-left rounded-[12px] p-[22px_20px] border border-[#e0ddd5] bg-[#fcfbf9] hover:border-[#2c2a27] hover:bg-[#faf9f6] transition-colors disabled:opacity-50"
+            className="flex-1 text-left rounded-[12px] p-[22px_20px] border border-[var(--color-line)] bg-[var(--color-paper)] hover:border-[var(--color-ink)] hover:bg-[var(--color-paper)] transition-colors disabled:opacity-50"
           >
             <div
               style={{
                 width: 38,
                 height: 38,
                 borderRadius: 10,
-                background: "#2c2a27",
+                background: "var(--color-ink)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -110,7 +110,7 @@ export function Onboarding() {
                 height="18"
                 viewBox="0 0 18 18"
                 fill="none"
-                stroke="#f6f5f2"
+                stroke="var(--color-surface)"
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -120,11 +120,11 @@ export function Onboarding() {
               </svg>
             </div>
             <div
-              style={{ fontSize: 15, fontWeight: 600, color: "#2c2a27", marginBottom: 5 }}
+              style={{ fontSize: 15, fontWeight: 600, color: "var(--color-ink)", marginBottom: 5 }}
             >
               New Base
             </div>
-            <div style={{ fontSize: 12.5, color: "#8c8980", lineHeight: 1.55 }}>
+            <div style={{ fontSize: 12.5, color: "var(--color-muted)", lineHeight: 1.55 }}>
               Create an empty folder and set it as a Markly Base.
             </div>
           </button>
@@ -133,15 +133,15 @@ export function Onboarding() {
           <button
             onClick={() => chooseBase("open")}
             disabled={scanning}
-            className="flex-1 text-left rounded-[12px] p-[22px_20px] border border-[#e0ddd5] bg-[#fcfbf9] hover:border-[#2c2a27] hover:bg-[#faf9f6] transition-colors disabled:opacity-50"
+            className="flex-1 text-left rounded-[12px] p-[22px_20px] border border-[var(--color-line)] bg-[var(--color-paper)] hover:border-[var(--color-ink)] hover:bg-[var(--color-paper)] transition-colors disabled:opacity-50"
           >
             <div
               style={{
                 width: 38,
                 height: 38,
                 borderRadius: 10,
-                background: "#f1f0ea",
-                border: "1px solid #e0ddd5",
+                background: "var(--color-tertiary)",
+                border: "1px solid var(--color-line)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -153,7 +153,7 @@ export function Onboarding() {
                 height="18"
                 viewBox="0 0 18 18"
                 fill="none"
-                stroke="#56534d"
+                stroke="var(--color-slate)"
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -162,11 +162,11 @@ export function Onboarding() {
               </svg>
             </div>
             <div
-              style={{ fontSize: 15, fontWeight: 600, color: "#2c2a27", marginBottom: 5 }}
+              style={{ fontSize: 15, fontWeight: 600, color: "var(--color-ink)", marginBottom: 5 }}
             >
               Open existing folder
             </div>
-            <div style={{ fontSize: 12.5, color: "#8c8980", lineHeight: 1.55 }}>
+            <div style={{ fontSize: 12.5, color: "var(--color-muted)", lineHeight: 1.55 }}>
               Open a folder that already contains markdown.
             </div>
           </button>
@@ -179,7 +179,7 @@ export function Onboarding() {
               fontSize: 10,
               fontWeight: 700,
               letterSpacing: "0.13em",
-              color: "#b3b0a6",
+              color: "var(--color-mid)",
               textTransform: "uppercase",
               marginBottom: 10,
             }}
@@ -193,14 +193,14 @@ export function Onboarding() {
                 alignItems: "center",
                 gap: 10,
                 height: 46,
-                border: "1px dashed #e0ddd5",
+                border: "1px dashed var(--color-line)",
                 borderRadius: 10,
                 padding: "0 16px",
-                color: "#bdb9ad",
+                color: "var(--color-mid)",
                 fontSize: 12.5,
               }}
             >
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#cbc8be" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--color-line)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M2.5 7L8 2.5 13.5 7M4 6.2v7.3h8V6.2" />
               </svg>
               No Bases yet — create one above to get started.
@@ -210,22 +210,22 @@ export function Onboarding() {
               {vaults.map((v) => {
                 const name = v.split("/").pop() ?? v;
                 return (
-                  <div key={v} className="group flex items-center gap-[10px] rounded-[10px] border border-[#e0ddd5] hover:border-[#2c2a27]" style={{ padding: "0 14px", height: 46 }}>
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8c8980" strokeWidth="1.3">
+                  <div key={v} className="group flex items-center gap-[10px] rounded-[10px] border border-[var(--color-line)] hover:border-[var(--color-ink)]" style={{ padding: "0 14px", height: 46 }}>
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--color-muted)" strokeWidth="1.3">
                       <path d="M2 4.4c0-.5.4-.9.9-.9h2.4l1.1 1.3h6.7c.5 0 .9.4.9.9v6.1c0 .5-.4.9-.9.9H2.9c-.5 0-.9-.4-.9-.9z" />
                     </svg>
                     <button
                       onClick={() => !scanning && openVault(v).catch((e) => setError(String(e)))}
                       disabled={scanning}
                       className="min-w-0 flex-1 truncate text-left"
-                      style={{ fontSize: 13.5, fontWeight: 500, color: "#2c2a27" }}
+                      style={{ fontSize: 13.5, fontWeight: 500, color: "var(--color-ink)" }}
                     >
                       {name}
                     </button>
-                    <span className="truncate text-[11.5px]" style={{ color: "#b3b0a6", maxWidth: 180 }}>{v}</span>
+                    <span className="truncate text-[11.5px]" style={{ color: "var(--color-mid)", maxWidth: 180 }}>{v}</span>
                     <button
                       onClick={() => removeVault(v)}
-                      className="hidden shrink-0 rounded p-[3px] text-[#bdb9ad] hover:text-[#c2705b] group-hover:block"
+                      className="hidden shrink-0 rounded p-[3px] text-[var(--color-mid)] hover:text-[var(--color-red)] group-hover:block"
                       title="Remove from list"
                     >
                       <svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
@@ -242,7 +242,7 @@ export function Onboarding() {
         <p
           style={{
             fontSize: 11.5,
-            color: "#bdb9ad",
+            color: "var(--color-mid)",
             fontFamily: "var(--font-mono)",
             textAlign: "center",
           }}
@@ -251,12 +251,12 @@ export function Onboarding() {
         </p>
 
         {scanning && (
-          <p style={{ marginTop: 16, fontSize: 13, color: "#8c8980" }}>
+          <p style={{ marginTop: 16, fontSize: 13, color: "var(--color-muted)" }}>
             Scanning…
           </p>
         )}
         {error && (
-          <p style={{ marginTop: 12, fontSize: 13, color: "#c2705b" }}>{error}</p>
+          <p style={{ marginTop: 12, fontSize: 13, color: "var(--color-red)" }}>{error}</p>
         )}
       </div>
     </div>

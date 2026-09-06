@@ -359,7 +359,7 @@ function AccountTab() {
               const active = v === vaultRoot;
               return (
                 <div key={v} className="flex items-center gap-3 rounded-[10px] border" style={{ padding: "10px 14px", borderColor: active ? "var(--color-gold)" : "var(--color-line)", background: active ? "var(--color-warm-surface)" : "var(--color-surface)" }}>
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke={active ? "#caa53d" : "var(--color-mid)"} strokeWidth="1.3">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke={active ? "var(--color-gold)" : "var(--color-mid)"} strokeWidth="1.3">
                     <path d="M2 4.4c0-.5.4-.9.9-.9h2.4l1.1 1.3h6.7c.5 0 .9.4.9.9v6.1c0 .5-.4.9-.9.9H2.9c-.5 0-.9-.4-.9-.9z" />
                   </svg>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -367,11 +367,11 @@ function AccountTab() {
                     <div className="text-muted truncate" style={{ fontSize: 11 }}>{v}</div>
                   </div>
                   {active ? (
-                    <span className="shrink-0 rounded-[5px] px-[7px] py-[2px] text-[10.5px] font-semibold" style={{ background: "#caa53d22", color: "#9a7b34" }}>Active</span>
+                    <span className="shrink-0 rounded-[5px] px-[7px] py-[2px] text-[10.5px] font-semibold" style={{ background: "var(--color-gold)22", color: "var(--color-warm-mid)" }}>Active</span>
                   ) : (
                     <div className="flex shrink-0 gap-2">
                       <button onClick={() => openVault(v).then(() => setBaseModalOpen(false)).catch((e) => setError(String(e)))} className="rounded-[7px] border border-line px-[9px] py-[4px] text-[12px] text-slate hover:bg-tertiary">Switch</button>
-                      <button onClick={() => removeVault(v)} className="rounded-[7px] border border-line px-[9px] py-[4px] text-[12px] hover:bg-tertiary" style={{ color: "#c2705b" }}>Remove</button>
+                      <button onClick={() => removeVault(v)} className="rounded-[7px] border border-line px-[9px] py-[4px] text-[12px] hover:bg-tertiary" style={{ color: "var(--color-red)" }}>Remove</button>
                     </div>
                   )}
                 </div>
@@ -381,7 +381,7 @@ function AccountTab() {
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M6 2v8M2 6h8" /></svg>
               Add Base
             </button>
-            {error && <div className="text-[12px]" style={{ color: "#c2705b" }}>{error}</div>}
+            {error && <div className="text-[12px]" style={{ color: "var(--color-red)" }}>{error}</div>}
           </div>
         </div>
       </div>
@@ -661,7 +661,7 @@ function TemplatesTab() {
           </div>
           <div className="flex justify-between" style={{ marginTop: 12 }}>
             {!isNew && (
-              <button onClick={() => remove(draft.id)} className="text-[12.5px] hover:opacity-80" style={{ color: "#c2705b" }}>Delete template</button>
+              <button onClick={() => remove(draft.id)} className="text-[12.5px] hover:opacity-80" style={{ color: "var(--color-red)" }}>Delete template</button>
             )}
             <div className="ml-auto flex gap-2">
               <button onClick={() => setEditingId(null)} className="rounded-[7px] border border-line px-3 py-[6px] text-[12.5px] text-slate hover:bg-tertiary">Cancel</button>
@@ -732,15 +732,15 @@ function AboutTab() {
         <div
           style={{
             width: 52, height: 52, borderRadius: "24%",
-            background: "linear-gradient(150deg,#2c2823,#171614)",
+            background: "linear-gradient(150deg,var(--color-tertiary),var(--color-paper))",
             position: "relative", display: "flex", alignItems: "center",
             justifyContent: "center", flexShrink: 0,
           }}
         >
-          <svg width="28" height="28" viewBox="0 0 48 48" fill="none" stroke="#f3f1ec" strokeWidth="4.8" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="28" height="28" viewBox="0 0 48 48" fill="none" stroke="var(--color-surface)" strokeWidth="4.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M11 36V12l13 22 13-22v24" />
           </svg>
-          <span style={{ position: "absolute", top: 10, right: 10, width: 6.5, height: 6.5, borderRadius: "50%", background: "#caa53d" }} />
+          <span style={{ position: "absolute", top: 10, right: 10, width: 6.5, height: 6.5, borderRadius: "50%", background: "var(--color-gold)" }} />
         </div>
         <div style={{ flex: 1 }}>
           <div className="text-ink" style={{ fontSize: 15, fontWeight: 600 }}>
