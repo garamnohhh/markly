@@ -1,33 +1,60 @@
-// Canonical Markly mark — geometry from brand-export/mark/markly-mark.svg
-// (M monogram in currentColor + gold unread dot). Dot drops ≤20px.
-interface LogoProps {
-  size?: number;
-  dot?: boolean;
-  className?: string;
+// The Markly mark, typeset rather than drawn — see index.css and
+// design_handoff_markly_2026-09-06/assets/snippets.md.
+//
+// Two forms, picked by size: at 64px and up a tile carries the whole name, at
+// 32px and below only the `m` and its dot survive because six letters stop
+// reading. Nothing here is an image, so the mark follows theme and resolution.
+
+// Inline wordmark. `live` blinks the dot — only ever one per screen, the one in
+// the title bar.
+export function Wordmark({ size = 15, live }: { size?: number; live?: boolean }) {
+  // The letter-spacing ladder from the handoff: tighten as it grows.
+  const tracking = size >= 44 ? "-0.035em" : size >= 24 ? "-0.03em" : "-0.02em";
+  return (
+    <span
+      className={`markly-wordmark${live ? " markly-wordmark--live" : ""}`}
+      style={{ fontSize: size, letterSpacing: tracking }}
+      aria-label="markly"
+    >
+      markly<i />
+    </span>
+  );
 }
 
-export function Logo({ size = 22, dot, className }: LogoProps) {
-  const showDot = dot ?? size > 20;
+// Square tile holding the whole name. Contents sit at 72% of the tile.
+export function LogoTile({ size = 64 }: { size?: number }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 48 48"
-      fill="none"
-      className={className}
-      aria-label="Markly"
+    <span className="markly-tile" style={{ width: size, height: size }}>
+      <span className="markly-wordmark" style={{ fontSize: size * 0.192 }} aria-label="markly">
+        markly<i />
+      </span>
+    </span>
+  );
+}
+
+// The reduced mark, on its tile. x-height = tile / 4, so font-size = tile /
+// 2.24. The dot is snapped to whole pixels with a 2px floor — left in em it
+// lands on half pixels at these sizes and smears.
+export function Logo({ size = 22, className }: { size?: number; className?: string }) {
+  const fontSize = size / 2.24;
+  const dot = Math.max(2, Math.round((size * 3) / 32));
+  return (
+    <span
+      className={`markly-tile ${className ?? ""}`}
+      style={{ width: size, height: size }}
+      aria-label="markly"
     >
-      <g transform="translate(24,24.8) scale(0.8) translate(-24,-24)">
-        <path
-          d="M11 36V12l13 22 13-22v24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="6.25"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </g>
-      {showDot && <circle cx="40" cy="8" r="3.7" fill="#caa53d" />}
-    </svg>
+      <span
+        className="markly-mark"
+        style={{
+          fontSize,
+          width: `calc(0.468em + ${dot}px)`,
+          height: `calc(0.560em + ${dot}px)`,
+        }}
+      >
+        <b style={{ top: `calc(${dot}px - 0.300em)` }}>m</b>
+        <i style={{ width: dot, height: dot }} />
+      </span>
+    </span>
   );
 }
