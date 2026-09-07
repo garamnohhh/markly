@@ -129,13 +129,13 @@ function NewItemControl({ dir }: { dir: string }) {
       <button
         title="New file or folder"
         onClick={() => setMode((m) => (m ? null : "menu"))}
-        className="flex h-[20px] w-[20px] items-center justify-center rounded-[5px] text-[15px] leading-none text-muted hover:bg-tertiary hover:text-ink"
+        className="flex h-[20px] w-[20px] items-center justify-center text-[15px] leading-none text-muted hover:bg-tertiary hover:text-ink"
       >
         +
       </button>
       {mode === "menu" && (
         <div
-          className="absolute right-0 z-50 mt-1 overflow-hidden rounded-[8px] border border-line bg-paper"
+          className="absolute right-0 z-50 mt-1 overflow-hidden border border-line bg-paper"
           style={{ minWidth: 150, boxShadow: "0 8px 24px -4px rgba(0,0,0,0.18)" }}
         >
           <button className={itemCls} onClick={() => setMode("file")}>New file</button>
@@ -144,13 +144,13 @@ function NewItemControl({ dir }: { dir: string }) {
       )}
       {(mode === "file" || mode === "folder") && (
         <div
-          className="absolute right-0 z-50 mt-1 rounded-[8px] border border-line bg-paper px-[10px] py-[8px]"
+          className="absolute right-0 z-50 mt-1 border border-line bg-paper px-[10px] py-[8px]"
           style={{ minWidth: 190, boxShadow: "0 8px 24px -4px rgba(0,0,0,0.18)" }}
         >
           <input
             ref={inputRef}
             placeholder={mode === "file" ? "name.md" : "folder name"}
-            className="w-full rounded-[5px] border border-line bg-surface px-2 py-1 text-[13px] text-ink focus:outline-none focus:ring-1 focus:ring-[var(--color-gold)]"
+            className="w-full border border-line bg-surface px-2 py-1 text-[13px] text-ink focus:outline-none focus:ring-1 focus:ring-[var(--color-gold)]"
             onKeyDown={(e) => {
               if (e.key === "Enter") submit((e.target as HTMLInputElement).value);
               if (e.key === "Escape") setMode(null);
@@ -271,7 +271,7 @@ function FolderRow({
       <button
         onClick={() => toggleFolder(path)}
         onContextMenu={(e) => { e.preventDefault(); onFileCtx(e.clientX, e.clientY, path, node.name, "folder"); }}
-        className="flex w-full items-center rounded-[8px] text-left hover:bg-tertiary"
+        className="flex w-full items-center text-left hover:bg-tertiary"
         style={{
           gap: 7,
           height: 30,
@@ -309,7 +309,7 @@ function DocFileRow({
     <button
       onClick={() => openDoc(doc.docId)}
       onContextMenu={(e) => { e.preventDefault(); onCtx(e.clientX, e.clientY, doc); }}
-      className="flex w-full items-center rounded-[8px] text-left hover:bg-tertiary"
+      className="flex w-full items-center text-left hover:bg-tertiary"
       style={{
         gap: 7, height: 30, paddingLeft: pl, paddingRight: 9,
         background: active ? "var(--color-row-active)" : undefined,
@@ -319,7 +319,7 @@ function DocFileRow({
     >
       <FileIcon active={active} />
       <span className="min-w-0 flex-1 truncate">{name}</span>
-      {hasUnread && <span className="size-[5px] shrink-0 rounded-full bg-gold" />}
+      {hasUnread && <span className="size-[5px] shrink-0 bg-gold" />}
     </button>
   );
 }
@@ -337,7 +337,7 @@ function RawFileRow({
     <button
       onClick={() => openFile(relPath)}
       onContextMenu={(e) => { e.preventDefault(); onFileCtx(e.clientX, e.clientY, relPath, name, "file"); }}
-      className="flex w-full items-center rounded-[8px] text-left hover:bg-tertiary"
+      className="flex w-full items-center text-left hover:bg-tertiary"
       style={{
         gap: 7, height: 30, paddingLeft: pl, paddingRight: 9,
         background: active ? "var(--color-row-active)" : undefined,
@@ -418,7 +418,7 @@ function NonDocCtxMenu({
   return (
     <div
       onMouseDown={(e) => e.stopPropagation()}
-      className="fixed z-50 overflow-hidden rounded-[8px] border border-line bg-paper"
+      className="fixed z-50 overflow-hidden border border-line bg-paper"
       style={{ top: menu.y, left: menu.x, minWidth: 180, boxShadow: "0 8px 24px -4px rgba(0,0,0,0.18)" }}
     >
       {kind === "file" && renaming ? (
@@ -426,7 +426,7 @@ function NonDocCtxMenu({
           <input
             ref={inputRef}
             defaultValue={name}
-            className="w-full rounded-[5px] border border-line bg-surface px-2 py-1 text-[13px] text-ink focus:outline-none focus:ring-1 focus:ring-[var(--color-gold)]"
+            className="w-full border border-line bg-surface px-2 py-1 text-[13px] text-ink focus:outline-none focus:ring-1 focus:ring-[var(--color-gold)]"
             onKeyDown={(e) => {
               if (e.key === "Enter") void submitRename((e.target as HTMLInputElement).value);
               if (e.key === "Escape") onClose();
@@ -441,7 +441,7 @@ function NonDocCtxMenu({
           <input
             ref={inputRef}
             placeholder={creating === "file" ? "name.md" : "folder name"}
-            className="w-full rounded-[5px] border border-line bg-surface px-2 py-1 text-[13px] text-ink focus:outline-none focus:ring-1 focus:ring-[var(--color-gold)]"
+            className="w-full border border-line bg-surface px-2 py-1 text-[13px] text-ink focus:outline-none focus:ring-1 focus:ring-[var(--color-gold)]"
             onKeyDown={(e) => {
               if (e.key === "Enter") submitCreate((e.target as HTMLInputElement).value);
               if (e.key === "Escape") onClose();

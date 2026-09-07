@@ -90,7 +90,7 @@ export function FindBar() {
   return (
     <div
       data-find-exclude
-      className="fixed z-[100] flex items-center gap-1.5 rounded-[10px] border border-line bg-paper"
+      className="fixed z-[100] flex items-center gap-1.5 border border-line bg-paper"
       style={{ top: 52, right: 16, padding: "6px 10px", minWidth: 280, boxShadow: "0 8px 24px -4px rgba(0,0,0,0.18)" }}
       onMouseDown={(e) => e.stopPropagation()}
     >
@@ -112,21 +112,21 @@ export function FindBar() {
         </span>
       )}
       <button onClick={() => onFind(true)} title="Previous (Shift+Enter)"
-        className="flex items-center justify-center rounded-[5px] text-muted hover:bg-tertiary hover:text-ink"
+        className="flex items-center justify-center text-muted hover:bg-tertiary hover:text-ink"
         style={{ width: 24, height: 24, flexShrink: 0 }}>
         <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <path d="M6 9.5V2.5M2.5 6L6 2.5 9.5 6" />
         </svg>
       </button>
       <button onClick={() => onFind(false)} title="Next (Enter)"
-        className="flex items-center justify-center rounded-[5px] text-muted hover:bg-tertiary hover:text-ink"
+        className="flex items-center justify-center text-muted hover:bg-tertiary hover:text-ink"
         style={{ width: 24, height: 24, flexShrink: 0 }}>
         <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <path d="M6 2.5V9.5M2.5 6L6 9.5 9.5 6" />
         </svg>
       </button>
       <button onClick={() => setFindOpen(false)}
-        className="flex items-center justify-center rounded-[5px] text-muted hover:bg-tertiary hover:text-ink"
+        className="flex items-center justify-center text-muted hover:bg-tertiary hover:text-ink"
         style={{ width: 24, height: 24, flexShrink: 0 }}>
         <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
           <path d="M1 1l10 10M11 1L1 11" />

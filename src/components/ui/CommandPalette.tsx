@@ -179,7 +179,6 @@ export function CommandPalette() {
           width: 460,
           background: "var(--color-paper)",
           border: "1px solid var(--color-line)",
-          borderRadius: 14,
           boxShadow: "0 30px 60px -20px rgba(44,42,39,0.45)",
           overflow: "hidden",
         }}
@@ -268,7 +267,7 @@ export function CommandPalette() {
                       key={it.id}
                       onMouseEnter={() => setActive(idx)}
                       onClick={() => it.run()}
-                      className="flex items-center gap-[11px] w-full text-left rounded-[9px]"
+                      className="flex items-center gap-[11px] w-full text-left"
                       style={{
                         padding: "9px 12px",
                         background: isActive ? "var(--color-tertiary)" : undefined,

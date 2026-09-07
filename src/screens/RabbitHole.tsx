@@ -103,7 +103,6 @@ export function RabbitHole() {
                     style={{
                       width: 16,
                       height: 16,
-                      borderRadius: "50%",
                       background: isActive ? "var(--color-ink)" : "var(--color-paper)",
                       border: `2px solid ${isActive ? "var(--color-ink)" : "var(--color-line)"}`,
                       flexShrink: 0,
@@ -113,7 +112,7 @@ export function RabbitHole() {
                       justifyContent: "center",
                     }}
                   >
-                    {isActive && <span style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--color-paper)" }} />}
+                    {isActive && <span style={{ width: 5, height: 5,  background: "var(--color-paper)" }} />}
                   </span>
                   <span
                     style={{
@@ -174,7 +173,6 @@ export function RabbitHole() {
                     style={{
                       padding: "13px 16px",
                       border: "1px solid var(--color-line)",
-                      borderRadius: 11,
                       background: "var(--color-surface)",
                     }}
                   >

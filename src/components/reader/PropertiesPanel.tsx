@@ -113,7 +113,7 @@ export function PropertiesPanel({
   }
 
   return (
-    <div className="mb-6 overflow-hidden rounded-[10px] border border-line bg-surface text-[12.5px]">
+    <div className="mb-6 overflow-hidden border border-line bg-surface text-[12.5px]">
       {/* header */}
       <button
         onClick={() => setOpen((o) => !o)}
@@ -126,8 +126,8 @@ export function PropertiesPanel({
         {!open && (
           <span className="ml-1.5 flex min-w-0 flex-1 items-center gap-2.5 overflow-hidden">
             {byKey.status && (
-              <span className="flex shrink-0 items-center gap-1.5 rounded-md border border-line bg-surface px-1.5 py-0.5 text-[11.5px] text-ink">
-                <span className="h-[5px] w-[5px] rounded-full bg-green" />
+              <span className="flex shrink-0 items-center gap-1.5 border border-line bg-surface px-1.5 py-0.5 text-[11.5px] text-ink">
+                <span className="h-[5px] w-[5px] bg-green" />
                 {byKey.status}
               </span>
             )}
@@ -179,11 +179,11 @@ export function PropertiesPanel({
                           setTimeout(() => statusRef.current?.select(), 0);
                         }
                       }}
-                      className={`flex items-center gap-1.5 rounded-[7px] border border-line bg-surface px-2 py-0.5 text-ink ${onFrontmatterChange ? "hover:border-mid" : ""}`}
+                      className={`flex items-center gap-1.5 border border-line bg-surface px-2 py-0.5 text-ink ${onFrontmatterChange ? "hover:border-mid" : ""}`}
                     >
                       {value ? (
                         <>
-                          <span className="h-1.5 w-1.5 rounded-full bg-green" />
+                          <span className="h-1.5 w-1.5 bg-green" />
                           {value}
                         </>
                       ) : (
@@ -206,7 +206,7 @@ export function PropertiesPanel({
                     {tagList.map((t) => (
                       <span
                         key={t}
-                        className="flex items-center gap-1 rounded-[7px] border border-line bg-tertiary px-2 py-0.5 text-slate"
+                        className="flex items-center gap-1 border border-line bg-tertiary px-2 py-0.5 text-slate"
                       >
                         {t}
                         {onFrontmatterChange && (
@@ -258,10 +258,10 @@ export function PropertiesPanel({
                     className={`flex items-center gap-1.5 ${onFrontmatterChange ? "cursor-pointer" : "cursor-default"}`}
                   >
                     <span
-                      className={`inline-flex h-4 w-7 items-center rounded-full transition-colors ${pinned ? "bg-gold" : "bg-line"}`}
+                      className={`inline-flex h-4 w-7 items-center transition-colors ${pinned ? "bg-gold" : "bg-line"}`}
                     >
                       <span
-                        className={`h-3 w-3 translate-x-0.5 rounded-full bg-paper shadow transition-transform ${pinned ? "translate-x-3.5" : ""}`}
+                        className={`h-3 w-3 translate-x-0.5 bg-paper shadow transition-transform ${pinned ? "translate-x-3.5" : ""}`}
                       />
                     </span>
                     <span className="text-slate">{pinned ? "true" : "false"}</span>
@@ -385,7 +385,7 @@ function InlineText({
   return (
     <button
       onClick={() => setEditing(true)}
-      className="flex items-center rounded-[7px] border border-line bg-surface px-2 py-0.5 text-left text-ink hover:border-mid"
+      className="flex items-center border border-line bg-surface px-2 py-0.5 text-left text-ink hover:border-mid"
     >
       {value || <span className="text-mid">click to set…</span>}
     </button>

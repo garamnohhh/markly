@@ -43,7 +43,7 @@ export function ReadingQueue() {
             if (!changes.length) return;
             goChanges();
           }}
-          className={`mb-[14px] flex w-full items-center gap-[9px] rounded-[10px] px-[12px] text-left ${changes.length > 0 ? "hover:brightness-95" : "cursor-default"}`}
+          className={`mb-[14px] flex w-full items-center gap-[9px] px-[12px] text-left ${changes.length > 0 ? "hover:brightness-95" : "cursor-default"}`}
           style={{ height: "40px", background: "var(--color-surface)", borderLeft: "3px solid var(--color-gold)", border: "1px solid var(--color-line)", borderLeftWidth: 3, borderLeftColor: "var(--color-gold)" }}
         >
           <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="var(--color-accent-text)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
@@ -54,7 +54,7 @@ export function ReadingQueue() {
           </span>
           {changes.length > 0 && (
             <span
-              className="inline-flex min-w-[20px] items-center justify-center rounded-[10px] px-[6px] text-[11px] font-bold"
+              className="inline-flex min-w-[20px] items-center justify-center px-[6px] text-[11px] font-bold"
               style={{ height: "20px", background: "var(--color-gold)", color: "var(--color-on-accent)" }}
             >
               {changes.length}
@@ -155,10 +155,10 @@ function UnreadRow({
     <button
       onClick={() => openDoc(doc.docId)}
       onContextMenu={(e) => { e.preventDefault(); onCtx(e.clientX, e.clientY); }}
-      className="flex w-full items-start gap-[9px] rounded-[8px] px-[11px] text-left hover:bg-tertiary"
+      className="flex w-full items-start gap-[9px] px-[11px] text-left hover:bg-tertiary"
       style={{ minHeight: "34px", paddingTop: "6px", paddingBottom: "6px", background: rowBg(openId, doc.docId) }}
     >
-      <span className="mt-[5px] size-[6px] shrink-0 rounded-full bg-gold" />
+      <span className="mt-[5px] size-[6px] shrink-0 bg-gold" />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-[6px]">
           <span
@@ -168,7 +168,7 @@ function UnreadRow({
             {docName(doc)}
           </span>
           <span
-            className="shrink-0 rounded-[5px] px-[6px] text-[10.5px] font-semibold"
+            className="shrink-0 px-[6px] text-[10.5px] font-semibold"
             style={{ border: "1px solid var(--color-line-soft)", color: "var(--color-muted)", fontFamily: "var(--font-mono)", paddingTop: "2px", paddingBottom: "2px" }}
           >
             {isNew ? "new" : `${n} edit${n > 1 ? "s" : ""}`}
@@ -202,7 +202,7 @@ function PinnedRow({
     <button
       onClick={() => openDoc(doc.docId)}
       onContextMenu={(e) => { e.preventDefault(); onCtx(e.clientX, e.clientY); }}
-      className="flex w-full items-center gap-[9px] rounded-[8px] px-[11px] text-left hover:bg-tertiary"
+      className="flex w-full items-center gap-[9px] px-[11px] text-left hover:bg-tertiary"
       style={{ minHeight: "32px", background: rowBg(openId, doc.docId) }}
     >
       <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="var(--color-gold)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
@@ -231,7 +231,7 @@ function RecentRow({
     <button
       onClick={() => openDoc(doc.docId)}
       onContextMenu={(e) => { e.preventDefault(); onCtx(e.clientX, e.clientY); }}
-      className="flex w-full items-center gap-[9px] rounded-[8px] px-[11px] text-left hover:bg-tertiary"
+      className="flex w-full items-center gap-[9px] px-[11px] text-left hover:bg-tertiary"
       style={{ minHeight: "32px", background: rowBg(openId, doc.docId) }}
     >
       <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="var(--color-mid)" strokeWidth="1.3" className="shrink-0">

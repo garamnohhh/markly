@@ -94,7 +94,7 @@ export function DocContextMenu({
   return (
     <div
       onMouseDown={(e) => e.stopPropagation()}
-      className="fixed z-50 overflow-hidden rounded-[8px] border border-line bg-paper"
+      className="fixed z-50 overflow-hidden border border-line bg-paper"
       style={{ top: menu.y, left: menu.x, minWidth: 180, boxShadow: "0 8px 24px -4px rgba(0,0,0,0.18)" }}
     >
       {renaming ? (
@@ -102,7 +102,7 @@ export function DocContextMenu({
           <input
             ref={inputRef}
             defaultValue={oldName}
-            className="w-full rounded-[5px] border border-line bg-surface px-2 py-1 text-[13px] text-ink focus:outline-none focus:ring-1 focus:ring-[var(--color-gold)]"
+            className="w-full border border-line bg-surface px-2 py-1 text-[13px] text-ink focus:outline-none focus:ring-1 focus:ring-[var(--color-gold)]"
             onKeyDown={(e) => {
               if (e.key === "Enter") submitRename((e.target as HTMLInputElement).value);
               if (e.key === "Escape") onClose();

@@ -61,7 +61,7 @@ export function TagResults() {
               <button
                 key={tag}
                 onClick={() => openTag(tag)}
-                className="flex items-center gap-2 w-full text-left rounded-[8px] hover:bg-tertiary"
+                className="flex items-center gap-2 w-full text-left hover:bg-tertiary"
                 style={{
                   height: 30,
                   padding: "0 10px",
@@ -106,7 +106,7 @@ export function TagResults() {
               <button
                 key={d.docId}
                 onClick={() => openDoc(d.docId)}
-                className="flex items-flex-start gap-3 w-full text-left rounded-[10px] hover:bg-surface transition-colors"
+                className="flex items-flex-start gap-3 w-full text-left hover:bg-surface transition-colors"
                 style={{ padding: "14px 14px" }}
               >
                 <svg
@@ -139,7 +139,6 @@ export function TagResults() {
                             fontSize: 11,
                             color: t === activeTag ? "var(--color-slate)" : "var(--color-muted)",
                             background: "var(--color-tertiary)",
-                            borderRadius: 5,
                             padding: "2px 7px",
                           }}
                         >

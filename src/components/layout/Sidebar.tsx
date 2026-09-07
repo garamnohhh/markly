@@ -56,7 +56,7 @@ function VaultSwitcher() {
     <div ref={ref} className="relative shrink-0 border-t border-line px-[14px] py-[10px]">
       <button
         onClick={() => setPopOpen((v) => !v)}
-        className="flex w-full items-center gap-[8px] rounded-[8px] px-[9px] hover:bg-tertiary"
+        className="flex w-full items-center gap-[8px] px-[9px] hover:bg-tertiary"
         style={{ height: 32 }}
       >
         <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="var(--color-mid)" strokeWidth="1.3">
@@ -70,13 +70,13 @@ function VaultSwitcher() {
 
       {popOpen && (
         <div
-          className="absolute bottom-full left-[14px] right-[14px] mb-[4px] overflow-hidden rounded-[10px] border border-line bg-paper"
+          className="absolute bottom-full left-[14px] right-[14px] mb-[4px] overflow-hidden border border-line bg-paper"
           style={{ boxShadow: "0 8px 24px -4px rgba(0,0,0,0.14)" }}
         >
           {/* current vault */}
           <div className="flex items-center gap-[8px] px-[12px] py-[8px]">
             <span className="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-ink">{activeName}</span>
-            <span className="shrink-0 rounded-[5px] bg-tertiary px-[7px] py-[2px] text-[10.5px] text-muted">active</span>
+            <span className="shrink-0 bg-tertiary px-[7px] py-[2px] text-[10.5px] text-muted">active</span>
           </div>
 
           {/* other vaults */}
@@ -159,7 +159,7 @@ export function Sidebar() {
         {/* search */}
         <button
           onClick={() => setCmdPalette(true)}
-          className="flex w-full items-center gap-2 rounded-[9px] border border-line bg-paper px-[11px] text-left hover:border-mid"
+          className="flex w-full items-center gap-2 border border-line bg-paper px-[11px] text-left hover:border-mid"
           style={{ height: "34px" }}
         >
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="var(--color-mid)" strokeWidth="1.5">
@@ -171,14 +171,14 @@ export function Sidebar() {
         </button>
 
         {/* Queue / Files toggle */}
-        <div className="flex gap-[3px] rounded-[9px] p-[3px]" style={{ background: "var(--color-tertiary)" }}>
+        <div className="flex gap-[3px] p-[3px]" style={{ background: "var(--color-tertiary)" }}>
           {TABS.map(({ value, label, icon }) => {
             const active = tab === value;
             return (
               <button
                 key={value}
                 onClick={() => setTab(value)}
-                className="flex flex-1 items-center justify-center gap-[6px] rounded-[7px] transition-colors"
+                className="flex flex-1 items-center justify-center gap-[6px] transition-colors"
                 style={{
                   height: "28px",
                   fontSize: "12px",
@@ -197,7 +197,7 @@ export function Sidebar() {
 
         {/* New note */}
         <button
-          className="flex w-full items-center justify-center gap-[7px] rounded-[9px] text-[13px] font-medium hover:opacity-90"
+          className="flex w-full items-center justify-center gap-[7px] text-[13px] font-medium hover:opacity-90"
           style={{ height: "36px", background: "var(--color-ink)", color: "var(--color-surface)" }}
           onClick={() => useStore.getState().newNote()}
         >
@@ -230,7 +230,7 @@ export function Sidebar() {
               <button
                 key={t}
                 onClick={() => openTag(t)}
-                className="cursor-pointer rounded-[6px] bg-tertiary px-[9px] py-[4px] text-[12px] text-slate hover:bg-line"
+                className="cursor-pointer bg-tertiary px-[9px] py-[4px] text-[12px] text-slate hover:bg-line"
               >
                 #{t}
               </button>

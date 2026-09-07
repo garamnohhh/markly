@@ -128,7 +128,6 @@ export function KnowledgeInbox() {
         <div
           style={{
             border: "1px solid var(--color-line)",
-            borderRadius: 14,
             overflow: "hidden",
             marginBottom: 28,
             opacity: updates.length === 0 ? 0.5 : 1,
@@ -161,7 +160,6 @@ export function KnowledgeInbox() {
                   minWidth: 20,
                   height: 20,
                   padding: "0 7px",
-                  borderRadius: 10,
                   background: "var(--color-gold)",
                   color: "var(--color-surface)",
                   fontSize: 11,
@@ -218,7 +216,6 @@ export function KnowledgeInbox() {
                   position: "absolute",
                   top: "calc(100% + 6px)",
                   left: 0,
-                  borderRadius: 10,
                   boxShadow: "0 8px 24px -8px rgba(44,42,39,0.18)",
                   zIndex: 20,
                   minWidth: 180,
@@ -271,7 +268,7 @@ export function KnowledgeInbox() {
                     key={d.docId}
                     onClick={() => openDoc(d.docId)}
                     className="border border-line bg-surface text-left hover:bg-tertiary transition-colors"
-                    style={{ padding: "13px 15px", borderRadius: 11, cursor: "pointer" }}
+                    style={{ padding: "13px 15px",  cursor: "pointer" }}
                   >
                     <div className="text-ink" style={{ fontSize: 14, fontWeight: 600 }}>{docName(d)}</div>
                   </button>
@@ -332,7 +329,6 @@ export function KnowledgeInbox() {
                     fontSize: 13,
                     background: "var(--color-surface)",
                     border: "1px solid var(--color-line)",
-                    borderRadius: 8,
                     padding: "5px 11px",
                     cursor: "pointer",
                   }}
@@ -364,14 +360,14 @@ function NoteNameModal({ title, onConfirm, onCancel }: { title: string; onConfir
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(44,42,39,0.32)" }} onClick={onCancel}>
-      <div className="rounded-[13px] border border-line bg-paper" style={{ width: 360, padding: 24, boxShadow: "0 24px 48px -12px rgba(44,42,39,0.28)" }} onClick={(e) => e.stopPropagation()}>
+      <div className=" border border-line bg-paper" style={{ width: 360, padding: 24, boxShadow: "0 24px 48px -12px rgba(44,42,39,0.28)" }} onClick={(e) => e.stopPropagation()}>
         <div className="text-ink" style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{title}</div>
         <input
           autoFocus
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder="Note name"
-          className="w-full rounded-[8px] border border-line bg-surface px-3 py-2 text-[13.5px] text-ink focus:outline-none focus:ring-1 focus:ring-[var(--color-gold)]"
+          className="w-full border border-line bg-surface px-3 py-2 text-[13.5px] text-ink focus:outline-none focus:ring-1 focus:ring-[var(--color-gold)]"
           onKeyDown={(e) => {
             if (e.key === "Enter") onConfirm(value);
             if (e.key === "Escape") onCancel();
@@ -379,11 +375,11 @@ function NoteNameModal({ title, onConfirm, onCancel }: { title: string; onConfir
           }}
         />
         <div className="flex justify-end gap-2" style={{ marginTop: 14 }}>
-          <button onClick={onCancel} className="rounded-[7px] border border-line px-3 py-[6px] text-[13px] text-slate hover:bg-tertiary">Cancel</button>
+          <button onClick={onCancel} className=" border border-line px-3 py-[6px] text-[13px] text-slate hover:bg-tertiary">Cancel</button>
           <button
             onClick={() => onConfirm(value)}
             disabled={!value.trim()}
-            className="rounded-[7px] px-3 py-[6px] text-[13px] font-medium hover:opacity-90 disabled:opacity-40"
+            className=" px-3 py-[6px] text-[13px] font-medium hover:opacity-90 disabled:opacity-40"
             style={{ background: "var(--color-ink)", color: "var(--color-surface)" }}
           >
             Create
@@ -404,7 +400,6 @@ function NewNoteButton() {
         padding: "0 16px",
         background: "var(--color-ink)",
         color: "var(--color-surface)",
-        borderRadius: 9,
         fontSize: 13.5,
         fontWeight: 500,
       }}
@@ -440,7 +435,6 @@ function QuickAction({
         gap: 10,
         minHeight: 60,
         padding: "0 14px",
-        borderRadius: 11,
       }}
     >
       <span
@@ -451,7 +445,6 @@ function QuickAction({
           justifyContent: "center",
           width: 30,
           height: 30,
-          borderRadius: 8,
           background: "var(--color-tertiary)",
           flexShrink: 0,
         }}
@@ -495,7 +488,7 @@ function StatCard({
   return (
     <div
       className="border border-line bg-surface"
-      style={{ padding: "13px 16px", borderRadius: 11 }}
+      style={{ padding: "13px 16px" }}
     >
       <div className="text-ink" style={{ fontSize: 23, fontWeight: 600, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
         {value}

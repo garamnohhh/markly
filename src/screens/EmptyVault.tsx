@@ -28,7 +28,6 @@ export function EmptyVault() {
         style={{
           width: 46,
           height: 46,
-          borderRadius: 12,
           border: "1.5px solid var(--color-line)",
           display: "flex",
           alignItems: "center",
@@ -82,7 +81,6 @@ export function EmptyVault() {
             padding: "0 18px",
             background: "var(--color-ink)",
             color: "var(--color-surface)",
-            borderRadius: 9,
             fontSize: 13.5,
             fontWeight: 500,
           }}
@@ -98,7 +96,6 @@ export function EmptyVault() {
             background: "var(--color-paper)",
             border: "1px solid var(--color-line)",
             color: "var(--color-line)",
-            borderRadius: 9,
             fontSize: 13.5,
             fontWeight: 500,
           }}
@@ -118,7 +115,6 @@ export function EmptyVault() {
                 fontSize: 12,
                 color: "var(--color-muted)",
                 background: "var(--color-tertiary)",
-                borderRadius: 6,
                 padding: "5px 11px",
               }}
             >

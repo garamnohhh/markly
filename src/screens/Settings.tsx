@@ -95,7 +95,7 @@ export function Settings() {
             <button
               key={item.id}
               onClick={() => setTab(item.id)}
-              className="flex w-full items-center gap-[10px] rounded-[8px] text-left transition-colors hover:bg-tertiary"
+              className="flex w-full items-center gap-[10px] text-left transition-colors hover:bg-tertiary"
               style={{
                 height: 34,
                 padding: "0 11px",
@@ -180,7 +180,7 @@ function Choice({
 }) {
   return (
     <div
-      className="flex gap-[2px] rounded-[8px] p-[2px]"
+      className="flex gap-[2px] p-[2px]"
       style={{ background: "var(--color-line)" }}
     >
       {options.map((o) => (
@@ -190,7 +190,6 @@ function Choice({
           style={{
             fontSize: 12.5,
             padding: "5px 14px",
-            borderRadius: 6,
             background: value === o.v ? "var(--color-paper)" : "transparent",
             color: value === o.v ? "var(--color-ink)" : "var(--color-muted)",
             fontWeight: value === o.v ? 500 : 400,
@@ -220,7 +219,6 @@ function Toggle({
         alignItems: "center",
         width: 42,
         height: 24,
-        borderRadius: 12,
         padding: "0 2px",
         background: on ? "var(--color-ink)" : "var(--color-line)",
         flexShrink: 0,
@@ -231,7 +229,6 @@ function Toggle({
         style={{
           width: 20,
           height: 20,
-          borderRadius: "50%",
           background: "var(--color-paper)",
           transform: on ? "translateX(18px)" : undefined,
         }}
@@ -349,17 +346,17 @@ function AccountTab() {
     <>
     {baseModalOpen && (
       <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(44,42,39,0.32)" }} onClick={() => setBaseModalOpen(false)}>
-        <div className="rounded-[14px] border border-line bg-paper" style={{ width: 480, boxShadow: "0 24px 48px -12px rgba(44,42,39,0.28)", overflow: "hidden" }} onClick={(e) => e.stopPropagation()}>
+        <div className=" border border-line bg-paper" style={{ width: 480, boxShadow: "0 24px 48px -12px rgba(44,42,39,0.28)", overflow: "hidden" }} onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-between border-b border-line px-5 py-4">
             <span className="text-ink" style={{ fontSize: 14, fontWeight: 600 }}>Change Base</span>
-            <button onClick={() => setBaseModalOpen(false)} className="rounded-[6px] px-2 py-1 text-[12px] text-muted hover:bg-tertiary" style={{ fontFamily: "var(--font-mono)" }}>esc</button>
+            <button onClick={() => setBaseModalOpen(false)} className=" px-2 py-1 text-[12px] text-muted hover:bg-tertiary" style={{ fontFamily: "var(--font-mono)" }}>esc</button>
           </div>
           <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
             {vaults.map((v) => {
               const name = v.split("/").pop() ?? v;
               const active = v === vaultRoot;
               return (
-                <div key={v} className="flex items-center gap-3 rounded-[10px] border" style={{ padding: "10px 14px", borderColor: active ? "var(--color-gold)" : "var(--color-line)", background: active ? "var(--color-accent-weak)" : "var(--color-surface)" }}>
+                <div key={v} className="flex items-center gap-3 border" style={{ padding: "10px 14px", borderColor: active ? "var(--color-gold)" : "var(--color-line)", background: active ? "var(--color-accent-weak)" : "var(--color-surface)" }}>
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke={active ? "var(--color-gold)" : "var(--color-mid)"} strokeWidth="1.3">
                     <path d="M2 4.4c0-.5.4-.9.9-.9h2.4l1.1 1.3h6.7c.5 0 .9.4.9.9v6.1c0 .5-.4.9-.9.9H2.9c-.5 0-.9-.4-.9-.9z" />
                   </svg>
@@ -368,17 +365,17 @@ function AccountTab() {
                     <div className="text-muted truncate" style={{ fontSize: 11 }}>{v}</div>
                   </div>
                   {active ? (
-                    <span className="shrink-0 rounded-[5px] px-[7px] py-[2px] text-[10.5px] font-semibold" style={{ border: "1px solid var(--color-gold)", color: "var(--color-accent-text)" }}>Active</span>
+                    <span className="shrink-0 px-[7px] py-[2px] text-[10.5px] font-semibold" style={{ border: "1px solid var(--color-gold)", color: "var(--color-accent-text)" }}>Active</span>
                   ) : (
                     <div className="flex shrink-0 gap-2">
-                      <button onClick={() => openVault(v).then(() => setBaseModalOpen(false)).catch((e) => setError(String(e)))} className="rounded-[7px] border border-line px-[9px] py-[4px] text-[12px] text-slate hover:bg-tertiary">Switch</button>
-                      <button onClick={() => removeVault(v)} className="rounded-[7px] border border-line px-[9px] py-[4px] text-[12px] hover:bg-tertiary" style={{ color: "var(--color-red)" }}>Remove</button>
+                      <button onClick={() => openVault(v).then(() => setBaseModalOpen(false)).catch((e) => setError(String(e)))} className=" border border-line px-[9px] py-[4px] text-[12px] text-slate hover:bg-tertiary">Switch</button>
+                      <button onClick={() => removeVault(v)} className=" border border-line px-[9px] py-[4px] text-[12px] hover:bg-tertiary" style={{ color: "var(--color-red)" }}>Remove</button>
                     </div>
                   )}
                 </div>
               );
             })}
-            <button onClick={addBase} className="flex items-center gap-2 rounded-[9px] border border-line px-[12px] py-[8px] text-[13px] text-slate hover:bg-tertiary" style={{ marginTop: 4 }}>
+            <button onClick={addBase} className="flex items-center gap-2 border border-line px-[12px] py-[8px] text-[13px] text-slate hover:bg-tertiary" style={{ marginTop: 4 }}>
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M6 2v8M2 6h8" /></svg>
               Add Base
             </button>
@@ -397,12 +394,12 @@ function AccountTab() {
 
       <SectionLabel>Base</SectionLabel>
       <div
-        className="flex items-center gap-3 rounded-[12px] border border-line bg-surface"
+        className="flex items-center gap-3 border border-line bg-surface"
         style={{ padding: "14px 16px", marginBottom: 10 }}
       >
         <div
           style={{
-            width: 38, height: 38, borderRadius: 9, flexShrink: 0,
+            width: 38, height: 38,  flexShrink: 0,
             background: "var(--color-tertiary)",
             display: "flex", alignItems: "center", justifyContent: "center",
           }}
@@ -421,7 +418,7 @@ function AccountTab() {
         <button
           onClick={() => setBaseModalOpen(true)}
           className="border border-line text-slate hover:border-mid transition-colors"
-          style={{ fontSize: 12.5, fontWeight: 500, borderRadius: 8, padding: "6px 12px", flexShrink: 0 }}
+          style={{ fontSize: 12.5, fontWeight: 500,  padding: "6px 12px", flexShrink: 0 }}
         >
           Change Base…
         </button>
@@ -430,7 +427,7 @@ function AccountTab() {
       <div style={{ marginTop: 28 }}>
         <SectionLabel>Sync</SectionLabel>
         <div
-          className="flex items-center justify-between rounded-[12px] border border-line bg-surface"
+          className="flex items-center justify-between border border-line bg-surface"
           style={{ padding: "14px 16px" }}
         >
           <div>
@@ -441,7 +438,7 @@ function AccountTab() {
           </div>
           <div
             className="border border-line text-slate"
-            style={{ fontSize: 12.5, fontWeight: 500, borderRadius: 8, padding: "6px 14px" }}
+            style={{ fontSize: 12.5, fontWeight: 500,  padding: "6px 14px" }}
           >
             Coming soon
           </div>
@@ -554,7 +551,7 @@ function ShortcutsTab() {
               <span className="text-ink" style={{ fontSize: 13.5 }}>{label}</span>
               <button
                 onClick={() => setCapturing(isCapturing ? null : key)}
-                className={`rounded-[6px] border transition-colors ${
+                className={` border transition-colors ${
                   isCapturing
                     ? "border-[var(--color-gold)] bg-[color-mix(in_srgb,var(--color-gold)_10%,transparent)] text-[var(--color-gold)]"
                     : "border-line bg-surface text-muted hover:border-[var(--color-mid)] hover:text-ink"
@@ -632,11 +629,11 @@ function TemplatesTab() {
     <section>
       <div className="text-ink" style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>Templates</div>
       <div className="text-muted" style={{ fontSize: 13, marginBottom: 20 }}>
-        Templates are reusable note starters. Use <code style={{ fontSize: 12, background: "var(--color-tertiary)", borderRadius: 4, padding: "1px 5px" }}>{"{{tplDate}}"}</code>, <code style={{ fontSize: 12, background: "var(--color-tertiary)", borderRadius: 4, padding: "1px 5px" }}>{"{{tplTime}}"}</code>, <code style={{ fontSize: 12, background: "var(--color-tertiary)", borderRadius: 4, padding: "1px 5px" }}>{"{{tplTitle}}"}</code> as variables.
+        Templates are reusable note starters. Use <code style={{ fontSize: 12, background: "var(--color-tertiary)",  padding: "1px 5px" }}>{"{{tplDate}}"}</code>, <code style={{ fontSize: 12, background: "var(--color-tertiary)",  padding: "1px 5px" }}>{"{{tplTime}}"}</code>, <code style={{ fontSize: 12, background: "var(--color-tertiary)",  padding: "1px 5px" }}>{"{{tplTitle}}"}</code> as variables.
       </div>
 
       {editing ? (
-        <div className="rounded-[12px] border border-line bg-surface" style={{ padding: 16 }}>
+        <div className=" border border-line bg-surface" style={{ padding: 16 }}>
           <div style={{ marginBottom: 10 }}>
             <div className="text-muted" style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 5 }}>Name</div>
             <input
@@ -644,7 +641,7 @@ function TemplatesTab() {
               value={draft.name}
               onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
               placeholder="e.g. Weekly Review"
-              className="w-full rounded-[8px] border border-line bg-paper px-3 py-2 text-[13.5px] text-ink focus:outline-none focus:ring-1 focus:ring-[var(--color-gold)]"
+              className="w-full border border-line bg-paper px-3 py-2 text-[13.5px] text-ink focus:outline-none focus:ring-1 focus:ring-[var(--color-gold)]"
               onKeyDown={(e) => e.stopPropagation()}
             />
           </div>
@@ -655,7 +652,7 @@ function TemplatesTab() {
               onChange={(e) => setDraft((d) => ({ ...d, content: e.target.value }))}
               placeholder={"## Notes\n\n"}
               rows={10}
-              className="w-full rounded-[8px] border border-line bg-paper px-3 py-2 text-[13px] font-mono text-ink focus:outline-none focus:ring-1 focus:ring-[var(--color-gold)] resize-none"
+              className="w-full border border-line bg-paper px-3 py-2 text-[13px] font-mono text-ink focus:outline-none focus:ring-1 focus:ring-[var(--color-gold)] resize-none"
               onKeyDown={(e) => e.stopPropagation()}
               style={{ lineHeight: 1.6 }}
             />
@@ -665,11 +662,11 @@ function TemplatesTab() {
               <button onClick={() => remove(draft.id)} className="text-[12.5px] hover:opacity-80" style={{ color: "var(--color-red)" }}>Delete template</button>
             )}
             <div className="ml-auto flex gap-2">
-              <button onClick={() => setEditingId(null)} className="rounded-[7px] border border-line px-3 py-[6px] text-[12.5px] text-slate hover:bg-tertiary">Cancel</button>
+              <button onClick={() => setEditingId(null)} className=" border border-line px-3 py-[6px] text-[12.5px] text-slate hover:bg-tertiary">Cancel</button>
               <button
                 onClick={save}
                 disabled={!draft.name.trim()}
-                className="rounded-[7px] px-3 py-[6px] text-[12.5px] font-medium hover:opacity-90 disabled:opacity-40"
+                className=" px-3 py-[6px] text-[12.5px] font-medium hover:opacity-90 disabled:opacity-40"
                 style={{ background: "var(--color-ink)", color: "var(--color-surface)" }}
               >
                 Save
@@ -684,7 +681,7 @@ function TemplatesTab() {
               <button
                 key={t.id}
                 onClick={() => startEdit(t)}
-                className="flex w-full items-center gap-3 rounded-[10px] border border-line bg-surface px-4 text-left hover:bg-tertiary transition-colors"
+                className="flex w-full items-center gap-3 border border-line bg-surface px-4 text-left hover:bg-tertiary transition-colors"
                 style={{ minHeight: 52, padding: "10px 14px" }}
               >
                 <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="var(--color-mid)" strokeWidth="1.4" strokeLinecap="round">
@@ -703,7 +700,7 @@ function TemplatesTab() {
           </div>
           <button
             onClick={startNew}
-            className="mt-3 flex items-center gap-2 rounded-[9px] border border-line px-[12px] py-[8px] text-[13px] text-slate hover:bg-tertiary"
+            className="mt-3 flex items-center gap-2 border border-line px-[12px] py-[8px] text-[13px] text-slate hover:bg-tertiary"
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M6 2v8M2 6h8" /></svg>
             New template
@@ -749,7 +746,7 @@ function AboutTab() {
             <button
               key={label}
               className="border border-line text-slate"
-              style={{ fontSize: 12.5, fontWeight: 500, borderRadius: 8, padding: "7px 12px" }}
+              style={{ fontSize: 12.5, fontWeight: 500,  padding: "7px 12px" }}
             >
               {label}
             </button>

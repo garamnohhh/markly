@@ -48,11 +48,11 @@ export function OutlinePanel({
         <div className="flex gap-[15px]">
           {/* progress track */}
           <div
-            className="relative w-[3px] shrink-0 rounded-[2px]"
+            className="relative w-[3px] shrink-0"
             style={{ background: "var(--color-line)" }}
           >
             <div
-              className="absolute inset-x-0 top-0 rounded-[2px]"
+              className="absolute inset-x-0 top-0"
               style={{ height: `${pct}%`, background: "var(--color-ink)" }}
             />
           </div>

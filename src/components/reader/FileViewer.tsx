@@ -410,7 +410,7 @@ export function FileViewer() {
       <img
         src={`data:${imageMime(fileExt)};base64,${b64}`}
         alt={name}
-        style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", borderRadius: 8 }}
+        style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
       />
     </div>
   );
@@ -472,7 +472,7 @@ export function FileViewer() {
         </div>
         {fileEditMode && (
           <div
-            className="pointer-events-none absolute inset-[10px] rounded-[13px]"
+            className="pointer-events-none absolute inset-[10px]"
             style={{
               border: "1.5px solid var(--color-line)",
               boxShadow: "inset 0 0 0 3px rgba(44,42,39,0.025)",
@@ -482,7 +482,7 @@ export function FileViewer() {
         {fileEditMode && (
           <div className="pointer-events-none fixed inset-x-0 bottom-5 flex justify-center">
             <div
-              className="flex items-center gap-2 rounded-full px-[15px] text-[11.5px] font-medium"
+              className="flex items-center gap-2 px-[15px] text-[11.5px] font-medium"
               style={{
                 height: "30px",
                 background: "var(--color-ink)",
@@ -490,7 +490,7 @@ export function FileViewer() {
                 boxShadow: "0 8px 20px -6px rgba(44,42,39,0.45)",
               }}
             >
-              <span className="inline-block size-[6px] shrink-0 rounded-full bg-[var(--color-green)]" />
+              <span className="inline-block size-[6px] shrink-0 bg-[var(--color-green)]" />
               <span>
                 Editing ·{" "}
                 <span style={{ fontFamily: "var(--font-mono)", color: "var(--color-mid)" }}>⌘E</span>

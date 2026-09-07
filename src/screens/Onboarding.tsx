@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useStore } from "../store";
+import { Wordmark } from "../components/ui/Logo";
 
 export function Onboarding() {
   const openVault = useStore((s) => s.openVault);
@@ -34,45 +35,11 @@ export function Onboarding() {
           padding: "0 40px",
         }}
       >
-        {/* Logo + title */}
-        <div className="flex items-center gap-[13px] mb-[10px]">
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 40,
-              height: 40,
-              borderRadius: "24%",
-              background: "linear-gradient(150deg,var(--color-tertiary),var(--color-paper))",
-              flexShrink: 0,
-            }}
-          >
-            <svg width="40" height="40" viewBox="0 0 48 48" fill="none">
-              <g transform="translate(24,24.8) scale(0.8) translate(-24,-24)">
-                <path
-                  d="M11 36V12l13 22 13-22v24"
-                  stroke="var(--color-surface)"
-                  strokeWidth="6.25"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </g>
-              <circle cx="40" cy="8" r="3.7" fill="var(--color-gold)" />
-            </svg>
-          </span>
-          <span
-            style={{
-              fontSize: 27,
-              fontWeight: 600,
-              letterSpacing: "-0.02em",
-              color: "var(--color-ink)",
-            }}
-          >
-            Welcome to Markly
-          </span>
+        {/* The wordmark is the title here — screen 17 has no separate heading.
+            Typeset, never an image (assets/snippets.md). */}
+        <div className="mb-[10px]">
+          <Wordmark size={44} />
         </div>
-
         <p
           style={{
             fontSize: 14,
@@ -91,13 +58,12 @@ export function Onboarding() {
           <button
             onClick={() => chooseBase("new")}
             disabled={scanning}
-            className="flex-1 text-left rounded-[12px] p-[22px_20px] border border-[var(--color-line)] bg-[var(--color-paper)] hover:border-[var(--color-ink)] hover:bg-[var(--color-paper)] transition-colors disabled:opacity-50"
+            className="flex-1 text-left p-[22px_20px] border border-[var(--color-line)] bg-[var(--color-paper)] hover:border-[var(--color-ink)] hover:bg-[var(--color-paper)] transition-colors disabled:opacity-50"
           >
             <div
               style={{
                 width: 38,
                 height: 38,
-                borderRadius: 10,
                 background: "var(--color-ink)",
                 display: "flex",
                 alignItems: "center",
@@ -133,13 +99,12 @@ export function Onboarding() {
           <button
             onClick={() => chooseBase("open")}
             disabled={scanning}
-            className="flex-1 text-left rounded-[12px] p-[22px_20px] border border-[var(--color-line)] bg-[var(--color-paper)] hover:border-[var(--color-ink)] hover:bg-[var(--color-paper)] transition-colors disabled:opacity-50"
+            className="flex-1 text-left p-[22px_20px] border border-[var(--color-line)] bg-[var(--color-paper)] hover:border-[var(--color-ink)] hover:bg-[var(--color-paper)] transition-colors disabled:opacity-50"
           >
             <div
               style={{
                 width: 38,
                 height: 38,
-                borderRadius: 10,
                 background: "var(--color-tertiary)",
                 border: "1px solid var(--color-line)",
                 display: "flex",
@@ -194,7 +159,6 @@ export function Onboarding() {
                 gap: 10,
                 height: 46,
                 border: "1px dashed var(--color-line)",
-                borderRadius: 10,
                 padding: "0 16px",
                 color: "var(--color-mid)",
                 fontSize: 12.5,
@@ -210,7 +174,7 @@ export function Onboarding() {
               {vaults.map((v) => {
                 const name = v.split("/").pop() ?? v;
                 return (
-                  <div key={v} className="group flex items-center gap-[10px] rounded-[10px] border border-[var(--color-line)] hover:border-[var(--color-ink)]" style={{ padding: "0 14px", height: 46 }}>
+                  <div key={v} className="group flex items-center gap-[10px] border border-[var(--color-line)] hover:border-[var(--color-ink)]" style={{ padding: "0 14px", height: 46 }}>
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--color-muted)" strokeWidth="1.3">
                       <path d="M2 4.4c0-.5.4-.9.9-.9h2.4l1.1 1.3h6.7c.5 0 .9.4.9.9v6.1c0 .5-.4.9-.9.9H2.9c-.5 0-.9-.4-.9-.9z" />
                     </svg>

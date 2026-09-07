@@ -260,7 +260,7 @@ function FolderDropdown({
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
       <div
-        className="fixed z-50 overflow-hidden rounded-[10px] border border-line bg-paper"
+        className="fixed z-50 overflow-hidden border border-line bg-paper"
         style={{
           top: state.y,
           left: state.x,
@@ -275,7 +275,7 @@ function FolderDropdown({
           {canGoUp ? (
             <button
               onClick={goUp}
-              className="flex items-center gap-1 rounded-[6px] px-1.5 py-0.5 text-[12px] text-muted hover:bg-tertiary hover:text-ink"
+              className="flex items-center gap-1 px-1.5 py-0.5 text-[12px] text-muted hover:bg-tertiary hover:text-ink"
             >
               <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
                 <path d="M10 3L5 8l5 5" />

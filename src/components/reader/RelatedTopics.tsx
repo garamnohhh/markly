@@ -118,7 +118,7 @@ export function RelatedTopics({
       <div className="absolute inset-0" onClick={onClose} />
 
       <div
-        className="relative flex flex-col overflow-hidden rounded-[16px] border border-line bg-paper"
+        className="relative flex flex-col overflow-hidden border border-line bg-paper"
         style={{
           width: "min(1240px, 92vw)",
           height: "74vh",
@@ -182,7 +182,7 @@ export function RelatedTopics({
                     <button
                       key={doc.docId}
                       onClick={() => selectDoc(doc.docId)}
-                      className={`flex items-center gap-2 rounded-[9px] text-left transition-colors ${
+                      className={`flex items-center gap-2 text-left transition-colors ${
                         selectedDocId === doc.docId ? "bg-tertiary" : "hover:bg-tertiary"
                       }`}
                       style={{ padding: "9px 10px" }}
@@ -225,7 +225,7 @@ export function RelatedTopics({
                         <span
                           key={t}
                           className="text-slate"
-                          style={{ fontSize: 12, background: "var(--color-tertiary)", borderRadius: 6, padding: "4px 9px" }}
+                          style={{ fontSize: 12, background: "var(--color-tertiary)",  padding: "4px 9px" }}
                         >
                           #{t}
                         </span>

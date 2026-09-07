@@ -156,7 +156,7 @@ export function DiffView() {
                 <button
                   key={d.docId}
                   onClick={() => openDiff(d.docId, d.lastDecidedVersion, d.currentVersion)}
-                  className="w-full text-left rounded-[10px]"
+                  className="w-full text-left"
                   style={{
                     padding: "11px 12px",
                     background: active ? "var(--color-paper)" : undefined,
@@ -177,7 +177,7 @@ export function DiffView() {
                     }}>
                       {docName(d)}
                     </span>
-                    {active && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--color-gold)", flexShrink: 0 }} />}
+                    {active && <span style={{ width: 6, height: 6,  background: "var(--color-gold)", flexShrink: 0 }} />}
                   </div>
                   <div className="flex items-center gap-[9px]" style={{ marginTop: 7, paddingLeft: 20 }}>
                     <span style={{ fontSize: 11, color: active ? "var(--color-accent-text)" : "var(--color-muted)", fontFamily: "var(--font-mono)" }}>
@@ -243,10 +243,10 @@ export function DiffView() {
 
               <div className="ml-auto flex items-center gap-2">
                 {/* Combined / Step toggle */}
-                <div className="flex gap-[2px] p-[2px] rounded-[8px]" style={{ background: "var(--color-tertiary)" }}>
+                <div className="flex gap-[2px] p-[2px]" style={{ background: "var(--color-tertiary)" }}>
                   {(["combined", "step"] as ViewMode[]).map((v) => (
                     <button key={v} onClick={() => setView(v)} style={{
-                      fontSize: 11.5, fontWeight: view === v ? 600 : 500, padding: "5px 11px", borderRadius: 6,
+                      fontSize: 11.5, fontWeight: view === v ? 600 : 500, padding: "5px 11px", 
                       background: view === v ? "var(--color-paper)" : "transparent",
                       color: view === v ? "var(--color-ink)" : "var(--color-muted)",
                       boxShadow: view === v ? "0 1px 2px rgba(44,42,39,0.05)" : undefined,
@@ -296,7 +296,7 @@ export function DiffView() {
                         <button
                           onClick={() => setStepIndex((i) => Math.max(0, i - 1))}
                           disabled={stepIndex === 0}
-                          className="flex items-center justify-center rounded-[7px] hover:bg-tertiary disabled:opacity-30 transition-colors"
+                          className="flex items-center justify-center hover:bg-tertiary disabled:opacity-30 transition-colors"
                           style={{ width: 28, height: 28, border: "1px solid var(--color-line)" }}
                         >
                           <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -312,7 +312,7 @@ export function DiffView() {
                         <button
                           onClick={() => setStepIndex((i) => Math.min(stepRecords.length - 1, i + 1))}
                           disabled={stepIndex === stepRecords.length - 1}
-                          className="flex items-center justify-center rounded-[7px] hover:bg-tertiary disabled:opacity-30 transition-colors"
+                          className="flex items-center justify-center hover:bg-tertiary disabled:opacity-30 transition-colors"
                           style={{ width: 28, height: 28, border: "1px solid var(--color-line)" }}
                         >
                           <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -390,7 +390,7 @@ function StepActions({
         <button
           onClick={() => revert(target.docId, dismissTo)}
           className="flex items-center gap-[7px] text-slate hover:border-mid hover:bg-surface transition-colors"
-          style={{ height: 32, padding: "0 13px", border: "1px solid var(--color-line)", borderRadius: 8, fontSize: 12.5, fontWeight: 500 }}
+          style={{ height: 32, padding: "0 13px", border: "1px solid var(--color-line)",  fontSize: 12.5, fontWeight: 500 }}
         >
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor"
             strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -410,7 +410,7 @@ function StepActions({
       <button
         onClick={handleAccept}
         className="flex items-center gap-[7px] transition-colors"
-        style={{ height: 32, padding: "0 14px", background: "var(--color-ink)", color: "var(--color-surface)", borderRadius: 8, fontSize: 12.5, fontWeight: 600 }}
+        style={{ height: 32, padding: "0 14px", background: "var(--color-ink)", color: "var(--color-surface)",  fontSize: 12.5, fontWeight: 600 }}
       >
         <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor"
           strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
