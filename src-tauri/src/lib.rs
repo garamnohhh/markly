@@ -3,7 +3,6 @@ mod commands;
 mod vault;
 
 use commands::VaultState;
-use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -16,11 +15,11 @@ pub fn run() {
         .setup(|app| {
             #[cfg(target_os = "macos")]
             {
-                let icon = tauri::image::Image::from_bytes(include_bytes!("../icons/icon-dock.png"))
-                    .expect("brand icon");
-                if let Some(win) = app.get_webview_window("main") {
-                    let _ = win.set_icon(icon);
-                }
+                // No set_icon here: on macOS tao's set_window_icon is a no-op
+                // (windows have no icon), and the Dock icon comes from
+                // icons/icon.icns — the bundle's in a release build, and the
+                // same file baked in by tauri-codegen in dev.
+                //
                 // Minimal macOS menu: standard app/edit/window items only.
                 // Removing the menu entirely (old approach) killed ⌘Q/⌘W/⌘H/⌘M; a full
                 // default menu intercepted our app shortcuts. These predefined items bind
