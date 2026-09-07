@@ -5,15 +5,6 @@ import { AppIcon } from "../ui/AppIcon";
 import { docName, docDirs } from "../../lib/types";
 import type { DocEntry } from "../../lib/types";
 
-const EXT_COLORS: Record<string, string> = {
-  pdf: "var(--color-red)",
-  png: "#8250df", jpg: "#8250df", jpeg: "#8250df", gif: "#8250df", webp: "#8250df", svg: "#8250df",
-  json: "#d0834a", yaml: "#d0834a", yml: "#d0834a", toml: "#d0834a",
-  js: "#4a78b0", ts: "#4a78b0", jsx: "#4a78b0", tsx: "#4a78b0",
-  py: "var(--color-green)", go: "var(--color-green)", rs: "#d0834a",
-  csv: "var(--color-green)", sh: "var(--color-slate)", bash: "var(--color-slate)",
-  html: "var(--color-red)", css: "#4a78b0", scss: "#4a78b0",
-};
 function FocusIcon({ on }: { on?: boolean }) {
   return (
     <svg width="15" height="15" viewBox="0 0 16 16" fill="none"
@@ -25,11 +16,11 @@ function FocusIcon({ on }: { on?: boolean }) {
   );
 }
 
+// No colour on an extension badge (23 · 면색) — it is information, not state.
 function FileExtBadge({ ext }: { ext: string }) {
   if (!ext) return null;
-  const color = EXT_COLORS[ext] ?? "var(--color-mid)";
   return (
-    <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.04em", color, background: `${color}18`, border: `1px solid ${color}30`, borderRadius: 4, padding: "2px 5px", textTransform: "uppercase" }}>
+    <span style={{ fontSize: "9px", letterSpacing: "0.06em", fontFamily: "var(--font-mono)", color: "var(--color-muted)", border: "1px solid var(--color-line-soft)", padding: "2px 5px", textTransform: "uppercase" }}>
       {ext}
     </span>
   );

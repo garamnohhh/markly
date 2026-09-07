@@ -180,12 +180,12 @@ export function DiffView() {
                     {active && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--color-gold)", flexShrink: 0 }} />}
                   </div>
                   <div className="flex items-center gap-[9px]" style={{ marginTop: 7, paddingLeft: 20 }}>
-                    <span style={{ fontSize: 11, color: active ? "var(--color-warm-hi)" : "var(--color-muted)", fontFamily: "var(--font-mono)" }}>
+                    <span style={{ fontSize: 11, color: active ? "var(--color-accent-text)" : "var(--color-muted)", fontFamily: "var(--font-mono)" }}>
                       v{d.lastDecidedVersion} → v{d.currentVersion}
                     </span>
                     <span style={{
-                      fontSize: 10.5, fontWeight: 600, color: "var(--color-warm-hi)",
-                      background: "var(--color-warm-badge)", borderRadius: 5, padding: "1px 6px",
+                      fontSize: 10.5, fontWeight: 600, color: "var(--color-muted)",
+                      border: "1px solid var(--color-line-soft)", fontFamily: "var(--font-mono)", padding: "1px 6px",
                     }}>
                       {n} change{n !== 1 ? "s" : ""}
                     </span>
@@ -232,8 +232,8 @@ export function DiffView() {
                   </span>
                   {doc && unreadCount(doc) > 0 && (
                     <span style={{
-                      fontSize: 10.5, fontWeight: 600, color: "var(--color-warm-hi)",
-                      background: "var(--color-warm-badge)", borderRadius: 5, padding: "1px 7px",
+                      fontSize: 10.5, fontWeight: 600, color: "var(--color-muted)",
+                      border: "1px solid var(--color-line-soft)", fontFamily: "var(--font-mono)", padding: "1px 7px",
                     }}>
                       unread
                     </span>
@@ -452,11 +452,11 @@ function DiffLineRow({ line }: { line: DiffLine }) {
 
   if (line.kind === "ins") {
     return (
-      <div style={{ display: "flex", background: "var(--color-warm-surface)" }}>
-        <span style={{ ...numStyle, color: "var(--color-green)", background: "var(--color-warm-surface)", borderRight: "1px solid var(--color-warm-border)" }}>
+      <div style={{ display: "flex", background: "var(--color-ok-weak)" }}>
+        <span style={{ ...numStyle, color: "var(--color-green)", background: "var(--color-ok-weak)", borderRight: "1px solid var(--color-line)" }}>
           {line.num}
         </span>
-        <span style={{ padding: "2px 18px", color: "var(--color-green)" }}>
+        <span style={{ padding: "2px 18px", color: "var(--color-ink)" }}>
           <span style={{ color: "var(--color-green)", marginRight: 8 }}>+</span>
           {line.segments.map((s) => s.text).join(" ")}
         </span>
@@ -466,13 +466,13 @@ function DiffLineRow({ line }: { line: DiffLine }) {
 
   if (line.kind === "del") {
     return (
-      <div style={{ display: "flex", background: "var(--color-warm-surface)" }}>
-        <span style={{ ...numStyle, color: "var(--color-warm-lo)", background: "var(--color-warm-surface)", borderRight: "1px solid var(--color-warm-border)" }}>
+      <div style={{ display: "flex", background: "var(--color-err-weak)" }}>
+        <span style={{ ...numStyle, color: "var(--color-mid)", background: "var(--color-err-weak)", borderRight: "1px solid var(--color-line)" }}>
           {line.num}
         </span>
-        <span style={{ padding: "2px 18px", color: "var(--color-red)" }}>
-          <span style={{ color: "var(--color-warm-mid)", marginRight: 8 }}>−</span>
-          <span style={{ textDecoration: "line-through", textDecorationColor: "var(--color-warm-lo)" }}>
+        <span style={{ padding: "2px 18px", color: "var(--color-ink)" }}>
+          <span style={{ color: "var(--color-red)", marginRight: 8 }}>−</span>
+          <span style={{ textDecoration: "line-through", textDecorationColor: "var(--color-mid)" }}>
             {line.segments.map((s) => s.text).join(" ")}
           </span>
         </span>
@@ -482,22 +482,22 @@ function DiffLineRow({ line }: { line: DiffLine }) {
 
   // chg: word-level inline highlights
   return (
-    <div style={{ display: "flex", background: "var(--color-warm-surface)" }}>
-      <span style={{ ...numStyle, color: "var(--color-warm-lo)", background: "var(--color-warm-surface)", borderRight: "1px solid var(--color-warm-border)" }}>
+    <div style={{ display: "flex", background: "var(--color-tertiary)" }}>
+      <span style={{ ...numStyle, color: "var(--color-mid)", background: "var(--color-tertiary)", borderRight: "1px solid var(--color-line)" }}>
         {line.num}
       </span>
       <span style={{ padding: "2px 18px" }}>
         {line.segments.map((seg, i) => {
           if (seg.op === "del") {
             return (
-              <span key={i} style={{ background: "var(--color-warm-border)", color: "var(--color-red)", textDecoration: "line-through", borderRadius: 3, padding: "0 2px" }}>
+              <span key={i} style={{ background: "var(--color-err-weak)", color: "var(--color-red)", textDecoration: "line-through", padding: "0 2px" }}>
                 {seg.text}
               </span>
             );
           }
           if (seg.op === "ins") {
             return (
-              <span key={i} style={{ background: "var(--color-warm-border)", color: "var(--color-green)", borderRadius: 3, padding: "0 2px" }}>
+              <span key={i} style={{ background: "var(--color-ok-weak)", color: "var(--color-green)", padding: "0 2px" }}>
                 {seg.text}
               </span>
             );

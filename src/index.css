@@ -17,14 +17,16 @@
 /* class-based dark mode (toggled via settings, not OS) */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Design tokens — 2026.09.06 handoff (design_handoff_markly_2026-09-06/).
-   The existing --color-* names are kept so every component keeps working; only
-   the values move to the handoff's palette. Names map to the design system's
-   own tokens as follows:
+/* Design tokens — 2026.09.07 handoff (design_handoff_markly_2026-09-07/).
+   Values are copied from the design system's own tokens/colors.css; nothing is
+   adjusted by eye. The Tailwind --color-* names are kept so utilities keep
+   working, and each one maps to a design-system token:
 
-     paper→--bg  surface→--surface  tertiary→--bg-2  line→--line
+     paper→--bg  surface→--surface  tertiary→--bg-2
+     line→--line  line-soft→--line-soft
      mid→--text-3  muted→--text-2  slate→--text-2  ink→--text
-     gold→--accent  green→--ok  red→--err
+     gold→--accent  accent-text→--accent-text  accent-weak→--accent-weak
+     green→--ok  red→--err  warn→--warn  info→--info  *-weak→--*-weak
 
    :root carries the LIGHT values and .dark overrides them, matching how the
    theme class already works. The default setting is dark (store), which is what
@@ -35,6 +37,7 @@
   --color-surface: #ffffff;
   --color-tertiary: #e8ebe8;
   --color-line: #d3dad4;
+  --color-line-soft: #e4e9e5;
   --color-mid: #6e7a72;
   --color-muted: #59635c;
   --color-slate: #59635c;
@@ -52,6 +55,13 @@
   --color-red: #b03a30;
   --color-warn: #8a6410;
   --color-info: #2a5f7d;
+
+  /* Weak tints. Diff rows, badges and match highlights only — never a banner
+     face (23 · 면색). */
+  --color-ok-weak: #dcf2e8;
+  --color-warn-weak: #f5e9cc;
+  --color-err-weak: #f6dcd8;
+  --color-info-weak: #dde9f0;
 
   /* Square corners are the system; curvature carries no meaning. Kept as
      tokens so a future exception has one place to live. */
@@ -71,30 +81,22 @@
   --spacing-sidebar: 268px;
   --spacing-panel: 268px;
 
-  /* Accent-tinted surfaces — UpdateNoticeBar, Updates banner. Formerly warm
-     gold; the handoff drops the paper palette entirely. */
-  --color-warm-surface: #dcf2e8;
-  --color-warm-border: #b6e0cd;
-  --color-warm-hi: #0b6b4a;
-  --color-warm-mid: #0b6b4a;
-  --color-warm-lo: #6e7a72;
-  --color-warm-badge: #c8ead9;
-
-  /* Row states */
-  --color-row-active: #e8ebe8;
 }
 
-/* Syntax highlighting tokens (editor code fences) */
+/* Syntax highlighting. The handoff's 23 · 구문 색 allows four kinds only —
+   keyword, string, number, comment. Function names, types and operators stay
+   --text; the remaining names are kept so the editor's tag map still resolves,
+   but they all point at one of the four (or at the text colour). */
 :root {
-  --hl-keyword:  #cf222e;
-  --hl-string:   #0a3069;
-  --hl-number:   #0550ae;
-  --hl-comment:  #6e7781;
-  --hl-type:     #953800;
-  --hl-function: #8250df;
-  --hl-operator: #cf222e;
-  --hl-property: #116329;
-  --hl-constant: #0550ae;
+  --hl-keyword:  var(--color-accent-text);
+  --hl-string:   var(--color-info);
+  --hl-number:   var(--color-warn);
+  --hl-comment:  var(--color-mid);
+  --hl-type:     var(--color-ink);
+  --hl-function: var(--color-ink);
+  --hl-operator: var(--color-ink);
+  --hl-property: var(--color-ink);
+  --hl-constant: var(--color-ink);
 }
 
 /* Dark theme: override the same token vars so every utility flips automatically */
@@ -103,6 +105,7 @@
   --color-surface: #0b0e0d;
   --color-tertiary: #131917;
   --color-line: #1e2422;
+  --color-line-soft: #161b19;
   --color-mid: #6b776f;
   --color-muted: #8b968e;
   --color-slate: #8b968e;
@@ -118,25 +121,11 @@
   --color-warn: #e0b64a;
   --color-info: #7fb8d9;
 
-  --color-warm-surface: #12281f;
-  --color-warm-border: #1e4433;
-  --color-warm-hi: #7ce7bd;
-  --color-warm-mid: #3ed49c;
-  --color-warm-lo: #6b776f;
-  --color-warm-badge: #123024;
+  --color-ok-weak: #12281f;
+  --color-warn-weak: #2c2413;
+  --color-err-weak: #2c1917;
+  --color-info-weak: #14232c;
 
-  --color-row-active: #131917;
-
-  /* dark mode syntax tokens */
-  --hl-keyword:  #ff7b72;
-  --hl-string:   #a5d6ff;
-  --hl-number:   #79c0ff;
-  --hl-comment:  #8b949e;
-  --hl-type:     #ffa657;
-  --hl-function: #d2a8ff;
-  --hl-operator: #ff7b72;
-  --hl-property: #7ee787;
-  --hl-constant: #79c0ff;
 }
 
 html,
@@ -201,16 +190,18 @@ body {
   margin: 0.85em 0;
 }
 .md-body a {
+  color: var(--color-accent-text);
+  text-decoration: none;
+}
+.md-body a:hover {
   color: var(--color-gold);
-  text-decoration: underline;
-  text-underline-offset: 2px;
 }
 .md-body strong {
   font-weight: 600;
 }
 /* Wiki links [[...]] — resolved vs unresolved (missing target) */
 .md-body a.wikilink {
-  color: var(--color-gold);
+  color: var(--color-accent-text);
   text-decoration: none;
   border-bottom: 1px solid var(--color-line);
 }
@@ -220,7 +211,8 @@ body {
   opacity: 0.85;
 }
 .md-body mark {
-  background: #f3e8cf;
+  background: var(--color-accent-weak);
+  color: var(--color-accent-text);
   border-radius: var(--radius-control);
   padding: 0 2px;
 }
@@ -446,11 +438,11 @@ body {
 }
 .md-body blockquote.callout-note,
 .md-body blockquote.callout-info {
-  border-left-color: #4a78b0;
+  border-left-color: var(--color-info);
 }
 .md-body blockquote.callout-note .callout-title,
 .md-body blockquote.callout-info .callout-title {
-  color: #4a78b0;
+  color: var(--color-info);
 }
 .md-body blockquote.callout-tip,
 .md-body blockquote.callout-success {
@@ -462,11 +454,11 @@ body {
 }
 .md-body blockquote.callout-warning,
 .md-body blockquote.callout-caution {
-  border-left-color: #9a7b34;
+  border-left-color: var(--color-warn);
 }
 .md-body blockquote.callout-warning .callout-title,
 .md-body blockquote.callout-caution .callout-title {
-  color: #9a7b34;
+  color: var(--color-warn);
 }
 .md-body blockquote.callout-danger,
 .md-body blockquote.callout-error,
@@ -595,21 +587,21 @@ body {
 
 /* Word-level diff marks */
 .word-del {
-  background: #fbeae6;
-  color: #9a4632;
+  background: var(--color-err-weak);
+  color: var(--color-red);
   text-decoration: line-through;
   border-radius: var(--radius-control);
   padding: 0 1px;
 }
 .word-ins {
-  background: #eef5e9;
-  color: #3f6a37;
+  background: var(--color-ok-weak);
+  color: var(--color-green);
   border-radius: var(--radius-control);
   padding: 0 1px;
 }
 
 /* ── Brand mark ────────────────────────────────────────────────────────────
-   From design_handoff_markly_2026-09-06/assets/snippets.md. The mark is
+   From design_handoff_markly_2026-09-07/assets/snippets.md. The mark is
    typeset, not a symbol: JetBrains Mono 400 plus a square accent dot. Drawn in
    code rather than shipped as an image so it follows theme, resolution and
    size changes. Do not restyle — the handoff forbids uppercase, other faces,

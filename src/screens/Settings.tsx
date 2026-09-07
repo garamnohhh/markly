@@ -359,7 +359,7 @@ function AccountTab() {
               const name = v.split("/").pop() ?? v;
               const active = v === vaultRoot;
               return (
-                <div key={v} className="flex items-center gap-3 rounded-[10px] border" style={{ padding: "10px 14px", borderColor: active ? "var(--color-gold)" : "var(--color-line)", background: active ? "var(--color-warm-surface)" : "var(--color-surface)" }}>
+                <div key={v} className="flex items-center gap-3 rounded-[10px] border" style={{ padding: "10px 14px", borderColor: active ? "var(--color-gold)" : "var(--color-line)", background: active ? "var(--color-accent-weak)" : "var(--color-surface)" }}>
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke={active ? "var(--color-gold)" : "var(--color-mid)"} strokeWidth="1.3">
                     <path d="M2 4.4c0-.5.4-.9.9-.9h2.4l1.1 1.3h6.7c.5 0 .9.4.9.9v6.1c0 .5-.4.9-.9.9H2.9c-.5 0-.9-.4-.9-.9z" />
                   </svg>
@@ -368,7 +368,7 @@ function AccountTab() {
                     <div className="text-muted truncate" style={{ fontSize: 11 }}>{v}</div>
                   </div>
                   {active ? (
-                    <span className="shrink-0 rounded-[5px] px-[7px] py-[2px] text-[10.5px] font-semibold" style={{ background: "var(--color-gold)22", color: "var(--color-warm-mid)" }}>Active</span>
+                    <span className="shrink-0 rounded-[5px] px-[7px] py-[2px] text-[10.5px] font-semibold" style={{ border: "1px solid var(--color-gold)", color: "var(--color-accent-text)" }}>Active</span>
                   ) : (
                     <div className="flex shrink-0 gap-2">
                       <button onClick={() => openVault(v).then(() => setBaseModalOpen(false)).catch((e) => setError(String(e)))} className="rounded-[7px] border border-line px-[9px] py-[4px] text-[12px] text-slate hover:bg-tertiary">Switch</button>

@@ -293,9 +293,9 @@ export function CommandPalette() {
                           style={{
                             fontSize: 10.5,
                             fontWeight: 600,
-                            color: "var(--color-warm-mid)",
-                            background: "var(--color-warm-badge)",
-                            borderRadius: 5,
+                            color: "var(--color-muted)",
+                            border: "1px solid var(--color-line-soft)",
+                            fontFamily: "var(--font-mono)",
                             padding: "2px 7px",
                             flexShrink: 0,
                           }}

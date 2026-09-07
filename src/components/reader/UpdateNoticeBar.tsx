@@ -1,6 +1,9 @@
 import type { DocEntry } from "../../lib/types";
 import { useStore } from "../../store";
 
+// Callout, accent tone. The handoff's 23 · 면색 is explicit: a callout does not
+// paint its face — the surface stays --surface and a 3px left bar carries the
+// tone. --accent-weak is for selected rows only, never for a banner.
 export function UpdateNoticeBar({ doc }: { doc: DocEntry }) {
   const readLock = useStore((s) => s.readLockVersion) ?? doc.currentVersion;
   const openDiff = useStore((s) => s.openDiff);
@@ -14,40 +17,32 @@ export function UpdateNoticeBar({ doc }: { doc: DocEntry }) {
   return (
     <div
       style={{
-        background: "var(--color-warm-surface)",
-        border: "1px solid var(--color-warm-border)",
-        borderRadius: "11px",
-        padding: "11px 15px",
+        background: "var(--color-surface)",
+        border: "1px solid var(--color-line)",
+        borderLeft: "3px solid var(--color-gold)",
+        padding: "12px 16px",
         marginBottom: "32px",
         display: "flex",
         alignItems: "center",
-        gap: "11px",
+        gap: "12px",
       }}
     >
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-        <path
-          d="M8 2.5a3.5 3.5 0 0 0-3.5 3.5c0 3-1.3 4-1.3 4h9.6s-1.3-1-1.3-4A3.5 3.5 0 0 0 8 2.5z"
-          fill="var(--color-warm-badge)" stroke="var(--color-warm-mid)" strokeWidth="1.1" strokeLinejoin="round"
-        />
-        <path d="M6.7 13a1.4 1.4 0 0 0 2.6 0" stroke="var(--color-warm-mid)" strokeWidth="1.1" strokeLinecap="round" />
-      </svg>
-
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "2px" }}>
         {isAccepted ? (
           <>
-            <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-warm-hi)" }}>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-ink)" }}>
               Changes applied to v{doc.currentVersion}
             </span>
-            <span style={{ fontSize: "12px", color: "var(--color-warm-mid)" }}>
+            <span style={{ fontSize: "12px", color: "var(--color-muted)" }}>
               Still reading v{readLock} · mark as read to dismiss
             </span>
           </>
         ) : (
           <>
-            <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-warm-hi)" }}>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-ink)" }}>
               {n} newer version{n > 1 ? "s" : ""} available
             </span>
-            <span style={{ fontSize: "12px", color: "var(--color-warm-mid)" }}>
+            <span style={{ fontSize: "12px", color: "var(--color-muted)" }}>
               Reading v{readLock} · latest is v{doc.currentVersion}
             </span>
           </>
@@ -59,18 +54,17 @@ export function UpdateNoticeBar({ doc }: { doc: DocEntry }) {
           <button
             onClick={() => openDiff(doc.docId, readLock, doc.currentVersion)}
             style={{
-              height: "30px",
-              padding: "0 13px",
-              borderRadius: "8px",
+              height: "32px",
+              padding: "0 12px",
               background: "var(--color-gold)",
-              color: "var(--color-surface)",
+              border: "1px solid var(--color-gold)",
+              color: "var(--color-on-accent)",
               fontSize: "12.5px",
               fontWeight: 600,
-              border: "none",
               cursor: "pointer",
             }}
           >
-            View changes
+            Compare
           </button>
         )}
         <button
@@ -78,18 +72,17 @@ export function UpdateNoticeBar({ doc }: { doc: DocEntry }) {
             useStore.setState({ readLockVersion: doc.currentVersion });
           })}
           style={{
-            height: "30px",
-            padding: "0 13px",
-            borderRadius: "8px",
-            border: "1px solid var(--color-warm-border)",
-            background: "none",
+            height: "32px",
+            padding: "0 12px",
+            border: "1px solid var(--color-line)",
+            background: "var(--color-surface)",
             fontSize: "12.5px",
-            fontWeight: 500,
-            color: "var(--color-warm-mid)",
+            fontWeight: 600,
+            color: "var(--color-ink)",
             cursor: "pointer",
           }}
         >
-          Mark as read
+          Read
         </button>
       </div>
     </div>

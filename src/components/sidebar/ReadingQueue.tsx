@@ -44,18 +44,18 @@ export function ReadingQueue() {
             goChanges();
           }}
           className={`mb-[14px] flex w-full items-center gap-[9px] rounded-[10px] px-[12px] text-left ${changes.length > 0 ? "hover:brightness-95" : "cursor-default"}`}
-          style={{ height: "40px", background: "var(--color-warm-surface)", border: "1px solid var(--color-warm-border)" }}
+          style={{ height: "40px", background: "var(--color-surface)", borderLeft: "3px solid var(--color-gold)", border: "1px solid var(--color-line)", borderLeftWidth: 3, borderLeftColor: "var(--color-gold)" }}
         >
-          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="var(--color-warm-mid)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="var(--color-accent-text)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
             <path d="M2 8h3l1.5 2.5L9 4.5 10.5 8H14" />
           </svg>
-          <span className="flex-1 text-[13px] font-semibold" style={{ color: "var(--color-warm-hi)", opacity: changes.length === 0 ? 0.5 : 1 }}>
+          <span className="flex-1 text-[13px] font-semibold" style={{ color: "var(--color-ink)", opacity: changes.length === 0 ? 0.5 : 1 }}>
             Changes
           </span>
           {changes.length > 0 && (
             <span
               className="inline-flex min-w-[20px] items-center justify-center rounded-[10px] px-[6px] text-[11px] font-bold"
-              style={{ height: "20px", background: "var(--color-gold)", color: "var(--color-surface)" }}
+              style={{ height: "20px", background: "var(--color-gold)", color: "var(--color-on-accent)" }}
             >
               {changes.length}
             </span>
@@ -169,7 +169,7 @@ function UnreadRow({
           </span>
           <span
             className="shrink-0 rounded-[5px] px-[6px] text-[10.5px] font-semibold"
-            style={{ background: "var(--color-warm-badge)", color: "var(--color-warm-mid)", paddingTop: "2px", paddingBottom: "2px" }}
+            style={{ border: "1px solid var(--color-line-soft)", color: "var(--color-muted)", fontFamily: "var(--font-mono)", paddingTop: "2px", paddingBottom: "2px" }}
           >
             {isNew ? "new" : `${n} edit${n > 1 ? "s" : ""}`}
           </span>

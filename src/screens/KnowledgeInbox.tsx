@@ -140,14 +140,15 @@ export function KnowledgeInbox() {
               alignItems: "center",
               gap: 9,
               padding: "14px 18px",
-              background: "var(--color-warm-surface)",
-              borderBottom: updates.length > 0 ? "1px solid var(--color-warm-border)" : undefined,
+              background: "var(--color-surface)",
+              borderLeft: "3px solid var(--color-gold)",
+              borderBottom: updates.length > 0 ? "1px solid var(--color-line)" : undefined,
             }}
           >
-            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="var(--color-warm-mid)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="var(--color-accent-text)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
               <path d="M2 8h3l1.5 2.5L9 4.5 10.5 8H14" />
             </svg>
-            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--color-warm-hi)" }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--color-ink)" }}>
               Updated since your last visit
             </span>
             {updates.length > 0 && (
@@ -479,12 +480,12 @@ function StatCard({
       <div
         style={{
           padding: "13px 16px",
-          border: "1px solid var(--color-warm-border)",
-          borderRadius: 11,
-          background: "var(--color-warm-surface)",
+          border: "1px solid var(--color-line)",
+          borderLeft: "3px solid var(--color-gold)",
+          background: "var(--color-surface)",
         }}
       >
-        <div style={{ fontSize: 23, fontWeight: 600, letterSpacing: "-0.02em", color: "var(--color-warm-hi)", fontVariantNumeric: "tabular-nums" }}>
+        <div style={{ fontSize: 23, fontWeight: 600, letterSpacing: "-0.02em", color: "var(--color-accent-text)", fontVariantNumeric: "tabular-nums" }}>
           {value}
         </div>
         <div className="text-muted" style={{ fontSize: 11.5, marginTop: 1 }}>{label}</div>
@@ -524,9 +525,9 @@ function UpdateRow({ doc, last, onOpen }: { doc: DocEntry; last: boolean; onOpen
           style={{
             fontSize: 11,
             fontWeight: 600,
-            color: "var(--color-warm-hi)",
-            background: "var(--color-warm-badge)",
-            borderRadius: 5,
+            color: "var(--color-muted)",
+            border: "1px solid var(--color-line-soft)",
+            fontFamily: "var(--font-mono)",
             padding: "2px 7px",
           }}
         >
