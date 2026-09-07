@@ -30,7 +30,9 @@ function BaseMark({ onGoInbox }: { onGoInbox: () => void }) {
         title="Base"
         className="flex shrink-0 items-center px-0.5 text-ink"
       >
-        <Wordmark size={15} live />
+        {/* 13, not the 15 the brand doc calls its inline floor — the mark sat
+            too loud next to the 12px path. See the report for that deviation. */}
+        <Wordmark size={13} live />
       </button>
       <span className="shrink-0 bg-line" style={{ width: 1, height: 14 }} />
     </>

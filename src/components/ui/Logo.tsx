@@ -10,13 +10,16 @@
 export function Wordmark({ size = 15, live }: { size?: number; live?: boolean }) {
   // The letter-spacing ladder from the handoff: tighten as it grows.
   const tracking = size >= 44 ? "-0.035em" : size >= 24 ? "-0.03em" : "-0.02em";
+  // The dot is 0.27em, snapped to whole pixels. Left in em it lands on half
+  // pixels and smears — the same reason the small mark snaps its dot.
+  const dot = Math.max(2, Math.round(size * 0.27));
   return (
     <span
       className={`markly-wordmark${live ? " markly-wordmark--live" : ""}`}
       style={{ fontSize: size, letterSpacing: tracking }}
       aria-label="markly"
     >
-      markly<i />
+      markly<i style={{ width: dot, height: dot }} />
     </span>
   );
 }
