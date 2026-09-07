@@ -258,10 +258,10 @@ export function PropertiesPanel({
                     className={`flex items-center gap-1.5 ${onFrontmatterChange ? "cursor-pointer" : "cursor-default"}`}
                   >
                     <span
-                      className={`inline-flex h-4 w-7 items-center transition-colors ${pinned ? "bg-gold" : "bg-line"}`}
+                      className={`inline-flex h-4 w-7 items-center border transition-colors ${pinned ? "border-[var(--color-gold)] bg-gold" : "border-line bg-transparent"}`}
                     >
                       <span
-                        className={`h-3 w-3 translate-x-0.5 bg-paper shadow transition-transform ${pinned ? "translate-x-3.5" : ""}`}
+                        className={`h-3 w-3 translate-x-0.5 transition-transform ${pinned ? "translate-x-3.5 bg-[var(--color-on-accent)]" : "bg-mid"}`}
                       />
                     </span>
                     <span className="text-slate">{pinned ? "true" : "false"}</span>

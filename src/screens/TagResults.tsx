@@ -46,7 +46,7 @@ export function TagResults() {
       {/* Left: tag list */}
       <div
         className="flex flex-col overflow-y-auto border-r border-line bg-surface"
-        style={{ width: 200, flexShrink: 0, padding: "18px 14px" }}
+        style={{ width: 269, flexShrink: 0, padding: "18px 14px" }}
       >
         <div
           className="text-mid"

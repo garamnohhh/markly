@@ -91,7 +91,7 @@ export function FindBar() {
     <div
       data-find-exclude
       className="fixed z-[100] flex items-center gap-1.5 border border-line bg-paper"
-      style={{ top: 52, right: 16, padding: "6px 10px", minWidth: 280, boxShadow: "0 8px 24px -4px rgba(0,0,0,0.18)" }}
+      style={{ top: 52, right: 16, padding: "6px 10px", minWidth: 280 }}
       onMouseDown={(e) => e.stopPropagation()}
     >
       <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="var(--color-muted)" strokeWidth="1.6" strokeLinecap="round" style={{ flexShrink: 0 }}>

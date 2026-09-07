@@ -95,7 +95,7 @@ export function DocContextMenu({
     <div
       onMouseDown={(e) => e.stopPropagation()}
       className="fixed z-50 overflow-hidden border border-line bg-paper"
-      style={{ top: menu.y, left: menu.x, minWidth: 180, boxShadow: "0 8px 24px -4px rgba(0,0,0,0.18)" }}
+      style={{ top: menu.y, left: menu.x, minWidth: 180 }}
     >
       {renaming ? (
         <div className="px-[10px] py-[8px]">

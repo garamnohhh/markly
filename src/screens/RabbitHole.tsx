@@ -59,7 +59,7 @@ export function RabbitHole() {
       {/* Left: trail */}
       <div
         className="flex flex-col overflow-y-auto border-r border-line bg-surface"
-        style={{ width: 220, flexShrink: 0, padding: "24px 16px" }}
+        style={{ width: 269, flexShrink: 0, padding: "24px 16px" }}
       >
         <div
           className="text-mid"

@@ -16,15 +16,17 @@ export function SegmentedControl<T extends string>({
   onChange,
 }: Props<T>) {
   return (
-    <div className="flex gap-0.5 rounded-input bg-tertiary p-0.5">
-      {segments.map((s) => (
+    <div className="inline-flex w-full border border-line">
+      {segments.map((s, i) => (
         <button
           key={s.value}
           onClick={() => onChange(s.value)}
-          className={`flex-1 whitespace-nowrap rounded-control px-2 py-1 text-[12.5px] font-medium transition-colors ${
+          className={`flex-1 whitespace-nowrap px-2 py-1 text-[12.5px] font-medium transition-colors ${
+            i > 0 ? "border-l border-line" : ""
+          } ${
             value === s.value
-              ? "bg-paper text-ink shadow-sm"
-              : "text-muted hover:text-slate"
+              ? "bg-[var(--color-gold)] text-[var(--color-on-accent)]"
+              : "text-muted hover:text-ink"
           }`}
         >
           {s.label}

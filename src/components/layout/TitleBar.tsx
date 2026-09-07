@@ -1,7 +1,7 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useLayoutEffect, useRef, useState } from "react";
 import { useStore, useDocs } from "../../store";
-import { AppIcon } from "../ui/AppIcon";
+import { Wordmark } from "../ui/Logo";
 import { docName, docDirs } from "../../lib/types";
 import type { DocEntry } from "../../lib/types";
 
@@ -23,6 +23,20 @@ function FileExtBadge({ ext }: { ext: string }) {
     <span style={{ fontSize: "9px", letterSpacing: "0.06em", fontFamily: "var(--font-mono)", color: "var(--color-muted)", border: "1px solid var(--color-line-soft)", padding: "2px 5px", textTransform: "uppercase" }}>
       {ext}
     </span>
+  );
+}
+
+// The wordmark stands where the app icon used to. It is the one live dot in the
+// app (assets/snippets.md: "페이지당 하나"), and the 1px rule after it is the
+// separator the Shell spec draws between the mark and the path.
+function BaseMark({ onGoInbox }: { onGoInbox: () => void }) {
+  return (
+    <>
+      <button onClick={onGoInbox} title="Base" className="flex shrink-0 items-center px-0.5">
+        <Wordmark size={15} live />
+      </button>
+      <span className="shrink-0 bg-line" style={{ width: 1, height: 14 }} />
+    </>
   );
 }
 
@@ -59,39 +73,42 @@ export function TitleBar() {
     <header
       data-tauri-drag-region
       data-find-exclude
-      className="flex h-[54px] shrink-0 items-center gap-3 border-b border-line bg-surface px-[18px] select-none"
+      className="grid h-[38px] shrink-0 items-center gap-3 border-b border-line bg-tertiary select-none"
+      style={{ gridTemplateColumns: "1fr auto 1fr", padding: "0 6px 0 14px" }}
     >
-      <TrafficLights />
+      {/* Left group. Which icons live here is unchanged by the redesign — only
+          the bar around them moved to the handoff's 38px grid. */}
+      <div data-tauri-drag-region className="flex items-center gap-[14px] justify-self-start">
+        <TrafficLights />
 
-      {!isSecondaryView && (
-        <IconButton label="Toggle sidebar (⌘\)" onClick={toggleSidebar}>
-          <SidebarIcon />
-        </IconButton>
-      )}
-      {!isSecondaryView && (
-        <IconButton
-          label={focusMode ? "Show side panels (⌘.)" : "Focus mode — text only (⌘.)"}
-          onClick={toggleFocus}
-        >
-          <FocusIcon on={focusMode} />
-        </IconButton>
-      )}
+        {!isSecondaryView && (
+          <IconButton label="Toggle sidebar (⌘\)" onClick={toggleSidebar}>
+            <SidebarIcon />
+          </IconButton>
+        )}
+        {!isSecondaryView && (
+          <IconButton
+            label={focusMode ? "Show side panels (⌘.)" : "Focus mode — text only (⌘.)"}
+            onClick={toggleFocus}
+          >
+            <FocusIcon on={focusMode} />
+          </IconButton>
+        )}
+      </div>
 
-      {/* Center breadcrumb */}
+      {/* Center: wordmark, hairline, path. The handoff puts the app's one
+          blinking dot here (assets/snippets.md), and grid keeps it centred
+          regardless of how wide the two side groups are. */}
       <div
         data-tauri-drag-region
-        className="flex min-w-0 flex-1 items-center justify-center gap-1.5 text-[12.5px] text-muted"
+        className="flex min-w-0 items-center justify-center gap-[10px] justify-self-center text-[12px] text-muted"
       >
-        {/* Reader / RabbitHole: AppIcon lives inside the breadcrumb so logo + path center together */}
         {inReader && doc
           ? <ReaderBreadcrumb doc={doc} onGoInbox={goInbox} />
           : inFileViewer
           ? (
             <>
-              <button onClick={goInbox} title="Base" className="flex shrink-0 items-center rounded-control p-0.5 hover:bg-tertiary">
-                <AppIcon size={18} />
-              </button>
-              <Sep />
+              <BaseMark onGoInbox={goInbox} />
               <span className="truncate rounded-control px-1 py-0.5 font-medium text-ink" style={{ maxWidth: 320 }}>
                 {fileName.includes(".") ? fileName.slice(0, fileName.lastIndexOf(".")) : fileName}
               </span>
@@ -102,13 +119,7 @@ export function TitleBar() {
           ? <RabbitHoleBreadcrumb doc={rabbitStartDoc} onGoInbox={goInbox} />
           : (
             <>
-              <button
-                onClick={goInbox}
-                title="Base"
-                className="flex shrink-0 items-center rounded-control p-0.5 hover:bg-tertiary"
-              >
-                <AppIcon size={18} />
-              </button>
+              <BaseMark onGoInbox={goInbox} />
 
               {view === "inbox" && (
                 <span className="rounded-control px-1 py-0.5 font-medium text-ink">My Base</span>
@@ -145,8 +156,8 @@ export function TitleBar() {
         }
       </div>
 
-      {/* Right buttons */}
-      <div className="flex items-center gap-1">
+      {/* Right group — also unchanged apart from the spacing. */}
+      <div className="flex items-center gap-1 justify-self-end">
         {inReader && (
           <button
             onClick={toggleMode}
@@ -324,7 +335,8 @@ function FolderDropdown({
   );
 }
 
-// Reader breadcrumb with overflow detection — AppIcon included so logo+path center as one unit
+// Reader breadcrumb with overflow detection — the wordmark is measured with
+// the path so the pair centres as one unit
 function ReaderBreadcrumb({ doc, onGoInbox }: { doc: DocEntry; onGoInbox: () => void }) {
   const dirs = docDirs(doc);
   const name = docName(doc);
@@ -371,7 +383,7 @@ function ReaderBreadcrumb({ doc, onGoInbox }: { doc: DocEntry; onGoInbox: () => 
           aria-hidden
           className="pointer-events-none invisible absolute left-0 top-0 flex shrink-0 items-center gap-1.5 whitespace-nowrap"
         >
-          <span style={{ width: 22, display: "inline-block" }} />
+          <span style={{ width: 68, display: "inline-block" }} />
           {dirs.map((d, i) => (
             <span key={i} className="flex items-center gap-1.5">
               <span>›</span>
@@ -382,14 +394,7 @@ function ReaderBreadcrumb({ doc, onGoInbox }: { doc: DocEntry; onGoInbox: () => 
           <span className="px-1 font-medium">{name}</span>
         </span>
 
-        {/* Logo */}
-        <button
-          onClick={onGoInbox}
-          title="Base"
-          className="flex shrink-0 items-center rounded-control p-0.5 hover:bg-tertiary"
-        >
-          <AppIcon size={18} />
-        </button>
+        <BaseMark onGoInbox={onGoInbox} />
 
         {shownDirs.map(({ label, prefix }, i) => (
           <span key={i} className="flex shrink-0 items-center gap-1.5">
@@ -440,13 +445,7 @@ function RabbitHoleBreadcrumb({ doc, onGoInbox }: { doc: DocEntry; onGoInbox: ()
   return (
     <>
       <div className="flex min-w-0 flex-1 items-center justify-center gap-1.5 overflow-hidden">
-        <button
-          onClick={onGoInbox}
-          title="Base"
-          className="flex shrink-0 items-center rounded-control p-0.5 hover:bg-tertiary"
-        >
-          <AppIcon size={18} />
-        </button>
+        <BaseMark onGoInbox={onGoInbox} />
 
         {dirs.map((d, i) => (
           <span key={i} className="flex shrink-0 items-center gap-1.5">

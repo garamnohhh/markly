@@ -189,8 +189,8 @@ function _build() { return create<AppState>()(
       acceptChangesOnClose: false,
       markReadOnDocClose: false,
       expandedFolders: [],
-      sidebarWidth: 268,
-      tocWidth: 268,
+      sidebarWidth: 269,
+      tocWidth: 269,
       showEmptySections: true,
       shortcuts: DEFAULT_SHORTCUTS,
       templates: DEFAULT_TEMPLATES,
@@ -494,10 +494,11 @@ function _build() { return create<AppState>()(
           ...current,
           ...p,
           vaults: root && !vaults.includes(root) ? [root, ...vaults] : vaults,
-          // Panel widths move to the handoff's 268px. Only the previous
-          // defaults are migrated — a width the user dragged to is theirs.
-          sidebarWidth: p.sidebarWidth === 380 ? 268 : (p.sidebarWidth ?? 268),
-          tocWidth: p.tocWidth === 360 ? 268 : (p.tocWidth ?? 268),
+          // Panel columns are 269px: the 268px SideNav plus its 1px border,
+          // which border-box would otherwise eat (23 · 패널 · 사이드바). Only
+          // previous defaults migrate — a width the user dragged to is theirs.
+          sidebarWidth: p.sidebarWidth === 380 || p.sidebarWidth === 268 ? 269 : (p.sidebarWidth ?? 269),
+          tocWidth: p.tocWidth === 360 || p.tocWidth === 268 ? 269 : (p.tocWidth ?? 269),
           shortcuts: { ...DEFAULT_SHORTCUTS, ...(p.shortcuts ?? {}) },
           templates: p.templates ?? DEFAULT_TEMPLATES,
         };

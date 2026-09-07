@@ -208,8 +208,8 @@ export function DocReader() {
           className="doc-scroll h-full overflow-y-auto"
         >
           <div
-            className={`mx-auto px-[56px] pt-16 pb-[120px] ${
-              editorWidth === "wide" ? "max-w-(--spacing-reading-wide)" : "max-w-(--spacing-reading)"
+            className={`mx-auto px-[32px] pt-16 pb-[120px] ${
+              editorWidth === "wide" ? "max-w-[calc(var(--spacing-reading-wide)+64px)]" : "max-w-[calc(var(--spacing-reading)+64px)]"
             }`}
           >
             <UpdateNoticeBar doc={doc} />

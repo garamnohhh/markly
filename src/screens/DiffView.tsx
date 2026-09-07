@@ -129,7 +129,7 @@ export function DiffView() {
       {/* Left panel: pending changes */}
       <div
         className="flex flex-col min-h-0 border-r border-line bg-surface"
-        style={{ width: 268, flexShrink: 0 }}
+        style={{ width: 269, flexShrink: 0 }}
       >
         {/* Header */}
         <div style={{ flexShrink: 0, padding: "18px 16px 12px" }}>

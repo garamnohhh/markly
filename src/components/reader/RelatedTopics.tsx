@@ -128,7 +128,7 @@ export function RelatedTopics({
         {/* Shared header — 3 zones aligned with the two panels below */}
         <div className="flex shrink-0 items-center border-b border-line" style={{ height: 42 }}>
           {/* Left zone: label, same width as list panel */}
-          <div className="flex shrink-0 items-center" style={{ width: 280, padding: "0 16px" }}>
+          <div className="flex shrink-0 items-center" style={{ width: 269, padding: "0 16px" }}>
             <span
               className="text-mid"
               style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.13em", textTransform: "uppercase" }}
@@ -147,7 +147,7 @@ export function RelatedTopics({
           </div>
 
           {/* Right zone: Open + esc, same width as list panel for symmetry */}
-          <div className="flex shrink-0 items-center justify-end gap-1" style={{ width: 280, padding: "0 12px" }}>
+          <div className="flex shrink-0 items-center justify-end gap-1" style={{ width: 269, padding: "0 12px" }}>
             {selectedDocId && (
               <button
                 onClick={() => openDoc(selectedDocId)}
@@ -170,7 +170,7 @@ export function RelatedTopics({
         {/* Body: list | divider | content */}
         <div className="flex min-h-0 flex-1">
           {/* Left: list */}
-          <div className="flex shrink-0 flex-col border-r border-line overflow-y-auto" style={{ width: 280, padding: "8px 10px" }}>
+          <div className="flex shrink-0 flex-col border-r border-line overflow-y-auto" style={{ width: 269, padding: "8px 10px" }}>
             {related.length === 0 && sharedTags.length === 0 ? (
               <div className="text-muted" style={{ fontSize: 12.5, padding: "12px 6px" }}>
                 No related documents found.

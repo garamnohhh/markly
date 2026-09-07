@@ -87,7 +87,7 @@ export function Settings() {
     <div className="flex h-full min-h-0">
       {/* Left nav */}
       <nav className="flex shrink-0 flex-col overflow-y-auto border-r border-line bg-surface"
-        style={{ width: 200, padding: "16px 12px", gap: 1 }}
+        style={{ width: 269, padding: "16px 12px", gap: 1 }}
       >
         {NAV_ITEMS.map((item) => {
           const active = tab === item.id;
@@ -190,10 +190,9 @@ function Choice({
           style={{
             fontSize: 12.5,
             padding: "5px 14px",
-            background: value === o.v ? "var(--color-paper)" : "transparent",
-            color: value === o.v ? "var(--color-ink)" : "var(--color-muted)",
-            fontWeight: value === o.v ? 500 : 400,
-            boxShadow: value === o.v ? "0 1px 2px rgba(0,0,0,0.04)" : undefined,
+            background: value === o.v ? "var(--color-gold)" : "transparent",
+            color: value === o.v ? "var(--color-on-accent)" : "var(--color-muted)",
+            fontWeight: value === o.v ? 600 : 400,
           }}
         >
           {o.l}
@@ -220,16 +219,17 @@ function Toggle({
         width: 42,
         height: 24,
         padding: "0 2px",
-        background: on ? "var(--color-ink)" : "var(--color-line)",
+        border: on ? "1px solid var(--color-gold)" : "1px solid var(--color-line)",
+        background: on ? "var(--color-gold)" : "transparent",
         flexShrink: 0,
       }}
     >
       <span
         className="transition-transform"
         style={{
-          width: 20,
-          height: 20,
-          background: "var(--color-paper)",
+          width: 18,
+          height: 18,
+          background: on ? "var(--color-on-accent)" : "var(--color-mid)",
           transform: on ? "translateX(18px)" : undefined,
         }}
       />
@@ -346,7 +346,7 @@ function AccountTab() {
     <>
     {baseModalOpen && (
       <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(44,42,39,0.32)" }} onClick={() => setBaseModalOpen(false)}>
-        <div className=" border border-line bg-paper" style={{ width: 480, boxShadow: "0 24px 48px -12px rgba(44,42,39,0.28)", overflow: "hidden" }} onClick={(e) => e.stopPropagation()}>
+        <div className=" border border-line bg-paper" style={{ width: 480, overflow: "hidden" }} onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-between border-b border-line px-5 py-4">
             <span className="text-ink" style={{ fontSize: 14, fontWeight: 600 }}>Change Base</span>
             <button onClick={() => setBaseModalOpen(false)} className=" px-2 py-1 text-[12px] text-muted hover:bg-tertiary" style={{ fontFamily: "var(--font-mono)" }}>esc</button>

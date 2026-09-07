@@ -71,7 +71,7 @@ function VaultSwitcher() {
       {popOpen && (
         <div
           className="absolute bottom-full left-[14px] right-[14px] mb-[4px] overflow-hidden border border-line bg-paper"
-          style={{ boxShadow: "0 8px 24px -4px rgba(0,0,0,0.14)" }}
+          style={{ }}
         >
           {/* current vault */}
           <div className="flex items-center gap-[8px] px-[12px] py-[8px]">
@@ -151,7 +151,7 @@ export function Sidebar() {
 
   return (
     <aside
-      className="relative flex shrink-0 flex-col border-r border-line bg-surface"
+      className="relative flex shrink-0 flex-col border-r border-line bg-tertiary"
       style={{ width: sidebarWidth }}
     >
       {/* fixed top: search + tab switcher + new note */}
@@ -171,21 +171,20 @@ export function Sidebar() {
         </button>
 
         {/* Queue / Files toggle */}
-        <div className="flex gap-[3px] p-[3px]" style={{ background: "var(--color-tertiary)" }}>
+        <div className="flex border border-line">
           {TABS.map(({ value, label, icon }) => {
             const active = tab === value;
             return (
               <button
                 key={value}
                 onClick={() => setTab(value)}
-                className="flex flex-1 items-center justify-center gap-[6px] transition-colors"
+                className="flex flex-1 items-center justify-center gap-[6px] transition-colors [&:not(:first-child)]:border-l [&:not(:first-child)]:border-line"
                 style={{
-                  height: "28px",
+                  height: "30px",
                   fontSize: "12px",
                   fontWeight: active ? 600 : 500,
-                  background: active ? "var(--color-paper)" : "transparent",
-                  color: active ? "var(--color-ink)" : "var(--color-muted)",
-                  boxShadow: active ? "0 1px 2px rgba(44,42,39,0.06)" : "none",
+                  background: active ? "var(--color-gold)" : "transparent",
+                  color: active ? "var(--color-on-accent)" : "var(--color-muted)",
                 }}
               >
                 {icon}
@@ -198,7 +197,7 @@ export function Sidebar() {
         {/* New note */}
         <button
           className="flex w-full items-center justify-center gap-[7px] text-[13px] font-medium hover:opacity-90"
-          style={{ height: "36px", background: "var(--color-ink)", color: "var(--color-surface)" }}
+          style={{ height: "38px", background: "var(--color-gold)", color: "var(--color-on-accent)" }}
           onClick={() => useStore.getState().newNote()}
         >
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">

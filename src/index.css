@@ -76,10 +76,12 @@
   --spacing-reading: 660px;
   --spacing-reading-wide: 920px;
 
-  /* shell dimensions */
-  --spacing-topbar: 54px;
-  --spacing-sidebar: 268px;
-  --spacing-panel: 268px;
+  /* shell dimensions (00 · 구현 기준). The title bar is --h-md; 269 is the
+     268px SideNav plus its 1px border, which border-box would otherwise eat. */
+  --spacing-topbar: 38px;
+  --spacing-header: 54px;
+  --spacing-sidebar: 269px;
+  --spacing-panel: 269px;
 
 }
 
@@ -126,6 +128,19 @@
   --color-err-weak: #2c1917;
   --color-info-weak: #14232c;
 
+}
+
+/* Motion — three durations, one easing (00 · 동작). Movement is capped at 4px,
+   so overlays fade in rather than sliding. */
+:root {
+  --dur-color: 120ms;
+  --dur-move: 180ms;
+  --dur-enter: 260ms;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes markly-fade { from { opacity: 0 } to { opacity: 1 } }
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
 }
 
 html,

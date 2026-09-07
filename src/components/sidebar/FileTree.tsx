@@ -136,7 +136,7 @@ function NewItemControl({ dir }: { dir: string }) {
       {mode === "menu" && (
         <div
           className="absolute right-0 z-50 mt-1 overflow-hidden border border-line bg-paper"
-          style={{ minWidth: 150, boxShadow: "0 8px 24px -4px rgba(0,0,0,0.18)" }}
+          style={{ minWidth: 150 }}
         >
           <button className={itemCls} onClick={() => setMode("file")}>New file</button>
           <button className={itemCls} onClick={() => setMode("folder")}>New folder</button>
@@ -145,7 +145,7 @@ function NewItemControl({ dir }: { dir: string }) {
       {(mode === "file" || mode === "folder") && (
         <div
           className="absolute right-0 z-50 mt-1 border border-line bg-paper px-[10px] py-[8px]"
-          style={{ minWidth: 190, boxShadow: "0 8px 24px -4px rgba(0,0,0,0.18)" }}
+          style={{ minWidth: 190 }}
         >
           <input
             ref={inputRef}
@@ -419,7 +419,7 @@ function NonDocCtxMenu({
     <div
       onMouseDown={(e) => e.stopPropagation()}
       className="fixed z-50 overflow-hidden border border-line bg-paper"
-      style={{ top: menu.y, left: menu.x, minWidth: 180, boxShadow: "0 8px 24px -4px rgba(0,0,0,0.18)" }}
+      style={{ top: menu.y, left: menu.x, minWidth: 180 }}
     >
       {kind === "file" && renaming ? (
         <div className="px-[10px] py-[8px]">
