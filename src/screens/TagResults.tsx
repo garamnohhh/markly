@@ -66,7 +66,7 @@ export function TagResults() {
                   height: 30,
                   padding: "0 10px",
                   fontSize: 13,
-                  background: active ? "var(--color-row-active)" : undefined,
+                  background: active ? "var(--color-surface)" : undefined,
                   color: active ? "var(--color-ink)" : "var(--color-slate)",
                   fontWeight: active ? 500 : 400,
                 }}

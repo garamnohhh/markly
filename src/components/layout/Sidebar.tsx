@@ -139,12 +139,25 @@ export function Sidebar() {
     return [...set].sort();
   }, [docs]);
 
+  // The grab strip straddles the border rather than sitting inside it, and the
+  // cursor and text selection are pinned for the whole drag — otherwise the
+  // pointer leaves the 4px strip on the first fast move and the drag reads as
+  // "sticky".
   const onDragStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     const startX = e.clientX;
     const startW = sidebarWidth;
+    const prevCursor = document.body.style.cursor;
+    const prevSelect = document.body.style.userSelect;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
     const onMove = (mv: MouseEvent) => setSidebarWidth(startW + mv.clientX - startX);
-    const onUp = () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
+    const onUp = () => {
+      document.body.style.cursor = prevCursor;
+      document.body.style.userSelect = prevSelect;
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
   }, [sidebarWidth, setSidebarWidth]);
@@ -197,21 +210,10 @@ export function Sidebar() {
         </div>
         </div>
 
-        {/* New note */}
-        <button
-          className="flex w-full items-center justify-center gap-[7px] text-[13px] font-medium hover:opacity-90"
-          style={{ height: "38px", background: "var(--color-surface)", border: "1px solid var(--color-line)", color: "var(--color-ink)" }}
-          onClick={() => useStore.getState().newNote()}
-        >
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
-            <path d="M8 3v10M3 8h10" />
-          </svg>
-          New note
-        </button>
       </div>
 
       {/* scrollable content */}
-      <div className="min-h-0 flex-1 overflow-y-auto px-[14px] pb-[14px]">
+      <div className="min-h-0 flex-1 overflow-y-auto">
         {tab === "queue" ? <ReadingQueue /> : <FileTree />}
       </div>
 
@@ -250,8 +252,9 @@ export function Sidebar() {
       {/* Drag handle — right edge */}
       <div
         onMouseDown={onDragStart}
-        className="absolute right-0 top-0 h-full w-[4px] cursor-col-resize hover:bg-[var(--color-gold)20]"
-        style={{ zIndex: 1 }}
+        title="Drag to resize"
+        className="absolute top-0 h-full cursor-col-resize"
+        style={{ right: -4, width: 9, zIndex: 30 }}
       />
     </aside>
   );

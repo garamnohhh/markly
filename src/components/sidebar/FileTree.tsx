@@ -51,51 +51,44 @@ function countFiles(node: TreeNode): number {
 }
 
 // Extension → badge color
-// Extension badges carry no colour (23 · 면색): an extension is information,
-// not a state. Neutral DS Badge — mono, hairline, --text-2.
-function ExtBadge({ name }: { name: string }) {
-  const ext = name.includes(".") ? name.split(".").pop()!.toLowerCase() : "";
-  if (!ext) return null;
+// The tree is mono unicode, not icons (23 · 구문 색 · 모서리). Guides and marks
+// follow the design system's TreeView exactly: "│ ".repeat(depth-1) + "├ " for
+// the guide, − / + for an open / closed folder.
+const guideFor = (depth: number) => (depth > 0 ? "│ ".repeat(depth - 1) + "├ " : "");
+
+const TREE_ROW: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  padding: "0 8px",
+  fontFamily: "var(--font-mono)",
+  fontSize: "12.5px",
+  lineHeight: 1.9,
+  whiteSpace: "nowrap",
+  textAlign: "left",
+  width: "100%",
+};
+
+function Guide({ depth }: { depth: number }) {
+  const g = guideFor(depth);
+  if (!g) return null;
   return (
-    <span
-      style={{
-        fontSize: "9.5px", letterSpacing: "0.06em",
-        fontFamily: "var(--font-mono)",
-        color: "var(--color-muted)",
-        border: "1px solid var(--color-line-soft)",
-        padding: "1px 5px",
-        flexShrink: 0, textTransform: "uppercase",
-      }}
-    >
-      {ext}
+    <span className="shrink-0" style={{ color: "var(--color-line)", userSelect: "none" }}>
+      {g}
     </span>
   );
 }
 
-// Icons
-const ChevronIcon = ({ open }: { open: boolean }) => (
-  <svg
-    width="11" height="11" viewBox="0 0 12 12"
-    fill="none" stroke="var(--color-mid)" strokeWidth="1.8"
-    strokeLinecap="round" strokeLinejoin="round"
-    style={{ transform: open ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.15s", flexShrink: 0 }}
-  >
-    <path d="M4 2.5L8 6l-4 3.5" />
-  </svg>
-);
-
-const FolderIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--color-mid)" strokeWidth="1.3" style={{ flexShrink: 0 }}>
-    <path d="M2 4.4c0-.5.4-.9.9-.9h2.4l1.1 1.3h6.7c.5 0 .9.4.9.9v6.1c0 .5-.4.9-.9.9H2.9c-.5 0-.9-.4-.9-.9z" />
-  </svg>
-);
-
-const FileIcon = ({ active }: { active?: boolean }) => (
-  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke={active ? "var(--color-mid)" : "var(--color-muted)"} strokeWidth="1.3" style={{ flexShrink: 0 }}>
-    <path d="M4 2h5l3 3v9H4z" />
-    <path d="M9 2v3h3" strokeLinejoin="round" />
-  </svg>
-);
+function Meta({ children }: { children: React.ReactNode }) {
+  return (
+    <span
+      className="shrink-0"
+      style={{ marginLeft: "auto", paddingLeft: 16, fontSize: 11, color: "var(--color-mid)" }}
+    >
+      {children}
+    </span>
+  );
+}
 
 // "+" affordance in the Files header: New file / New folder, created at `dir`
 // (current doc's folder, else root). Reuses the small inline-input pattern.
@@ -231,7 +224,7 @@ function NodeChildren({
             <DocFileRow
               key={child.name}
               doc={child.doc}
-              name={child.name.replace(/\.md$/i, "")}
+              name={child.name}
               depth={depth}
               active={openId === child.doc.docId}
               openDoc={openDoc}
@@ -271,25 +264,24 @@ function FolderRow({
       <button
         onClick={() => toggleFolder(path)}
         onContextMenu={(e) => { e.preventDefault(); onFileCtx(e.clientX, e.clientY, path, node.name, "folder"); }}
-        className="flex w-full items-center text-left hover:bg-tertiary"
+        aria-expanded={open}
+        className="hover:text-ink"
         style={{
-          gap: 7,
-          height: 30,
-          paddingLeft: 9 + depth * 21,
-          paddingRight: 9,
-          color: "var(--color-slate)",
-          fontSize: "13.5px",
+          ...TREE_ROW,
+          borderLeft: "3px solid transparent",
+          color: "var(--color-muted)",
           userSelect: "none",
         }}
       >
-        <ChevronIcon open={open} />
-        <FolderIcon />
-        <span className="min-w-0 flex-1 truncate">{node.name}</span>
-        {count > 0 && (
-          <span className="shrink-0 text-[11px] text-muted">
-            {count}
-          </span>
-        )}
+        <Guide depth={depth} />
+        <span
+          className="shrink-0"
+          style={{ color: open ? "var(--color-accent-text)" : "var(--color-mid)" }}
+        >
+          {open ? "−" : "+"}
+        </span>
+        <span className="min-w-0 truncate">{node.name}</span>
+        {count > 0 && <Meta>{count}</Meta>}
       </button>
       {open && <NodeChildren node={node} depth={depth + 1} pathPrefix={path} onCtx={onCtx} onFileCtx={onFileCtx} />}
     </>
@@ -303,23 +295,23 @@ function DocFileRow({
   openDoc: (id: string) => void; onCtx: OnCtx;
 }) {
   const hasUnread = unreadCount(doc) > 0;
-  const pl = depth === 0 ? 9 + 18 : 9 + depth * 21;
 
   return (
     <button
       onClick={() => openDoc(doc.docId)}
       onContextMenu={(e) => { e.preventDefault(); onCtx(e.clientX, e.clientY, doc); }}
-      className="flex w-full items-center text-left hover:bg-tertiary"
+      aria-selected={active || undefined}
+      className="hover:text-ink"
       style={{
-        gap: 7, height: 30, paddingLeft: pl, paddingRight: 9,
-        background: active ? "var(--color-row-active)" : undefined,
-        color: active ? "var(--color-ink)" : "var(--color-slate)",
-        fontWeight: active ? 500 : 400, fontSize: "13.5px",
+        ...TREE_ROW,
+        borderLeft: `3px solid ${active ? "var(--color-gold)" : "transparent"}`,
+        background: active ? "var(--color-surface)" : undefined,
+        color: active ? "var(--color-ink)" : "var(--color-muted)",
       }}
     >
-      <FileIcon active={active} />
-      <span className="min-w-0 flex-1 truncate">{name}</span>
-      {hasUnread && <span className="size-[5px] shrink-0 bg-gold" />}
+      <Guide depth={depth + 1} />
+      <span className="min-w-0 truncate">{name}</span>
+      {hasUnread && <Meta>▪</Meta>}
     </button>
   );
 }
@@ -330,24 +322,23 @@ function RawFileRow({
   name: string; relPath: string; depth: number; active: boolean;
   openFile: (relPath: string) => void; onFileCtx: OnFileCtx;
 }) {
-  const pl = depth === 0 ? 9 + 18 : 9 + depth * 21;
-  const displayName = name.includes(".") ? name.substring(0, name.lastIndexOf(".")) : name;
-
   return (
     <button
       onClick={() => openFile(relPath)}
       onContextMenu={(e) => { e.preventDefault(); onFileCtx(e.clientX, e.clientY, relPath, name, "file"); }}
-      className="flex w-full items-center text-left hover:bg-tertiary"
+      aria-selected={active || undefined}
+      className="hover:text-ink"
       style={{
-        gap: 7, height: 30, paddingLeft: pl, paddingRight: 9,
-        background: active ? "var(--color-row-active)" : undefined,
-        color: active ? "var(--color-ink)" : "var(--color-slate)",
-        fontWeight: active ? 500 : 400, fontSize: "13.5px",
+        ...TREE_ROW,
+        borderLeft: `3px solid ${active ? "var(--color-gold)" : "transparent"}`,
+        background: active ? "var(--color-surface)" : undefined,
+        color: active ? "var(--color-ink)" : "var(--color-muted)",
       }}
     >
-      <FileIcon active={active} />
-      <span className="min-w-0 flex-1 truncate">{displayName}</span>
-      <ExtBadge name={name} />
+      <Guide depth={depth + 1} />
+      {/* Extension stays in the name, as the spec's tree data has it — the
+          badge was ours. */}
+      <span className="min-w-0 truncate">{name}</span>
     </button>
   );
 }

@@ -16,12 +16,23 @@ export function OutlinePanel({
   const tocWidth = useStore((s) => s.tocWidth);
   const setTocWidth = useStore((s) => s.setTocWidth);
 
+  // Same grab strip as the sidebar: straddle the border, pin the cursor for the
+  // duration, so a fast drag does not slip off it.
   const onDragStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     const startX = e.clientX;
     const startW = tocWidth;
+    const prevCursor = document.body.style.cursor;
+    const prevSelect = document.body.style.userSelect;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
     const onMove = (mv: MouseEvent) => setTocWidth(startW - (mv.clientX - startX));
-    const onUp = () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
+    const onUp = () => {
+      document.body.style.cursor = prevCursor;
+      document.body.style.userSelect = prevSelect;
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
   }, [tocWidth, setTocWidth]);
@@ -35,8 +46,9 @@ export function OutlinePanel({
       {/* Drag handle — left edge */}
       <div
         onMouseDown={onDragStart}
-        className="absolute left-0 top-0 h-full w-[4px] cursor-col-resize hover:bg-[var(--color-gold)20]"
-        style={{ zIndex: 1 }}
+        title="Drag to resize"
+        className="absolute top-0 h-full cursor-col-resize"
+        style={{ left: -4, width: 9, zIndex: 30 }}
       />
       <div
         className="mb-[18px] text-[10px] font-bold uppercase text-mid"

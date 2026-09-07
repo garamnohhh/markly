@@ -100,7 +100,7 @@ export function Settings() {
                 height: 34,
                 padding: "0 11px",
                 fontSize: 13.5,
-                background: active ? "var(--color-row-active)" : undefined,
+                background: active ? "var(--color-surface)" : undefined,
                 color: active ? "var(--color-ink)" : "var(--color-slate)",
                 fontWeight: active ? 500 : 400,
               }}
