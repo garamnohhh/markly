@@ -54,7 +54,10 @@ export function Settings() {
 
       {/* Content area */}
       <div className="min-w-0 flex-1 overflow-y-auto bg-paper" style={{ padding: "36px 40px" }}>
-        <div style={{ maxWidth: 660 }}>
+        {/* The handoff leaves this column against the left edge; centring it is
+            the user's call, not the spec's. The 660px measure is unchanged —
+            only the block moves. */}
+        <div style={{ maxWidth: 660, margin: "0 auto" }}>
           {tab === "appearance" && <AppearanceTab />}
           {tab === "editor" && <EditorTab />}
           {tab === "tracking" && <TrackingTab />}

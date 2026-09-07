@@ -7,6 +7,7 @@ import { unreadCount } from "../../lib/types";
 import { DocContextMenu } from "../ui/DocContextMenu";
 import type { CtxMenu } from "../ui/DocContextMenu";
 import type { DocEntry } from "../../lib/types";
+import { ExtChip } from "../ui/ExtChip";
 
 interface TreeNode {
   name: string;
@@ -280,7 +281,8 @@ function FolderRow({
         >
           {open ? "−" : "+"}
         </span>
-        <span className="min-w-0 truncate">{node.name}</span>
+        {/* folders get a count, never a chip */}
+        <span className="min-w-0 flex-1 truncate">{node.name}</span>
         {count > 0 && <Meta>{count}</Meta>}
       </button>
       {open && <NodeChildren node={node} depth={depth + 1} pathPrefix={path} onCtx={onCtx} onFileCtx={onFileCtx} />}
@@ -310,8 +312,16 @@ function DocFileRow({
       }}
     >
       <Guide depth={depth + 1} />
-      <span className="min-w-0 truncate">{name}</span>
-      {hasUnread && <Meta>▪</Meta>}
+      <span className="min-w-0 flex-1 truncate">{name}</span>
+      <ExtChip name={name} />
+      {/* the unread square rides to the right of the chip; it is this
+          product's data, so it is outside the accent budget */}
+      {hasUnread && (
+        <span
+          className="shrink-0"
+          style={{ width: 6, height: 6, background: "var(--color-gold)" }}
+        />
+      )}
     </button>
   );
 }
@@ -336,9 +346,8 @@ function RawFileRow({
       }}
     >
       <Guide depth={depth + 1} />
-      {/* Extension stays in the name, as the spec's tree data has it — the
-          badge was ours. */}
-      <span className="min-w-0 truncate">{name}</span>
+      <span className="min-w-0 flex-1 truncate">{name}</span>
+      <ExtChip name={name} />
     </button>
   );
 }

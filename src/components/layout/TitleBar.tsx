@@ -2,6 +2,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useStore, useDocs } from "../../store";
 import { Wordmark } from "../ui/Logo";
+import { ExtChip, isMarkdown } from "../ui/ExtChip";
 import { docName, docDirs, unreadCount } from "../../lib/types";
 import type { DocEntry } from "../../lib/types";
 
@@ -13,16 +14,6 @@ function FocusIcon({ on }: { on?: boolean }) {
       <path d="M2 5V2.6h2.4M11.6 2h2.4v2.4M14 11.6V14h-2.4M4.4 14H2v-2.4" />
       <path d="M6 6h4M6 8.5h4M6 11h2.5" />
     </svg>
-  );
-}
-
-// No colour on an extension badge (23 · 면색) — it is information, not state.
-function FileExtBadge({ ext }: { ext: string }) {
-  if (!ext) return null;
-  return (
-    <span style={{ fontSize: "9px", letterSpacing: "0.06em", fontFamily: "var(--font-mono)", color: "var(--color-muted)", border: "1px solid var(--color-line-soft)", padding: "2px 5px", textTransform: "uppercase" }}>
-      {ext}
-    </span>
   );
 }
 
@@ -73,7 +64,6 @@ export function TitleBar() {
     view === "settings" || view === "diff" || view === "tag-results" || view === "rabbit-hole";
 
   const fileName = openFilePath?.split("/").pop() ?? "";
-  const fileExt = fileName.includes(".") ? fileName.split(".").pop()!.toLowerCase() : "";
 
   return (
     <header
@@ -115,10 +105,13 @@ export function TitleBar() {
           ? (
             <>
               <BaseMark onGoInbox={goInbox} />
-              <span className="truncate rounded-control px-1 py-0.5 font-medium text-ink" style={{ maxWidth: 320 }}>
-                {fileName.includes(".") ? fileName.slice(0, fileName.lastIndexOf(".")) : fileName}
+              {/* the name keeps its extension and the chip sits beside it, the
+                  way the addendum's tree and viewer header both do. Markdown is
+                  the default, so it carries no chip in the header. */}
+              <span className="truncate px-1 py-0.5 font-medium text-ink" style={{ maxWidth: 320 }}>
+                {fileName}
               </span>
-              <FileExtBadge ext={fileExt} />
+              {!isMarkdown(fileName) && <ExtChip name={fileName} />}
             </>
           )
           : view === "rabbit-hole" && rabbitStartDoc

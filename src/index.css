@@ -625,6 +625,24 @@ body {
   padding: 0 1px;
 }
 
+/* File-type chip. One chip, the letters change — from the 2026.09.07 addendum
+   (design_handoff_markly_2026-09-07/addenda/Markly File Type Chips.dc.html).
+   No colour by type: an extension is not a state, and a file list puts dozens
+   of these on screen at once. */
+.markly-ext {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  text-transform: uppercase;
+  padding: 0 4px;
+  border: 1px solid var(--color-line);
+  color: var(--color-mid);
+  background: var(--color-paper);
+  display: inline-block;
+}
+
 /* garamnoh wordmark — the maker's mark, not Markly's. Typeset in mono with a
    block cursor that sits ON the baseline; the cursor is the mark. Copied from
    the garamnoh design system's components/wordmark.css. Only the static
