@@ -1,8 +1,8 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useStore, useDocs } from "../../store";
 import { Wordmark } from "../ui/Logo";
-import { docName, docDirs } from "../../lib/types";
+import { docName, docDirs, unreadCount } from "../../lib/types";
 import type { DocEntry } from "../../lib/types";
 
 function FocusIcon({ on }: { on?: boolean }) {
@@ -32,7 +32,13 @@ function FileExtBadge({ ext }: { ext: string }) {
 function BaseMark({ onGoInbox }: { onGoInbox: () => void }) {
   return (
     <>
-      <button onClick={onGoInbox} title="Base" className="flex shrink-0 items-center px-0.5">
+      {/* --text, not --text-2: the Shell leaves the wordmark on the root colour
+          while the path separators drop to --text-3. */}
+      <button
+        onClick={onGoInbox}
+        title="Base"
+        className="flex shrink-0 items-center px-0.5 text-ink"
+      >
         <Wordmark size={15} live />
       </button>
       <span className="shrink-0 bg-line" style={{ width: 1, height: 14 }} />
@@ -267,71 +273,87 @@ function FolderDropdown({
   const canGoUp = currentPrefix !== rootPrefix;
   const currentFolderName = currentPrefix.slice(0, -1).split("/").pop() ?? "";
 
+  // Menu, per screen 32: no scrim (that is for Dialog and the palette only),
+  // closes on an outside click. Glyphs are mono unicode; the right-hand number
+  // rides the Kbd/shortcut slot, which is where a mono right-aligned column
+  // already lives.
+  useEffect(() => {
+    const close = (e: MouseEvent) => {
+      if (!(e.target as HTMLElement).closest("[data-markly-menu]")) onClose();
+    };
+    const key = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("mousedown", close);
+    window.addEventListener("keydown", key, true);
+    return () => {
+      window.removeEventListener("mousedown", close);
+      window.removeEventListener("keydown", key, true);
+    };
+  }, [onClose]);
+
+  const ITEM =
+    "flex w-full items-center gap-3 px-3 text-left text-[13px] text-muted transition-colors hover:bg-tertiary hover:text-ink";
+
   return (
-    <>
-      <div className="fixed inset-0 z-40" onClick={onClose} />
+    <div
+      data-markly-menu
+      className="fixed z-50 border border-line bg-surface"
+      style={{
+        top: state.y,
+        left: state.x,
+        minWidth: 200,
+        maxHeight: 360,
+        overflowY: "auto",
+        padding: "4px 0",
+      }}
+    >
       <div
-        className="fixed z-50 overflow-hidden border border-line bg-paper"
+        className="uppercase text-mid"
         style={{
-          top: state.y,
-          left: state.x,
-          minWidth: 220,
-          maxHeight: 360,
-          overflowY: "auto",
-          boxShadow: "0 8px 24px -4px rgba(44,42,39,0.18)",
+          padding: "8px 12px 4px",
+          fontFamily: "var(--font-mono)",
+          fontSize: 10.5,
+          letterSpacing: "0.12em",
         }}
       >
-        {/* Header row: back button + current folder name */}
-        <div className="flex items-center gap-1 border-b border-line px-2 py-1.5">
-          {canGoUp ? (
-            <button
-              onClick={goUp}
-              className="flex items-center gap-1 px-1.5 py-0.5 text-[12px] text-muted hover:bg-tertiary hover:text-ink"
-            >
-              <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
-                <path d="M10 3L5 8l5 5" />
-              </svg>
-              back
-            </button>
-          ) : (
-            <span className="w-[11px]" />
-          )}
-          <span className="text-[11px] font-medium text-mid">{currentFolderName}</span>
-        </div>
-
-        {subfolders.length === 0 && directFiles.length === 0 && (
-          <div className="px-3 py-2 text-[12px] text-muted">Empty folder</div>
-        )}
-        {subfolders.map((sf) => (
-          <button
-            key={sf}
-            onClick={() => enterFolder(sf)}
-            className="flex w-full items-center gap-2 px-3 py-[7px] text-left text-[13px] text-slate hover:bg-tertiary"
-          >
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="var(--color-mid)" strokeWidth="1.3">
-              <path d="M2 4.4c0-.5.4-.9.9-.9h2.4l1.1 1.3h6.7c.5 0 .9.4.9.9v6.1c0 .5-.4.9-.9.9H2.9c-.5 0-.9-.4-.9-.9z" />
-            </svg>
-            <span className="flex-1">{sf}</span>
-            <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="var(--color-muted)" strokeWidth="1.6" strokeLinecap="round">
-              <path d="M6 3l5 5-5 5" />
-            </svg>
-          </button>
-        ))}
-        {directFiles.map((d) => (
-          <button
-            key={d.docId}
-            onClick={() => { openDoc(d.docId); onClose(); }}
-            className="flex w-full items-center gap-2 px-3 py-[7px] text-left text-[13px] text-slate hover:bg-tertiary"
-          >
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="var(--color-muted)" strokeWidth="1.3">
-              <path d="M4 2h5l3 3v9H4z" />
-              <path d="M9 2v3h3" strokeLinejoin="round" />
-            </svg>
-            {docName(d)}
-          </button>
-        ))}
+        {currentFolderName || "Base"}
       </div>
-    </>
+
+      {canGoUp && (
+        <>
+          <button onClick={goUp} className={ITEM} style={{ height: 32 }}>
+            <span className="font-mono text-mid">↑</span>
+            <span className="flex-1">Up</span>
+          </button>
+          <div style={{ height: 1, margin: "4px 0", background: "var(--color-line-soft)" }} />
+        </>
+      )}
+
+      {subfolders.length === 0 && directFiles.length === 0 && (
+        <div className="px-3 py-2 text-[13px] text-mid">Empty folder</div>
+      )}
+
+      {subfolders.map((sf) => (
+        <button key={sf} onClick={() => enterFolder(sf)} className={ITEM} style={{ height: 32 }}>
+          <span className="font-mono text-mid">▸</span>
+          <span className="flex-1 truncate">{sf}</span>
+          <span className="ml-auto font-mono text-[11px] text-mid">
+            {docs.filter((d) => d.docId.startsWith(currentPrefix + sf + "/")).length}
+          </span>
+        </button>
+      ))}
+
+      {directFiles.map((d) => (
+        <button
+          key={d.docId}
+          onClick={() => { openDoc(d.docId); onClose(); }}
+          className={ITEM}
+          style={{ height: 32 }}
+        >
+          <span className="font-mono text-mid">{unreadCount(d) > 0 ? "▪" : "▫"}</span>
+          <span className="flex-1 truncate">{docName(d)}</span>
+        </button>
+      ))}
+    </div>
   );
 }
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { LogoTile } from "../components/ui/Logo";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
-import { useStore, formatShortcut, DEFAULT_SHORTCUTS, DEFAULT_TEMPLATES } from "../store";
+import { useStore, shortcutKeys, DEFAULT_SHORTCUTS, DEFAULT_TEMPLATES } from "../store";
 import type { Template } from "../store";
 import type { ShortcutsMap } from "../store";
 import { captureMode } from "../lib/captureMode";
@@ -9,75 +9,15 @@ import { modalStack } from "../lib/modalStack";
 
 type Tab = "appearance" | "editor" | "tracking" | "account" | "shortcuts" | "templates" | "about";
 
-const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-  {
-    id: "appearance",
-    label: "Appearance",
-    icon: (
-      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
-        <circle cx="8" cy="8" r="6" />
-        <path d="M5 8.5l2 2 4-4.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-  },
-  {
-    id: "editor",
-    label: "Editor",
-    icon: (
-      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M11 2.5l2.5 2.5L6 12.5l-3 .5.5-3z" />
-      </svg>
-    ),
-  },
-  {
-    id: "account",
-    label: "Account & Sync",
-    icon: (
-      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round">
-        <path d="M4 4l4-2 4 2-4 2zM4 4L1 6l3 2 4-2zM12 4l3 2-3 2-4-2zM4 8l4 2 4-2M8 10v3" />
-      </svg>
-    ),
-  },
-  {
-    id: "tracking",
-    label: "Version tracking",
-    icon: (
-      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M2 8h3l1.5 2.5L9 4.5 10.5 8H14" />
-      </svg>
-    ),
-  },
-  {
-    id: "templates",
-    label: "Templates",
-    icon: (
-      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
-        <rect x="2.5" y="2.5" width="11" height="11" rx="1.6" />
-        <path d="M2.5 6h11M6 6v7.5" />
-      </svg>
-    ),
-  },
-  {
-    id: "shortcuts",
-    label: "Shortcuts",
-    icon: (
-      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3">
-        <rect x="1.5" y="4" width="13" height="8" rx="1.5" />
-        <path d="M4 6.5h.01M6 6.5h.01M8 6.5h.01M10 6.5h.01M4 9h6" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    id: "about",
-    label: "About",
-    icon: (
-      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
-        <circle cx="8" cy="8" r="6" />
-        <path d="M8 7.5v3.5" strokeLinecap="round" />
-        <circle cx="8" cy="5" r="0.6" fill="currentColor" />
-      </svg>
-    ),
-  },
+// SideNav, labels only — the spec's setGroups has no glyphs.
+const NAV_ITEMS: { id: Tab; label: string }[] = [
+  { id: "appearance", label: "Appearance" },
+  { id: "editor", label: "Editor" },
+  { id: "account", label: "Account & Sync" },
+  { id: "tracking", label: "Version history" },
+  { id: "templates", label: "Templates" },
+  { id: "shortcuts", label: "Shortcuts" },
+  { id: "about", label: "About" },
 ];
 
 export function Settings() {
@@ -86,8 +26,9 @@ export function Settings() {
   return (
     <div className="flex h-full min-h-0">
       {/* Left nav */}
-      <nav className="flex shrink-0 flex-col overflow-y-auto border-r border-line bg-surface"
-        style={{ width: 269, padding: "16px 12px", gap: 1 }}
+      <nav
+        className="flex shrink-0 flex-col overflow-y-auto border-r border-line bg-tertiary"
+        style={{ width: 269, padding: "16px 0" }}
       >
         {NAV_ITEMS.map((item) => {
           const active = tab === item.id;
@@ -95,19 +36,15 @@ export function Settings() {
             <button
               key={item.id}
               onClick={() => setTab(item.id)}
-              className="flex w-full items-center gap-[10px] text-left transition-colors hover:bg-tertiary"
+              aria-current={active ? "page" : undefined}
+              className="flex w-full items-center gap-2 text-left text-[13px] transition-colors hover:text-ink"
               style={{
-                height: 34,
-                padding: "0 11px",
-                fontSize: 13.5,
+                padding: "8px 16px",
+                borderLeft: `3px solid ${active ? "var(--color-gold)" : "transparent"}`,
                 background: active ? "var(--color-surface)" : undefined,
-                color: active ? "var(--color-ink)" : "var(--color-slate)",
-                fontWeight: active ? 500 : 400,
+                color: active ? "var(--color-ink)" : "var(--color-muted)",
               }}
             >
-              <span style={{ color: active ? "var(--color-ink)" : "var(--color-muted)" }}>
-                {item.icon}
-              </span>
               {item.label}
             </button>
           );
@@ -116,8 +53,8 @@ export function Settings() {
       </nav>
 
       {/* Content area */}
-      <div className="min-w-0 flex-1 overflow-y-auto bg-paper" style={{ padding: "32px 48px" }}>
-        <div style={{ maxWidth: 640, margin: "0 auto" }}>
+      <div className="min-w-0 flex-1 overflow-y-auto bg-paper" style={{ padding: "36px 40px" }}>
+        <div style={{ maxWidth: 660 }}>
           {tab === "appearance" && <AppearanceTab />}
           {tab === "editor" && <EditorTab />}
           {tab === "tracking" && <TrackingTab />}
@@ -486,6 +423,55 @@ function TrackingTab() {
   );
 }
 
+// Kbd — one boxed glyph per key (.gn-kbd), laid out in a .gn-kbd-row.
+function Kbd({ combo }: { combo: string }) {
+  return (
+    <span className="inline-flex items-center gap-1">
+      {shortcutKeys(combo).map((k, i) => (
+        <kbd
+          key={i}
+          className="inline-flex items-center justify-center bg-tertiary text-muted"
+          style={{
+            minWidth: 20,
+            height: 20,
+            padding: "0 5px",
+            border: "1px solid var(--color-line)",
+            fontFamily: "var(--font-mono)",
+            fontSize: 11.5,
+            lineHeight: 1,
+          }}
+        >
+          {k}
+        </kbd>
+      ))}
+    </span>
+  );
+}
+
+function Th({ children, num }: { children: React.ReactNode; num?: boolean }) {
+  return (
+    <th
+      className="uppercase text-mid"
+      style={{
+        textAlign: num ? "right" : "left",
+        padding: "8px 12px",
+        borderBottom: "1px solid var(--color-line)",
+        fontFamily: "var(--font-mono)",
+        fontSize: 10.5,
+        fontWeight: 400,
+        letterSpacing: "0.1em",
+      }}
+    >
+      {children}
+    </th>
+  );
+}
+
+const TD: React.CSSProperties = {
+  padding: "8px 12px",
+  borderBottom: "1px solid var(--color-line-soft)",
+};
+
 function ShortcutsTab() {
   const shortcuts = useStore((s) => s.shortcuts);
   const setShortcut = useStore((s) => s.setShortcut);
@@ -495,12 +481,12 @@ function ShortcutsTab() {
     { key: "palette", label: "Command palette" },
     { key: "editMode", label: "Toggle edit mode" },
     { key: "sidebar", label: "Toggle sidebar" },
-    { key: "outline", label: "Toggle outline" },
-    { key: "focus", label: "Focus mode (hide both panels)" },
-    { key: "related", label: "Related topics" },
-    { key: "openRelated", label: "Open doc from Related (⌘O)" },
+    { key: "outline", label: "Outline" },
+    { key: "focus", label: "Focus mode" },
+    { key: "related", label: "Related Topics" },
+    { key: "openRelated", label: "Open from Related" },
     { key: "markRead", label: "Mark as read" },
-    { key: "goChanges", label: "Go to Changes" },
+    { key: "goChanges", label: "Review changes" },
     { key: "newNote", label: "New note" },
   ];
 
@@ -531,47 +517,78 @@ function ShortcutsTab() {
     };
   }, [capturing, setShortcut]);
 
+  // Two tables side by side, as screen 15 lays them out.
+  const half = Math.ceil(ROWS.length / 2);
+  const tables = [ROWS.slice(0, half), ROWS.slice(half)];
+
   return (
     <section>
-      <div className="text-ink" style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>
-        Keyboard shortcuts
+      <h1 className="text-ink" style={{ fontSize: 34, letterSpacing: "-0.02em", margin: "0 0 6px" }}>
+        Shortcuts
+      </h1>
+      <p className="text-muted" style={{ fontSize: 14, margin: "0 0 22px" }}>
+        {ROWS.length} shortcuts. Click one to reassign.
+      </p>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 24, alignItems: "start" }}>
+        {tables.map((rows, ti) => (
+          <table key={ti} style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+            <thead>
+              <tr>
+                <Th>Action</Th>
+                <Th num>Keys</Th>
+                <Th>Note</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map(({ key, label }) => {
+                const isCapturing = capturing === key;
+                const changed = shortcuts[key] !== DEFAULT_SHORTCUTS[key];
+                return (
+                  <tr key={key}>
+                    <td className="text-ink" style={TD}>{label}</td>
+                    <td style={{ ...TD, textAlign: "right" }}>
+                      <button
+                        onClick={() => setCapturing(isCapturing ? null : key)}
+                        title="Click to reassign"
+                      >
+                        {isCapturing ? (
+                          <span
+                            style={{
+                              fontFamily: "var(--font-mono)",
+                              fontSize: 11.5,
+                              color: "var(--color-accent-text)",
+                            }}
+                          >
+                            press keys
+                          </span>
+                        ) : (
+                          <Kbd combo={shortcuts[key]} />
+                        )}
+                      </button>
+                    </td>
+                    <td
+                      className="text-mid"
+                      style={{ ...TD, fontFamily: "var(--font-mono)", fontSize: 11 }}
+                    >
+                      {changed ? "changed" : ""}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        ))}
       </div>
-      <div className="text-muted" style={{ fontSize: 12.5, marginBottom: 16 }}>
-        Click a shortcut to reassign. Press Esc to cancel.
-      </div>
-      <div style={{ display: "flex", flexDirection: "column" }}>
-        {ROWS.map(({ key, label }) => {
-          const isCapturing = capturing === key;
-          return (
-            <div
-              key={key}
-              className="flex items-center justify-between"
-              style={{ padding: "10px 2px", borderBottom: "1px solid var(--color-line)" }}
-            >
-              <span className="text-ink" style={{ fontSize: 13.5 }}>{label}</span>
-              <button
-                onClick={() => setCapturing(isCapturing ? null : key)}
-                className={` border transition-colors ${
-                  isCapturing
-                    ? "border-[var(--color-gold)] bg-[color-mix(in_srgb,var(--color-gold)_10%,transparent)] text-[var(--color-gold)]"
-                    : "border-line bg-surface text-muted hover:border-[var(--color-mid)] hover:text-ink"
-                }`}
-                style={{ fontSize: 12, fontFamily: "var(--font-mono)", padding: "4px 12px", minWidth: 64, textAlign: "center" }}
-              >
-                {isCapturing ? "Press keys…" : formatShortcut(shortcuts[key])}
-              </button>
-            </div>
-          );
-        })}
-      </div>
+
       <button
         onClick={() => {
           Object.entries(DEFAULT_SHORTCUTS).forEach(([k, v]) =>
             setShortcut(k as keyof ShortcutsMap, v)
           );
         }}
-        className="text-muted hover:text-ink transition-colors"
-        style={{ fontSize: 12, marginTop: 16 }}
+        className="text-muted transition-colors hover:text-ink"
+        style={{ fontSize: 12, marginTop: 22 }}
       >
         Reset to defaults
       </button>
@@ -737,8 +754,19 @@ function AboutTab() {
           <div className="text-muted" style={{ fontSize: 12.5, marginTop: 2 }}>
             Local-first markdown reader
           </div>
-          <div className="text-muted" style={{ fontSize: 12, marginTop: 4 }}>
-            Created by Garam · © 2026 Markly. All rights reserved.
+          <div
+            className="text-muted flex items-baseline gap-1.5"
+            style={{ fontSize: 12, marginTop: 6 }}
+          >
+            <span>Made by</span>
+            {/* garamnoh design system, Wordmark, static-cursor variant */}
+            <span className="gn-wordmark gn-wordmark-sm" aria-label="garamnoh">
+              garamnoh
+              <span className="gn-wordmark-cursor" />
+            </span>
+          </div>
+          <div className="text-mid" style={{ fontSize: 11.5, marginTop: 4 }}>
+            © 2026 Markly
           </div>
         </div>
         <div className="flex gap-2">

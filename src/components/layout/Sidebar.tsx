@@ -5,25 +5,10 @@ import type { SidebarTab } from "../../store";
 import { ReadingQueue } from "../sidebar/ReadingQueue";
 import { FileTree } from "../sidebar/FileTree";
 
-const TABS: { value: SidebarTab; label: string; icon: React.ReactNode }[] = [
-  {
-    value: "queue",
-    label: "Queue",
-    icon: (
-      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
-        <path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h7" />
-      </svg>
-    ),
-  },
-  {
-    value: "files",
-    label: "Files",
-    icon: (
-      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
-        <path d="M2 4.4c0-.5.4-.9.9-.9h2.4l1.1 1.3h6.7c.5 0 .9.4.9.9v6.1c0 .5-.4.9-.9.9H2.9c-.5 0-.9-.4-.9-.9z" />
-      </svg>
-    ),
-  },
+// The Shell mounts a plain SegmentedControl here: uppercase labels, no icons.
+const TABS: { value: SidebarTab; label: string }[] = [
+  { value: "queue", label: "QUEUE" },
+  { value: "files", label: "FILES" },
 ];
 
 function VaultSwitcher() {
@@ -187,7 +172,7 @@ export function Sidebar() {
         {/* Queue / Files toggle */}
         <div className="-mx-[12px] flex border-b border-line-soft px-[12px] pb-[8px]">
         <div className="flex flex-1 border border-line">
-          {TABS.map(({ value, label, icon }) => {
+          {TABS.map(({ value, label }) => {
             const active = tab === value;
             return (
               <button
@@ -196,13 +181,14 @@ export function Sidebar() {
                 className="flex flex-1 items-center justify-center gap-[6px] transition-colors [&:not(:first-child)]:border-l [&:not(:first-child)]:border-line"
                 style={{
                   height: "32px",
-                  fontSize: "12px",
-                  fontWeight: active ? 600 : 500,
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "11px",
+                  letterSpacing: "0.08em",
+                  fontWeight: 400,
                   background: active ? "var(--color-gold)" : "transparent",
                   color: active ? "var(--color-on-accent)" : "var(--color-muted)",
                 }}
               >
-                {icon}
                 {label}
               </button>
             );
@@ -213,7 +199,7 @@ export function Sidebar() {
       </div>
 
       {/* scrollable content */}
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto" style={tab === "files" ? { padding: "8px 4px" } : undefined}>
         {tab === "queue" ? <ReadingQueue /> : <FileTree />}
       </div>
 

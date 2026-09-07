@@ -50,7 +50,8 @@ export function matchShortcut(e: KeyboardEvent, combo: string | undefined): bool
   );
 }
 
-export function formatShortcut(combo: string): string {
+// One glyph per key, in the order the design system's Kbd rows print them.
+export function shortcutKeys(combo: string): string[] {
   const parts = combo.split("+");
   const key = parts[parts.length - 1];
   return [
@@ -58,8 +59,12 @@ export function formatShortcut(combo: string): string {
     parts.includes("Alt") ? "⌥" : "",
     parts.includes("Shift") ? "⇧" : "",
     parts.includes("Meta") ? "⌘" : "",
-    key.toUpperCase(),
-  ].join("");
+    key.length === 1 ? key.toUpperCase() : key,
+  ].filter(Boolean);
+}
+
+export function formatShortcut(combo: string): string {
+  return shortcutKeys(combo).join("");
 }
 
 export interface Template {

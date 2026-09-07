@@ -10,23 +10,10 @@ interface Item {
   group: "Recent · with updates" | "Notes" | "Actions";
   badge?: string;
   kbd?: string;
-  icon: React.ReactNode;
+  icon: string;
   run: () => void;
 }
 
-const NoteIcon = ({ active }: { active?: boolean }) => (
-  <svg
-    width="14"
-    height="14"
-    viewBox="0 0 16 16"
-    fill="none"
-    stroke={active ? "var(--color-muted)" : "var(--color-mid)"}
-    strokeWidth="1.3"
-  >
-    <path d="M4 2h5l3 3v9H4z" />
-    <path d="M9 2v3h3" strokeLinejoin="round" />
-  </svg>
-);
 
 export function CommandPalette() {
   const open = useStore((s) => s.cmdPaletteOpen);
@@ -46,11 +33,7 @@ export function CommandPalette() {
         label: "New note",
         group: "Actions",
         kbd: "⌘N",
-        icon: (
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--color-slate)" strokeWidth="1.5" strokeLinecap="round">
-            <path d="M8 3v10M3 8h10" />
-          </svg>
-        ),
+        icon: "+",
         run: async () => {
           close();
           const name = window.prompt("New note filename (e.g. ideas.md)");
@@ -67,34 +50,21 @@ export function CommandPalette() {
         label: "Toggle edit mode",
         group: "Actions",
         kbd: "⌘E",
-        icon: (
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--color-slate)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M11 2.5l2.5 2.5L6 12.5l-3 .5.5-3z" />
-          </svg>
-        ),
+        icon: "\u270E",
         run: () => { s().toggleMode(); close(); },
       },
       {
         id: "c:inbox",
         label: "Go to Knowledge Inbox",
         group: "Actions",
-        icon: (
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--color-slate)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M2 8h3l1.5 2.5L9 4.5 10.5 8H14" />
-          </svg>
-        ),
+        icon: "\u2302",
         run: () => { s().goInbox(); close(); },
       },
       {
         id: "c:rescan",
         label: "Re-scan Base",
         group: "Actions",
-        icon: (
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--color-slate)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M2.5 8a5.5 5.5 0 1 1 1.6 3.9" />
-            <path d="M2.5 13v-3h3" />
-          </svg>
-        ),
+        icon: "\u21BB",
         run: () => { s().rescan(); close(); },
       },
       {
@@ -102,25 +72,14 @@ export function CommandPalette() {
         label: "Toggle Sidebar",
         group: "Actions",
         kbd: "⌘\\",
-        icon: (
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--color-slate)" strokeWidth="1.4" strokeLinecap="round">
-            <path d="M14 4h-7M14 8h-7M14 12h-5" />
-            <path d="M3 4v8" strokeWidth="1.6" />
-          </svg>
-        ),
+        icon: "\u25A4",
         run: () => { s().toggleSidebar(); close(); },
       },
       {
         id: "c:settings",
         label: "Open Settings",
         group: "Actions",
-        icon: (
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--color-slate)" strokeWidth="1.4" strokeLinecap="round">
-            <path d="M2.5 5h6M11 5h2.5M2.5 11h2.5M8 11h5.5" />
-            <circle cx="9.5" cy="5" r="1.7" />
-            <circle cx="6.5" cy="11" r="1.7" />
-          </svg>
-        ),
+        icon: "\u2699",
         run: () => { s().setView("settings"); close(); },
       },
     ];
@@ -134,7 +93,7 @@ export function CommandPalette() {
         label: docName(d),
         group: "Recent · with updates" as const,
         badge: `${unreadCount(d)} new`,
-        icon: <NoteIcon active />,
+        icon: "\u25AA",
         run: () => { s().openDoc(d.docId); close(); },
       }));
 
@@ -145,7 +104,7 @@ export function CommandPalette() {
         id: `n:${d.docId}`,
         label: docName(d),
         group: "Notes" as const,
-        icon: <NoteIcon />,
+        icon: "\u25AB",
         run: () => { s().openDoc(d.docId); close(); },
       }));
 
@@ -171,35 +130,33 @@ export function CommandPalette() {
   return (
     <div
       className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh]"
-      style={{ background: "rgba(44,42,39,0.18)" }}
+      style={{
+        background: "color-mix(in oklab, var(--color-paper) 78%, transparent)",
+        backdropFilter: "blur(3px)",
+      }}
       onClick={() => setOpen(false)}
     >
       <div
         style={{
-          width: 460,
-          background: "var(--color-paper)",
+          width: "min(620px, calc(100vw - 32px))",
+          maxHeight: "60vh",
+          display: "flex",
+          flexDirection: "column",
+          background: "var(--color-surface)",
           border: "1px solid var(--color-line)",
-          boxShadow: "0 30px 60px -20px rgba(44,42,39,0.45)",
-          overflow: "hidden",
+          borderLeft: "3px solid var(--color-gold)",
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Input row */}
         <div
-          className="flex items-center gap-[11px]"
-          style={{ padding: "15px 18px", borderBottom: "1px solid var(--color-tertiary)" }}
+          className="flex items-center gap-3"
+          style={{ padding: "0 16px", height: 44, borderBottom: "1px solid var(--color-line-soft)" }}
         >
-          <svg
-            width="17"
-            height="17"
-            viewBox="0 0 16 16"
-            fill="none"
-            stroke={q ? "var(--color-slate)" : "var(--color-mid)"}
-            strokeWidth="1.5"
-          >
-            <circle cx="7" cy="7" r="4.5" />
-            <path d="M11 11l3 3" strokeLinecap="round" />
-          </svg>
+          {/* the prompt is a mono glyph, not an icon (.gn-cmdk-prompt) */}
+          <span style={{ fontFamily: "var(--font-mono)", color: "var(--color-accent-text)" }}>
+            ›
+          </span>
           <input
             autoFocus
             value={q}
@@ -221,13 +178,17 @@ export function CommandPalette() {
                 setOpen(false);
               }
             }}
-            placeholder="Search notes or type a command…"
-            className="flex-1 bg-transparent focus:outline-none"
-            style={{ fontSize: 16, color: q ? "var(--color-ink)" : "var(--color-mid)" }}
+            placeholder="Search notes or type a command"
+            className="h-full flex-1 bg-transparent focus:outline-none"
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: 13,
+              color: q ? "var(--color-ink)" : "var(--color-mid)",
+            }}
           />
           <button
             onClick={() => setOpen(false)}
-            className="rounded-control px-2 py-0.5 text-[11px] font-medium text-muted transition-colors hover:bg-tertiary hover:text-ink"
+            className="text-[11px] text-mid transition-colors hover:text-ink"
             style={{ fontFamily: "var(--font-mono)" }}
           >
             esc
@@ -235,9 +196,15 @@ export function CommandPalette() {
         </div>
 
         {/* Results */}
-        <div style={{ padding: "8px 8px 10px", maxHeight: "50vh", overflowY: "auto" }}>
+        <div style={{ padding: "8px 0", overflowY: "auto", flex: 1, minHeight: 0 }}>
           {filtered.length === 0 && (
-            <div style={{ padding: "12px", fontSize: 13, color: "var(--color-mid)" }}>
+            <div
+              className="uppercase"
+              style={{
+                padding: "32px 16px", textAlign: "center", fontFamily: "var(--font-mono)",
+                fontSize: 11, letterSpacing: "0.14em", color: "var(--color-mid)",
+              }}
+            >
               No matches
             </div>
           )}
@@ -249,12 +216,12 @@ export function CommandPalette() {
               <div key={group}>
                 <div
                   style={{
-                    fontSize: 10,
-                    fontWeight: 700,
+                    fontFamily: "var(--font-mono)",
+                    fontSize: 10.5,
                     letterSpacing: "0.12em",
                     color: "var(--color-mid)",
                     textTransform: "uppercase",
-                    padding: "8px 12px 6px",
+                    padding: "12px 16px 4px",
                   }}
                 >
                   {group}
@@ -267,17 +234,29 @@ export function CommandPalette() {
                       key={it.id}
                       onMouseEnter={() => setActive(idx)}
                       onClick={() => it.run()}
-                      className="flex items-center gap-[11px] w-full text-left"
+                      aria-selected={isActive}
+                      className="flex w-full items-center gap-3 text-left"
                       style={{
-                        padding: "9px 12px",
+                        height: 34,
+                        padding: "0 16px",
+                        fontSize: 13,
+                        borderLeft: `3px solid ${isActive ? "var(--color-gold)" : "transparent"}`,
                         background: isActive ? "var(--color-tertiary)" : undefined,
+                        color: isActive ? "var(--color-ink)" : "var(--color-muted)",
                       }}
                     >
-                      <span style={{ flexShrink: 0 }}>{it.icon}</span>
                       <span
                         style={{
-                          fontSize: 14,
-                          color: isActive ? "var(--color-ink)" : "var(--color-line)",
+                          flexShrink: 0,
+                          fontFamily: "var(--font-mono)",
+                          width: "1em",
+                          color: isActive ? "var(--color-accent-text)" : "var(--color-mid)",
+                        }}
+                      >
+                        {it.icon}
+                      </span>
+                      <span
+                        style={{
                           flex: 1,
                           minWidth: 0,
                           overflow: "hidden",
@@ -305,8 +284,10 @@ export function CommandPalette() {
                       {it.kbd && (
                         <span
                           style={{
+                            marginLeft: "auto",
                             fontSize: 11,
-                            color: "var(--color-line)",
+                            letterSpacing: "0.06em",
+                            color: "var(--color-mid)",
                             fontFamily: "var(--font-mono)",
                             flexShrink: 0,
                           }}
@@ -317,8 +298,9 @@ export function CommandPalette() {
                       {isActive && !it.kbd && (
                         <span
                           style={{
+                            marginLeft: "auto",
                             fontSize: 11,
-                            color: "var(--color-line)",
+                            color: "var(--color-mid)",
                             fontFamily: "var(--font-mono)",
                             flexShrink: 0,
                           }}
@@ -336,11 +318,14 @@ export function CommandPalette() {
 
         {/* Footer */}
         <div
-          className="flex items-center gap-4"
+          className="flex shrink-0 items-center gap-4 uppercase"
           style={{
-            padding: "10px 18px",
-            borderTop: "1px solid var(--color-tertiary)",
-            background: "var(--color-paper)",
+            padding: "8px 16px",
+            borderTop: "1px solid var(--color-line-soft)",
+            fontFamily: "var(--font-mono)",
+            fontSize: 10.5,
+            letterSpacing: "0.08em",
+            color: "var(--color-mid)",
           }}
         >
           {[
@@ -348,11 +333,8 @@ export function CommandPalette() {
             { key: "↵", label: "open" },
             { key: "⌘↵", label: "open in split" },
           ].map(({ key, label }) => (
-            <span key={key} style={{ fontSize: 11.5, color: "var(--color-mid)" }}>
-              <span style={{ fontFamily: "var(--font-mono)", color: "var(--color-muted)" }}>
-                {key}
-              </span>{" "}
-              {label}
+            <span key={key}>
+              <span style={{ color: "var(--color-muted)" }}>{key}</span> {label}
             </span>
           ))}
         </div>

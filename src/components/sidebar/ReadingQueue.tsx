@@ -28,7 +28,14 @@ function Group({ label, children }: { label?: string; children: React.ReactNode 
       {label && (
         <div
           className="font-mono uppercase text-mid"
-          style={{ padding: "16px 16px 8px", fontSize: 10.5, letterSpacing: "0.12em" }}
+          style={{
+            // 3px of transparent border so the label starts on the same
+            // vertical as the items, which carry .gn-sidenav-item's border-left
+            borderLeft: "3px solid transparent",
+            padding: "16px 16px 8px",
+            fontSize: 10.5,
+            letterSpacing: "0.12em",
+          }}
         >
           {label}
         </div>
@@ -205,7 +212,10 @@ export function ReadingQueue() {
 
 function Hint({ text }: { text: string }) {
   return (
-    <div className="text-[12px] text-mid" style={{ padding: "8px 16px" }}>
+    <div
+      className="text-[12px] text-mid"
+      style={{ borderLeft: "3px solid transparent", padding: "8px 16px" }}
+    >
       {text}
     </div>
   );
