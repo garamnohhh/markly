@@ -18,23 +18,33 @@ export function OutlinePanel({
 
   // Same grab strip as the sidebar: straddle the border, pin the cursor for the
   // duration, so a fast drag does not slip off it.
-  const onDragStart = useCallback((e: React.MouseEvent) => {
+  // Pointer capture, not window listeners: the pointer stays bound to the
+  // handle for the whole drag, so crossing the preview iframe or leaving the
+  // window does not drop it. Cursor and text selection are pinned for the
+  // duration too, or a fast drag reads as "sticky".
+  const onDragStart = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     e.preventDefault();
+    const el = e.currentTarget;
     const startX = e.clientX;
     const startW = tocWidth;
     const prevCursor = document.body.style.cursor;
     const prevSelect = document.body.style.userSelect;
     document.body.style.cursor = "col-resize";
     document.body.style.userSelect = "none";
-    const onMove = (mv: MouseEvent) => setTocWidth(startW - (mv.clientX - startX));
+    el.setPointerCapture(e.pointerId);
+
+    const onMove = (mv: PointerEvent) => setTocWidth(startW - (mv.clientX - startX));
     const onUp = () => {
       document.body.style.cursor = prevCursor;
       document.body.style.userSelect = prevSelect;
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
+      el.removeEventListener("pointermove", onMove);
+      el.removeEventListener("pointerup", onUp);
+      el.removeEventListener("pointercancel", onUp);
+      try { el.releasePointerCapture(e.pointerId); } catch { /* already released */ }
     };
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
+    el.addEventListener("pointermove", onMove);
+    el.addEventListener("pointerup", onUp);
+    el.addEventListener("pointercancel", onUp);
   }, [tocWidth, setTocWidth]);
 
   const pct = Math.round(progress * 100);
@@ -45,7 +55,7 @@ export function OutlinePanel({
     >
       {/* Drag handle — left edge */}
       <div
-        onMouseDown={onDragStart}
+        onPointerDown={onDragStart}
         title="Drag to resize"
         className="absolute top-0 h-full cursor-col-resize"
         style={{ left: -4, width: 9, zIndex: 30 }}

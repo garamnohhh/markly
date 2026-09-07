@@ -51,6 +51,12 @@ export function matchShortcut(e: KeyboardEvent, combo: string | undefined): bool
 }
 
 // One glyph per key, in the order the design system's Kbd rows print them.
+// Sidebar column bounds. The handoff fixes the column at 269, but resizing is
+// a feature in use, so 269 is only a point inside this range — and the sidebar
+// now opens at the top of it.
+export const SIDEBAR_MIN = 212;
+export const SIDEBAR_MAX = 380;
+
 export function shortcutKeys(combo: string): string[] {
   const parts = combo.split("+");
   const key = parts[parts.length - 1];
@@ -194,7 +200,7 @@ function _build() { return create<AppState>()(
       acceptChangesOnClose: false,
       markReadOnDocClose: false,
       expandedFolders: [],
-      sidebarWidth: 269,
+      sidebarWidth: SIDEBAR_MAX,
       tocWidth: 269,
       showEmptySections: true,
       shortcuts: DEFAULT_SHORTCUTS,
@@ -316,7 +322,7 @@ function _build() { return create<AppState>()(
             : [...s.expandedFolders, path],
         })),
       setSidebarWidth: (w) =>
-        set({ sidebarWidth: Math.min(380, Math.max(212, w)) }),
+        set({ sidebarWidth: Math.min(SIDEBAR_MAX, Math.max(SIDEBAR_MIN, w)) }),
       setTocWidth: (w) =>
         set({ tocWidth: Math.min(360, Math.max(212, w)) }),
       setShowEmptySections: (showEmptySections) => set({ showEmptySections }),
@@ -499,10 +505,13 @@ function _build() { return create<AppState>()(
           ...current,
           ...p,
           vaults: root && !vaults.includes(root) ? [root, ...vaults] : vaults,
-          // Panel columns are 269px: the 268px SideNav plus its 1px border,
-          // which border-box would otherwise eat (23 · 패널 · 사이드바). Only
-          // previous defaults migrate — a width the user dragged to is theirs.
-          sidebarWidth: p.sidebarWidth === 380 || p.sidebarWidth === 268 ? 269 : (p.sidebarWidth ?? 269),
+          // The sidebar opens at its widest setting. Only widths that were
+          // themselves defaults migrate — 380 was the pre-redesign default and
+          // is the new one, 268/269 were the handoff defaults. A width the user
+          // dragged to is theirs and is left alone.
+          sidebarWidth: [268, 269].includes(p.sidebarWidth as number)
+            ? SIDEBAR_MAX
+            : (p.sidebarWidth ?? SIDEBAR_MAX),
           tocWidth: p.tocWidth === 360 || p.tocWidth === 268 ? 269 : (p.tocWidth ?? 269),
           shortcuts: { ...DEFAULT_SHORTCUTS, ...(p.shortcuts ?? {}) },
           templates: p.templates ?? DEFAULT_TEMPLATES,
