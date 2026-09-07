@@ -154,13 +154,14 @@ export function Sidebar() {
       className="relative flex shrink-0 flex-col border-r border-line bg-tertiary"
       style={{ width: sidebarWidth }}
     >
-      {/* fixed top: search + tab switcher + new note */}
-      <div className="shrink-0 px-[14px] pt-[18px] pb-[12px]" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+      {/* Top block follows the Shell spec: search row, then the segmented
+          control on its own hairline-separated shelf. */}
+      <div className="shrink-0" style={{ padding: "8px 12px 0", display: "flex", flexDirection: "column", gap: "8px" }}>
         {/* search */}
         <button
           onClick={() => setCmdPalette(true)}
           className="flex w-full items-center gap-2 border border-line bg-paper px-[11px] text-left hover:border-mid"
-          style={{ height: "34px" }}
+          style={{ height: "32px" }}
         >
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="var(--color-mid)" strokeWidth="1.5">
             <circle cx="7" cy="7" r="4.5" />
@@ -171,7 +172,8 @@ export function Sidebar() {
         </button>
 
         {/* Queue / Files toggle */}
-        <div className="flex border border-line">
+        <div className="-mx-[12px] flex border-b border-line-soft px-[12px] pb-[8px]">
+        <div className="flex flex-1 border border-line">
           {TABS.map(({ value, label, icon }) => {
             const active = tab === value;
             return (
@@ -180,7 +182,7 @@ export function Sidebar() {
                 onClick={() => setTab(value)}
                 className="flex flex-1 items-center justify-center gap-[6px] transition-colors [&:not(:first-child)]:border-l [&:not(:first-child)]:border-line"
                 style={{
-                  height: "30px",
+                  height: "32px",
                   fontSize: "12px",
                   fontWeight: active ? 600 : 500,
                   background: active ? "var(--color-gold)" : "transparent",
@@ -193,11 +195,12 @@ export function Sidebar() {
             );
           })}
         </div>
+        </div>
 
         {/* New note */}
         <button
           className="flex w-full items-center justify-center gap-[7px] text-[13px] font-medium hover:opacity-90"
-          style={{ height: "38px", background: "var(--color-gold)", color: "var(--color-on-accent)" }}
+          style={{ height: "38px", background: "var(--color-surface)", border: "1px solid var(--color-line)", color: "var(--color-ink)" }}
           onClick={() => useStore.getState().newNote()}
         >
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">

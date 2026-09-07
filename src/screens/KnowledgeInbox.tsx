@@ -398,10 +398,11 @@ function NewNoteButton() {
       style={{
         height: 38,
         padding: "0 16px",
-        background: "var(--color-ink)",
-        color: "var(--color-surface)",
+        background: "var(--color-gold)",
+        border: "1px solid var(--color-gold)",
+        color: "var(--color-on-accent)",
         fontSize: 13.5,
-        fontWeight: 500,
+        fontWeight: 600,
       }}
     >
       <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
