@@ -1,7 +1,26 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { modalStack } from "../../lib/modalStack";
 import type { SlideKind } from "../../lib/slides";
+
+// One queue for the whole app. Two overlays never overlap, but an enter and an
+// exit can, and AppKit drops whichever arrives during a running transition.
+let fullscreenQueue: Promise<void> = Promise.resolve();
+
+function queueFullscreen(on: boolean): Promise<void> {
+  if (!("__TAURI_INTERNALS__" in window)) return Promise.resolve();
+  fullscreenQueue = fullscreenQueue
+    .then(() => getCurrentWindow().setFullscreen(on))
+    // The transition itself is animated and setFullscreen resolves before it
+    // finishes, so hold the queue open long enough for AppKit to accept the
+    // next toggle. Measured against macOS's own ~0.5s Space animation.
+    .then(() => new Promise<void>((r) => setTimeout(r, 650)))
+    .catch(() => {});
+  return fullscreenQueue;
+}
+
+const enterFullscreen = () => queueFullscreen(true);
+const leaveFullscreen = () => queueFullscreen(false);
 
 // Full-window slideshow for HTML decks and PDFs. Everything else in the app is
 // untouched: this mounts only from FileViewer, only for html/htm/pdf, and only
@@ -49,24 +68,34 @@ export function SlideshowOverlay({
   // app's own title bar, but not the macOS menu bar — and that's the strip still
   // showing during a presentation.
   //
-  // Deliberately unconditional in both directions. Reading isFullscreen() first
-  // and skipping when already fullscreen looked tidier, but the value goes stale
-  // across a cycle: after one enter/exit, the second slideshow opened windowed.
-  // Set it, then clear it. The cleanup runs however this component goes away
-  // (Escape, the close button, navigation, an error boundary), so no path can
-  // strand the window fullscreen.
+  // macOS fullscreen is an animated Space transition, and AppKit ignores a
+  // toggle that arrives while one is still running. Firing enter on mount and
+  // exit on unmount meant a quick Escape landed mid-animation: the overlay
+  // vanished, the window stayed fullscreen, and the next slideshow opened into
+  // a window that was already in the wrong state. So the two calls are put on
+  // one queue — exit always waits for enter to finish, and the overlay does not
+  // unmount until the exit has been asked for.
   useEffect(() => {
-    if (!("__TAURI_INTERNALS__" in window)) return;
-    const win = getCurrentWindow();
-    void win.setFullscreen(true).catch(() => {});
-    return () => { void win.setFullscreen(false).catch(() => {}); };
+    enterFullscreen();
+    return () => { void leaveFullscreen(); };
   }, []);
 
-  // Escape closes. Arrows page only when we own paging — a deck handles its own,
-  // and forwarding would double-advance it.
+  // Escape closes, once. A second Escape while the window is still animating
+  // back used to queue a second toggle and flip it fullscreen again.
+  const closing = useRef(false);
+  const close = useCallback(() => {
+    if (closing.current) return;
+    closing.current = true;
+    // Ask for the window back first, then unmount, so the order on screen is
+    // fullscreen → windowed → overlay gone rather than the other way round.
+    void leaveFullscreen().then(onClose);
+  }, [onClose]);
+
+  // Arrows page only when we own paging — a deck handles its own, and
+  // forwarding would double-advance it.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") { e.preventDefault(); onClose(); return; }
+      if (e.key === "Escape") { e.preventDefault(); e.stopImmediatePropagation(); close(); return; }
       if (!paging) return;
       if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") {
         e.preventDefault();
@@ -78,7 +107,7 @@ export function SlideshowOverlay({
     };
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
-  }, [onClose, paging, count]);
+  }, [close, paging, count]);
 
   // Keys land on whichever window has focus, so mirror the handler into the
   // frame. Same-origin only — a data: PDF frame is opaque, which is why the
@@ -146,7 +175,7 @@ export function SlideshowOverlay({
           </span>
         )}
         <button
-          onClick={onClose}
+          onClick={close}
           className="pointer-events-auto rounded-control px-2 py-1 text-[11px] font-medium"
           style={{ background: "rgba(0,0,0,0.55)", color: "var(--color-ink)", fontFamily: "var(--font-mono)" }}
           title="Exit slideshow (Esc)"

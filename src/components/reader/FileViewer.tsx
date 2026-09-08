@@ -10,6 +10,7 @@ import type { SlideKind } from "../../lib/slides";
 import { SlideshowOverlay } from "./SlideshowOverlay";
 import { EditorView } from "@codemirror/view";
 import { openWithOtherApp, revealInFinder } from "../../lib/handoff";
+import { ExtChip } from "../ui/ExtChip";
 
 // svg moved out of IMAGE_EXTS so it becomes editable text
 const IMAGE_EXTS = new Set(["png", "jpg", "jpeg", "gif", "webp"]);
@@ -206,23 +207,51 @@ function HtmlPreview({ text, name, onDetect }: { text: string; name: string; onD
   );
 }
 
-// Entry point for the slideshow. Rendered only next to an HTML deck or a PDF —
-// see `slideKind` in FileViewer.
-function SlideButton({ onClick }: { onClick: () => void }) {
+// Content header, 54px (00 · 구현 기준, screens 24~26). Only tools that belong
+// to this screen live here — the spec is explicit that the path and the edit
+// button stay in the title bar. That is also why the slideshow button moved off
+// the content: it was floating over the document because we had nowhere to put
+// it, not because the spec asked for that.
+function ViewerHeader({
+  name,
+  note,
+  onOpenExternally,
+  onSlides,
+}: {
+  name: string;
+  note: string;
+  onOpenExternally: () => void;
+  onSlides?: () => void;
+}) {
+  const btn =
+    "border border-line bg-surface px-3 text-[12.5px] font-semibold text-ink hover:border-mid";
   return (
-    <button
-      onClick={onClick}
-      title="Slideshow"
-      className="absolute right-3 top-3 z-10 flex items-center gap-1.5 rounded-control px-2.5 py-1 text-[12px] font-medium text-slate transition-colors hover:bg-tertiary hover:text-ink"
-      style={{ background: "var(--color-surface)", border: "1px solid var(--color-line)" }}
+    <div
+      className="flex shrink-0 items-center gap-3 border-b border-line"
+      style={{ height: 54, padding: "0 32px" }}
     >
-      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round">
-        <rect x="2" y="3" width="12" height="8" rx="1.5" />
-        <path d="M6.6 5.8v3.4l3-1.7z" fill="currentColor" stroke="none" />
-        <path d="M5.5 13.5h5" strokeLinecap="round" />
-      </svg>
-      Slides
-    </button>
+      <ExtChip name={name} />
+      <span className="font-mono text-mid" style={{ fontSize: 11 }}>{note}</span>
+      <span className="ml-auto flex items-center gap-2">
+        <button onClick={onOpenExternally} className={btn} style={{ height: 32 }}>
+          Open ↗
+        </button>
+        {onSlides && (
+          <button
+            onClick={onSlides}
+            className="px-3 text-[12.5px] font-semibold"
+            style={{
+              height: 32,
+              background: "var(--color-gold)",
+              border: "1px solid var(--color-gold)",
+              color: "var(--color-on-accent)",
+            }}
+          >
+            Slides
+          </button>
+        )}
+      </span>
+    </div>
   );
 }
 
@@ -418,26 +447,31 @@ export function FileViewer() {
 
   const pdfSrc = isPdf ? `data:application/pdf;base64,${b64}` : undefined;
 
-  const slideshow = slideKind && (
-    <>
-      <SlideButton onClick={() => setShowSlides(true)} />
-      {showSlides && (
-        <SlideshowOverlay
-          kind={slideKind}
-          html={isHtml ? htmlText : undefined}
-          pdfSrc={pdfSrc}
-          name={name}
-          onClose={() => setShowSlides(false)}
-        />
-      )}
-    </>
+  const slideshow = showSlides && slideKind && (
+    <SlideshowOverlay
+      kind={slideKind}
+      html={isHtml ? htmlText : undefined}
+      pdfSrc={pdfSrc}
+      name={name}
+      onClose={() => setShowSlides(false)}
+    />
+  );
+
+  const header = (note: string) => (
+    <ViewerHeader
+      name={name}
+      note={note}
+      onOpenExternally={() => { void openWithOtherApp(`${vaultRoot}/${relPath}`); }}
+      onSlides={slideKind ? () => setShowSlides(true) : undefined}
+    />
   );
 
   if (isPdf) return (
-    <div className="relative min-w-0 flex-1">
+    <div className="flex min-w-0 flex-1 flex-col">
+      {header("read-only · versions tracked the same")}
       <iframe
         src={pdfSrc}
-        style={{ flex: 1, border: "none", width: "100%", height: "100%" }}
+        style={{ flex: 1, border: "none", width: "100%", minHeight: 0 }}
         title={name}
       />
       {slideshow}
@@ -448,8 +482,11 @@ export function FileViewer() {
     // Render mode: view = visual render, edit = raw code
     if (RENDER_EXTS.has(fileExt) && !fileEditMode) {
       return (
-        <div className="relative flex min-w-0 flex-1">
-          <RenderView text={isHtml ? htmlText : text} fileExt={fileExt} name={name} onDetect={setHtmlKind} />
+        <div className="flex min-w-0 flex-1 flex-col">
+          {header("rendered · the document's own styles")}
+          <div className="relative flex min-h-0 flex-1">
+            <RenderView text={isHtml ? htmlText : text} fileExt={fileExt} name={name} onDetect={setHtmlKind} />
+          </div>
           {slideshow}
         </div>
       );

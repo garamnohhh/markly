@@ -60,7 +60,18 @@ export type SlideKind =
 // Only explicit slide markers. `body > section` was tried and dropped: across the
 // 51 HTML files in the real vault it never once matched an actual deck, and did
 // match two ordinary reports that happen to be split into sections.
-const SLIDE_SELECTORS = ["section[data-label]", ".slide"];
+//
+// The framework selectors below are distinctive enough not to reintroduce that
+// problem — no ordinary document puts its content inside `.reveal .slides` or
+// marks it `.step`. Without them a reveal.js or impress.js export got no
+// slideshow button at all, which is what "slide 버튼이 다 있는 게 아니네" was.
+const SLIDE_SELECTORS = [
+  "section[data-label]",
+  ".slide",
+  ".reveal .slides > section",   // reveal.js
+  ".step",                       // impress.js
+  "[data-slide]",
+];
 
 // `x-import` is the authored form; `deck-stage` is what it becomes once the
 // document's own script upgrades it.
