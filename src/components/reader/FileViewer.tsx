@@ -215,14 +215,36 @@ function HtmlPreview({ text, name, onDetect }: { text: string; name: string; onD
 function ViewerHeader({
   name,
   note,
-  onOpenExternally,
+  absPath,
   onSlides,
 }: {
   name: string;
   note: string;
-  onOpenExternally: () => void;
+  absPath: string;
   onSlides?: () => void;
 }) {
+  // "Open ↗" said nothing about what it opened, and it said nothing when it
+  // failed either — the promise was fired and dropped. Both fixed: the label
+  // names the destination, and the outcome always shows up somewhere.
+  const [said, setSaid] = useState<{ text: string; bad: boolean } | null>(null);
+  const inBrowser = /\.html?$/i.test(name);
+
+  async function handOff() {
+    setSaid(null);
+    const r = await openWithOtherApp(absPath);
+    if (r.ok) {
+      setSaid({ text: inBrowser ? "Opened in your browser" : "Opened", bad: false });
+    } else {
+      setSaid({
+        text: r.noApp
+          ? "No app on this Mac opens this file"
+          : `Could not open it — ${r.message}`,
+        bad: true,
+      });
+    }
+    setTimeout(() => setSaid(null), 4000);
+  }
+
   const btn =
     "border border-line bg-surface px-3 text-[12.5px] font-semibold text-ink hover:border-mid";
   return (
@@ -232,9 +254,17 @@ function ViewerHeader({
     >
       <ExtChip name={name} />
       <span className="font-mono text-mid" style={{ fontSize: 11 }}>{note}</span>
+      {said && (
+        <span
+          className="font-mono truncate"
+          style={{ fontSize: 11, color: said.bad ? "var(--color-red)" : "var(--color-accent-text)" }}
+        >
+          {said.text}
+        </span>
+      )}
       <span className="ml-auto flex items-center gap-2">
-        <button onClick={onOpenExternally} className={btn} style={{ height: 32 }}>
-          Open ↗
+        <button onClick={() => { void handOff(); }} className={btn} style={{ height: 32 }}>
+          {inBrowser ? "Open in browser ↗" : "Open in default app ↗"}
         </button>
         {onSlides && (
           <button
@@ -459,9 +489,10 @@ export function FileViewer() {
 
   const header = (note: string) => (
     <ViewerHeader
+      key={relPath}
       name={name}
       note={note}
-      onOpenExternally={() => { void openWithOtherApp(`${vaultRoot}/${relPath}`); }}
+      absPath={`${vaultRoot}/${relPath}`}
       onSlides={slideKind ? () => setShowSlides(true) : undefined}
     />
   );

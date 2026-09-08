@@ -1,26 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import { modalStack } from "../../lib/modalStack";
+import { acquireFullscreen, releaseFullscreen } from "../../lib/fullscreen";
 import type { SlideKind } from "../../lib/slides";
-
-// One queue for the whole app. Two overlays never overlap, but an enter and an
-// exit can, and AppKit drops whichever arrives during a running transition.
-let fullscreenQueue: Promise<void> = Promise.resolve();
-
-function queueFullscreen(on: boolean): Promise<void> {
-  if (!("__TAURI_INTERNALS__" in window)) return Promise.resolve();
-  fullscreenQueue = fullscreenQueue
-    .then(() => getCurrentWindow().setFullscreen(on))
-    // The transition itself is animated and setFullscreen resolves before it
-    // finishes, so hold the queue open long enough for AppKit to accept the
-    // next toggle. Measured against macOS's own ~0.5s Space animation.
-    .then(() => new Promise<void>((r) => setTimeout(r, 650)))
-    .catch(() => {});
-  return fullscreenQueue;
-}
-
-const enterFullscreen = () => queueFullscreen(true);
-const leaveFullscreen = () => queueFullscreen(false);
 
 // Full-window slideshow for HTML decks and PDFs. Everything else in the app is
 // untouched: this mounts only from FileViewer, only for html/htm/pdf, and only
@@ -66,30 +47,48 @@ export function SlideshowOverlay({
 
   // Take the whole screen, not just the window: this overlay already covers the
   // app's own title bar, but not the macOS menu bar — and that's the strip still
-  // showing during a presentation.
+  // showing during a presentation. lib/fullscreen owns the transition; see the
+  // note there for why this is not a plain enter-on-mount effect.
   //
-  // macOS fullscreen is an animated Space transition, and AppKit ignores a
-  // toggle that arrives while one is still running. Firing enter on mount and
-  // exit on unmount meant a quick Escape landed mid-animation: the overlay
-  // vanished, the window stayed fullscreen, and the next slideshow opened into
-  // a window that was already in the wrong state. So the two calls are put on
-  // one queue — exit always waits for enter to finish, and the overlay does not
-  // unmount until the exit has been asked for.
-  useEffect(() => {
-    enterFullscreen();
-    return () => { void leaveFullscreen(); };
+  // macOS moves a fullscreen window to its own Space and the web view stops
+  // being first responder on the way, so focus has to be taken back once the
+  // animation has settled — otherwise arrow keys do nothing until you click,
+  // and that click advances a slide.
+  const containerRef = useRef<HTMLDivElement>(null);
+  const released = useRef(false);
+
+  const takeFocus = useCallback(() => {
+    window.focus();
+    const cw = frameRef.current?.contentWindow;
+    try {
+      if (cw) { cw.focus(); return; }
+    } catch { /* opaque frame — fall through to the container */ }
+    containerRef.current?.focus();
   }, []);
 
-  // Escape closes, once. A second Escape while the window is still animating
-  // back used to queue a second toggle and flip it fullscreen again.
+  const release = useCallback(() => {
+    if (released.current) return Promise.resolve();
+    released.current = true;
+    return releaseFullscreen();
+  }, []);
+
+  useEffect(() => {
+    // StrictMode runs this twice on the same instance, so the guard has to be
+    // re-armed each time — otherwise the second run inherits released=true from
+    // the first cleanup and Escape never asks for the window back.
+    released.current = false;
+    void acquireFullscreen().then(takeFocus);
+    return () => { void release(); };
+  }, [release, takeFocus]);
+
+  // Escape closes, once. Leaving fullscreen first keeps the order on screen
+  // fullscreen → windowed → overlay gone.
   const closing = useRef(false);
   const close = useCallback(() => {
     if (closing.current) return;
     closing.current = true;
-    // Ask for the window back first, then unmount, so the order on screen is
-    // fullscreen → windowed → overlay gone rather than the other way round.
-    void leaveFullscreen().then(onClose);
-  }, [onClose]);
+    void release().then(onClose);
+  }, [onClose, release]);
 
   // Arrows page only when we own paging — a deck handles its own, and
   // forwarding would double-advance it.
@@ -149,7 +148,9 @@ export function SlideshowOverlay({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex flex-col"
+      ref={containerRef}
+      tabIndex={-1}
+      className="fixed inset-0 z-[60] flex flex-col outline-none"
       style={{ background: "#111" }}
       role="dialog"
       aria-label={`${name} slideshow`}
