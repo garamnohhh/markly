@@ -81,32 +81,55 @@ export function SlideshowOverlay({
     return () => { void release(); };
   }, [release, takeFocus]);
 
-  // Escape closes, once. Leaving fullscreen first keeps the order on screen
-  // fullscreen → windowed → overlay gone.
+  // Escape closes now. #1115 waited for the fullscreen exit before unmounting
+  // so the window would already be back — but that exit is an animated Space
+  // transition plus a position restore, and holding the overlay on screen for
+  // most of a second reads as "Escape doesn't work", so you press it again.
+  // The overlay goes at once and the window follows, which is what every other
+  // app does.
   const closing = useRef(false);
   const close = useCallback(() => {
     if (closing.current) return;
     closing.current = true;
-    void release().then(onClose);
+    void release();
+    onClose();
   }, [onClose, release]);
 
-  // Arrows page only when we own paging — a deck handles its own, and
-  // forwarding would double-advance it.
+  // One handler, called from wherever the key actually landed — the app window
+  // or the document's own frame. It used to be mirrored: the frame re-dispatched
+  // the event onto window and the window handler ran, but the frame's own
+  // handler had already run too, so a single ArrowRight moved two slides.
+  // A key can reach us twice: once in the app document and again inside the
+  // document's own frame, ~56ms apart (measured). Both routes have to stay —
+  // an opaque PDF frame only ever reports through the app document — so the
+  // first route to speak wins and the other is ignored from then on. No timing
+  // guess, and it re-elects whenever the frame reloads.
+  const keySource = useRef<"app" | "frame" | null>(null);
+
+  const handleKey = useCallback((e: KeyboardEvent, from: "app" | "frame") => {
+    if (keySource.current === null) keySource.current = from;
+    if (keySource.current !== from) return;
+    if (e.key === "Escape") { e.preventDefault(); e.stopImmediatePropagation(); close(); return; }
+    if (!paging) return;
+    if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") {
+      e.preventDefault();
+      setIndex((i) => Math.min(i + 1, count - 1));
+    } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+      e.preventDefault();
+      setIndex((i) => Math.max(i - 1, 0));
+    }
+  }, [close, paging, count]);
+
+  // The frame listener is attached once and has to keep seeing the current
+  // handler, so it reads it through a ref instead of being re-attached.
+  const handleKeyRef = useRef(handleKey);
+  handleKeyRef.current = handleKey;
+
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") { e.preventDefault(); e.stopImmediatePropagation(); close(); return; }
-      if (!paging) return;
-      if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") {
-        e.preventDefault();
-        setIndex((i) => Math.min(i + 1, count - 1));
-      } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
-        e.preventDefault();
-        setIndex((i) => Math.max(i - 1, 0));
-      }
-    };
+    const onKey = (e: KeyboardEvent) => handleKeyRef.current(e, "app");
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
-  }, [close, paging, count]);
+  }, []);
 
   // Keys land on whichever window has focus, so mirror the handler into the
   // frame. Same-origin only — a data: PDF frame is opaque, which is why the
@@ -115,12 +138,16 @@ export function SlideshowOverlay({
     const cw = frameRef.current?.contentWindow;
     if (!cw) return;
     try {
+      // Touching anything on a cross-origin frame throws, and a data: PDF frame
+      // is cross-origin — so even this guard has to sit inside the try.
+      // onLoad fires again on every reload and StrictMode runs the src effect
+      // twice, so the listeners go on at most once per frame.
+      const w = cw as Window & { __marklySlideKeys?: boolean };
+      if (w.__marklySlideKeys) return;
+      w.__marklySlideKeys = true;
+      keySource.current = null;
       cw.focus();
-      cw.addEventListener("keydown", (e) => {
-        window.dispatchEvent(new KeyboardEvent("keydown", {
-          key: e.key, code: e.code, bubbles: true, cancelable: true,
-        }));
-      }, true);
+      cw.addEventListener("keydown", (e) => handleKeyRef.current(e, "frame"), true);
       if (paging) {
         const found = cw.document.querySelectorAll<HTMLElement>((kind as { selector: string }).selector);
         setCount(found.length);
@@ -132,15 +159,43 @@ export function SlideshowOverlay({
     } catch { /* opaque frame (pdf) — close button and outside clicks still work */ }
   }
 
-  // Show one slide at a time by hiding the rest. Cheaper and more predictable
-  // than cloning a slide into a new document, and it survives author CSS.
+  // Show one slide at a time by hiding the rest, then sit the visible one in the
+  // middle and scale it to fit. Decks are authored at a fixed size — the real
+  // one here is 1440×810 — so left alone they land flush against the top-left
+  // corner of a full-screen frame and run off the edge.
+  //
+  // The limit of what we do to someone else's document: we centre and scale the
+  // slide as a whole and never touch what is inside it, so the author's layout
+  // is preserved exactly, just fitted. And this is our in-memory copy — the
+  // file on disk is not written.
   useEffect(() => {
     if (!paging) return;
     const cw = frameRef.current?.contentWindow;
     if (!cw) return;
     try {
-      const found = cw.document.querySelectorAll<HTMLElement>((kind as { selector: string }).selector);
+      const doc = cw.document;
+      if (!doc.getElementById("markly-slideshow-fit")) {
+        const style = doc.createElement("style");
+        style.id = "markly-slideshow-fit";
+        style.textContent =
+          "html,body{margin:0!important;padding:0!important;height:100%!important;" +
+          "overflow:hidden!important;background:#111!important;" +
+          "display:flex!important;align-items:center!important;justify-content:center!important}";
+        doc.head.appendChild(style);
+      }
+      const found = doc.querySelectorAll<HTMLElement>((kind as { selector: string }).selector);
       found.forEach((el, i) => { el.style.display = i === index ? "" : "none"; });
+      const slide = found[index];
+      if (slide) {
+        slide.style.flex = "none";
+        // measure at 1:1 before scaling, or each pass compounds the last
+        slide.style.transform = "";
+        const w = slide.offsetWidth || 1;
+        const h = slide.offsetHeight || 1;
+        const scale = Math.min(cw.innerWidth / w, cw.innerHeight / h, 1);
+        slide.style.transformOrigin = "center center";
+        slide.style.transform = `scale(${scale})`;
+      }
     } catch { /* not ready yet — onLoad re-runs this via setCount */ }
   }, [index, paging, kind, ready]);
 
@@ -160,7 +215,10 @@ export function SlideshowOverlay({
           ref={frameRef}
           src={frameSrc}
           onLoad={onLoad}
-          sandbox="allow-scripts allow-same-origin allow-forms"
+          // A sandboxed data: URL has an opaque origin and WebKit refuses to
+          // run the built-in PDF viewer in it — the overlay came up blank. The
+          // preview pane never sandboxed its PDF frame either.
+          sandbox={pdfSrc ? undefined : "allow-scripts allow-same-origin allow-forms"}
           style={{ flex: 1, border: "none", width: "100%", height: "100%", background: "#111" }}
           title={name}
         />

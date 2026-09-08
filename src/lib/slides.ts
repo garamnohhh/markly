@@ -81,12 +81,29 @@ const DECK_SELECTOR = 'x-import[component-from-global-scope="deck-stage"], deck-
 // carry their slides inside a script string and only build the DOM when they run,
 // so parsing the raw HTML finds nothing at all — that's how a 10-slide deck was
 // getting no slideshow button.
+// A deck-stage element only lays anything out once the document's own script has
+// upgraded it. A bundled export loaded from a blob: URL often never gets there —
+// and an un-upgraded deck-stage leaves its fixed-size sections stacked flush
+// against the top-left corner, which is exactly what "왜 왼쪽에 슬라이드가 나와"
+// was. So hand over to the runtime only when the runtime is actually alive.
+function deckRuntimeIsLive(doc: Document): boolean {
+  if (!doc.querySelector(DECK_SELECTOR)) return false;
+  try {
+    return !!doc.defaultView?.customElements?.get("deck-stage");
+  } catch {
+    return false;
+  }
+}
+
 export function detectSlidesIn(doc: Document): SlideKind {
-  if (doc.querySelector(DECK_SELECTOR)) return { kind: "deck" };
+  if (deckRuntimeIsLive(doc)) return { kind: "deck" };
   for (const selector of SLIDE_SELECTORS) {
     const n = doc.querySelectorAll(selector).length;
     if (n >= 2) return { kind: "elements", selector, count: n };
   }
+  // A deck-stage that never woke up and has no sections we can page: still
+  // worth offering, the document just drives itself.
+  if (doc.querySelector(DECK_SELECTOR)) return { kind: "deck" };
   return null;
 }
 
