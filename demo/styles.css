@@ -1,0 +1,6 @@
+/* Build-only. The demo's vite root is demo/, so Tailwind's automatic content
+   detection never looks at ../src and every utility class came out missing —
+   the shell collapsed. @source points it back at the app. */
+@import "../src/index.css";
+@source "../src";
+@source "./Picker.tsx";
