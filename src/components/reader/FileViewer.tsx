@@ -9,6 +9,7 @@ import { detectSlidesIn, needsAssetBase, withAssetBase } from "../../lib/slides"
 import type { SlideKind } from "../../lib/slides";
 import { SlideshowOverlay } from "./SlideshowOverlay";
 import { EditorView } from "@codemirror/view";
+import { openWithOtherApp, revealInFinder } from "../../lib/handoff";
 
 // svg moved out of IMAGE_EXTS so it becomes editable text
 const IMAGE_EXTS = new Set(["png", "jpg", "jpeg", "gif", "webp"]);
@@ -503,13 +504,76 @@ export function FileViewer() {
     );
   }
 
+  return <OpaqueFile relPath={relPath} name={name} />;
+}
+
+// Nothing to render here, so the screen's job is to get the file somewhere that
+// can render it. If macOS has no handler the open fails silently (-10814), so
+// the failure is stated and the two things that still work are offered.
+function OpaqueFile({ relPath, name }: { relPath: string; name: string }) {
+  const vaultRoot = useStore((s) => s.vaultRoot);
+  const abs = `${vaultRoot}/${relPath}`;
+  const [failed, setFailed] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  async function handOff() {
+    setFailed(null);
+    const r = await openWithOtherApp(abs);
+    if (!r.ok) {
+      setFailed(
+        r.noApp
+          ? "No app on this Mac opens this file type."
+          : `Could not open it — ${r.message}`,
+      );
+    }
+  }
+
+  const btn =
+    "border border-line bg-surface px-3 text-[12.5px] font-semibold text-ink hover:border-mid";
+
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-3" style={{ color: "var(--color-muted)" }}>
-      <svg width="36" height="36" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 2h5l3 3v9H4z" /><path d="M9 2v3h3" />
-      </svg>
-      <span style={{ fontSize: 13 }}>Binary file — no preview</span>
-      <span style={{ fontSize: 12, color: "var(--color-mid)" }}>{name}</span>
+    <div
+      className="flex flex-1 flex-col items-center justify-center gap-4"
+      style={{ color: "var(--color-muted)" }}
+    >
+      <div className="flex flex-col items-center gap-1">
+        <span style={{ fontSize: 13, color: "var(--color-ink)" }}>{name}</span>
+        <span style={{ fontSize: 12, fontFamily: "var(--font-mono)" }}>
+          Markly does not read this format
+        </span>
+      </div>
+      <div className="flex items-center gap-2">
+        <button onClick={handOff} className={btn} style={{ height: 32 }}>
+          Open ↗
+        </button>
+        <button onClick={() => revealInFinder(abs)} className={btn} style={{ height: 32 }}>
+          Reveal
+        </button>
+        <button
+          onClick={() => {
+            void navigator.clipboard.writeText(abs).then(() => {
+              setCopied(true);
+              setTimeout(() => setCopied(false), 1600);
+            });
+          }}
+          className={btn}
+          style={{ height: 32 }}
+        >
+          {copied ? "Copied" : "Copy path"}
+        </button>
+      </div>
+      {failed && (
+        <div
+          style={{
+            maxWidth: 420,
+            textAlign: "center",
+            fontSize: 12,
+            color: "var(--color-red)",
+          }}
+        >
+          {failed}
+        </div>
+      )}
     </div>
   );
 }

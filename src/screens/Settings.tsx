@@ -1,21 +1,22 @@
 import { useEffect, useState } from "react";
 import { LogoTile } from "../components/ui/Logo";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
-import { useStore, shortcutKeys, DEFAULT_SHORTCUTS, DEFAULT_TEMPLATES } from "../store";
+import { useStore, useDocs, shortcutKeys, DEFAULT_SHORTCUTS, DEFAULT_TEMPLATES } from "../store";
 import type { Template } from "../store";
 import type { ShortcutsMap } from "../store";
 import { captureMode } from "../lib/captureMode";
 import { modalStack } from "../lib/modalStack";
 
-type Tab = "appearance" | "editor" | "tracking" | "account" | "shortcuts" | "templates" | "about";
+type Tab = "appearance" | "editor" | "base" | "tracking" | "templates" | "account" | "shortcuts" | "about";
 
 // SideNav, labels only — the spec's setGroups has no glyphs.
 const NAV_ITEMS: { id: Tab; label: string }[] = [
   { id: "appearance", label: "Appearance" },
   { id: "editor", label: "Editor" },
-  { id: "account", label: "Account & Sync" },
+  { id: "base", label: "Base" },
   { id: "tracking", label: "Version history" },
   { id: "templates", label: "Templates" },
+  { id: "account", label: "Account & Sync" },
   { id: "shortcuts", label: "Shortcuts" },
   { id: "about", label: "About" },
 ];
@@ -60,6 +61,7 @@ export function Settings() {
         <div style={{ maxWidth: 660, margin: "0 auto" }}>
           {tab === "appearance" && <AppearanceTab />}
           {tab === "editor" && <EditorTab />}
+          {tab === "base" && <BaseTab />}
           {tab === "tracking" && <TrackingTab />}
           {tab === "account" && <AccountTab />}
           {tab === "shortcuts" && <ShortcutsTab />}
@@ -255,137 +257,201 @@ function EditorTab() {
   );
 }
 
-function AccountTab() {
+// Screen 14. The Base is the folder Markly watches; the app does not sync, it
+// only says whether the folder already sits somewhere that does.
+const SYNC_HOSTS: { match: string; name: string }[] = [
+  { match: "/Library/Mobile Documents/", name: "iCloud Drive" },
+  { match: "/Dropbox/", name: "Dropbox" },
+  { match: "/Google Drive/", name: "Google Drive" },
+  { match: "/OneDrive", name: "OneDrive" },
+  { match: "/Sync/", name: "Resilio Sync" },
+];
+
+function syncHost(path: string | null): string | null {
+  if (!path) return null;
+  return SYNC_HOSTS.find((h) => path.includes(h.match))?.name ?? null;
+}
+
+const homeShort = (p: string) => p.replace(/^\/Users\/[^/]+/, "~");
+
+function BaseTab() {
   const vaultRoot = useStore((s) => s.vaultRoot);
   const vaults = useStore((s) => s.vaults);
   const openVault = useStore((s) => s.openVault);
   const removeVault = useStore((s) => s.removeVault);
-  const [baseModalOpen, setBaseModalOpen] = useState(false);
+  const docs = useDocs();
+  const nonMd = useStore((s) => s.nonMdFiles);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!baseModalOpen) return;
-    modalStack.push();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") { e.stopImmediatePropagation(); setBaseModalOpen(false); }
-    };
-    window.addEventListener("keydown", onKey, true);
-    return () => { window.removeEventListener("keydown", onKey, true); modalStack.pop(); };
-  }, [baseModalOpen]);
+  const host = syncHost(vaultRoot);
 
-  async function addBase() {
+  async function pickBase() {
     setError(null);
     const path = await openDialog({ directory: true, multiple: false });
     if (typeof path === "string") {
-      try { await openVault(path); setBaseModalOpen(false); }
-      catch (e) { setError(String(e)); }
+      try { await openVault(path); } catch (e) { setError(String(e)); }
     }
   }
 
   return (
-    <>
-    {baseModalOpen && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(44,42,39,0.32)" }} onClick={() => setBaseModalOpen(false)}>
-        <div className=" border border-line bg-paper" style={{ width: 480, overflow: "hidden" }} onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-center justify-between border-b border-line px-5 py-4">
-            <span className="text-ink" style={{ fontSize: 14, fontWeight: 600 }}>Change Base</span>
-            <button onClick={() => setBaseModalOpen(false)} className=" px-2 py-1 text-[12px] text-muted hover:bg-tertiary" style={{ fontFamily: "var(--font-mono)" }}>esc</button>
-          </div>
-          <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
-            {vaults.map((v) => {
-              const name = v.split("/").pop() ?? v;
-              const active = v === vaultRoot;
-              return (
-                <div key={v} className="flex items-center gap-3 border" style={{ padding: "10px 14px", borderColor: active ? "var(--color-gold)" : "var(--color-line)", background: active ? "var(--color-accent-weak)" : "var(--color-surface)" }}>
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke={active ? "var(--color-gold)" : "var(--color-mid)"} strokeWidth="1.3">
-                    <path d="M2 4.4c0-.5.4-.9.9-.9h2.4l1.1 1.3h6.7c.5 0 .9.4.9.9v6.1c0 .5-.4.9-.9.9H2.9c-.5 0-.9-.4-.9-.9z" />
-                  </svg>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div className="text-ink" style={{ fontSize: 13, fontWeight: active ? 600 : 400 }}>{name}</div>
-                    <div className="text-muted truncate" style={{ fontSize: 11 }}>{v}</div>
-                  </div>
-                  {active ? (
-                    <span className="shrink-0 px-[7px] py-[2px] text-[10.5px] font-semibold" style={{ border: "1px solid var(--color-gold)", color: "var(--color-accent-text)" }}>Active</span>
-                  ) : (
-                    <div className="flex shrink-0 gap-2">
-                      <button onClick={() => openVault(v).then(() => setBaseModalOpen(false)).catch((e) => setError(String(e)))} className=" border border-line px-[9px] py-[4px] text-[12px] text-slate hover:bg-tertiary">Switch</button>
-                      <button onClick={() => removeVault(v)} className=" border border-line px-[9px] py-[4px] text-[12px] hover:bg-tertiary" style={{ color: "var(--color-red)" }}>Remove</button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-            <button onClick={addBase} className="flex items-center gap-2 border border-line px-[12px] py-[8px] text-[13px] text-slate hover:bg-tertiary" style={{ marginTop: 4 }}>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M6 2v8M2 6h8" /></svg>
-              Add Base
-            </button>
-            {error && <div className="text-[12px]" style={{ color: "var(--color-red)" }}>{error}</div>}
-          </div>
-        </div>
-      </div>
-    )}
     <section>
-      <div className="text-ink" style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>
-        Account &amp; Sync
-      </div>
-      <div className="text-muted" style={{ fontSize: 13, marginBottom: 18 }}>
-        Markly works fully offline. Your Base is a local folder you own.
-      </div>
+      <h1 className="text-ink" style={{ fontSize: 34, letterSpacing: "-0.02em", margin: "0 0 28px" }}>
+        Base
+      </h1>
 
-      <SectionLabel>Base</SectionLabel>
+      <SectionLabel>Base folder</SectionLabel>
       <div
-        className="flex items-center gap-3 border border-line bg-surface"
-        style={{ padding: "14px 16px", marginBottom: 10 }}
+        className="flex items-center gap-4 border border-line"
+        style={{ padding: "18px 20px", margin: "12px 0" }}
       >
-        <div
+        <span
+          className="flex shrink-0 items-center gap-1 px-2"
           style={{
-            width: 38, height: 38,  flexShrink: 0,
-            background: "var(--color-tertiary)",
-            display: "flex", alignItems: "center", justifyContent: "center",
+            height: 18,
+            border: "1px solid var(--color-green)",
+            color: "var(--color-green)",
+            background: "var(--color-ok-weak)",
+            fontFamily: "var(--font-mono)",
+            fontSize: 11,
+            letterSpacing: "0.06em",
           }}
         >
-          <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="var(--color-slate)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M2 13V6l6-4 6 4v7H2z" />
-            <path d="M6 13V9h4v4" />
-          </svg>
-        </div>
+          <span style={{ width: 6, height: 6, background: "currentColor" }} />
+          WATCHING
+        </span>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="text-ink" style={{ fontSize: 14, fontWeight: 600 }}>Local Base</div>
-          <div className="text-muted truncate" style={{ fontSize: 12, marginTop: 2 }}>
-            {vaultRoot ?? "No base selected"}
+          <div
+            className="text-ink truncate"
+            style={{ fontFamily: "var(--font-mono)", fontSize: 13, marginBottom: 4 }}
+          >
+            {vaultRoot ? homeShort(vaultRoot) : "No Base selected"}
+          </div>
+          <div
+            className="text-mid"
+            style={{ fontFamily: "var(--font-mono)", fontSize: 11 }}
+          >
+            {/* the spec shows a folder size here; Markly does not measure one
+                yet, so it counts what it does know */}
+            {docs.length} documents · {nonMd.length} other files
           </div>
         </div>
         <button
-          onClick={() => setBaseModalOpen(true)}
-          className="border border-line text-slate hover:border-mid transition-colors"
-          style={{ fontSize: 12.5, fontWeight: 500,  padding: "6px 12px", flexShrink: 0 }}
+          onClick={pickBase}
+          className="shrink-0 border border-line bg-surface px-3 text-[12.5px] font-semibold text-ink hover:border-mid"
+          style={{ height: 32 }}
         >
-          Change Base…
+          Change
         </button>
       </div>
 
-      <div style={{ marginTop: 28 }}>
-        <SectionLabel>Sync</SectionLabel>
+      {host && (
         <div
-          className="flex items-center justify-between border border-line bg-surface"
-          style={{ padding: "14px 16px" }}
+          className="flex gap-3 border border-line bg-surface text-muted"
+          style={{ padding: "12px 16px", borderLeft: "3px solid var(--color-info)", fontSize: 13 }}
         >
-          <div>
-            <div className="text-ink" style={{ fontSize: 14, fontWeight: 500 }}>Markly Sync</div>
-            <div className="text-muted" style={{ fontSize: 12, marginTop: 2 }}>
-              End-to-end encrypted multi-device sync
-            </div>
+          <span className="font-mono" style={{ color: "var(--color-info)" }}>i</span>
+          <span>
+            This folder is inside {host}. {host} does the syncing — Markly only
+            watches the files for changes.
+          </span>
+        </div>
+      )}
+
+      {error && (
+        <div className="text-[12px]" style={{ color: "var(--color-red)", marginTop: 10 }}>
+          {error}
+        </div>
+      )}
+
+      {vaults.length > 1 && (
+        <div style={{ marginTop: 28 }}>
+          <SectionLabel>Recent Bases</SectionLabel>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 12 }}>
+            {vaults.filter((v) => v !== vaultRoot).map((v) => (
+              <div
+                key={v}
+                className="flex items-center gap-3 border border-line bg-surface"
+                style={{ padding: "10px 14px" }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="text-ink" style={{ fontSize: 13 }}>{v.split("/").pop()}</div>
+                  <div
+                    className="text-mid truncate"
+                    style={{ fontFamily: "var(--font-mono)", fontSize: 11 }}
+                  >
+                    {homeShort(v)}
+                  </div>
+                </div>
+                <button
+                  onClick={() => { openVault(v).catch((e) => setError(String(e))); }}
+                  className="shrink-0 border border-line px-[9px] py-[4px] text-[12px] text-slate hover:bg-tertiary"
+                >
+                  Switch
+                </button>
+                <button
+                  onClick={() => removeVault(v)}
+                  className="shrink-0 border border-line px-[9px] py-[4px] text-[12px] hover:bg-tertiary"
+                  style={{ color: "var(--color-red)" }}
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
           </div>
-          <div
-            className="border border-line text-slate"
-            style={{ fontSize: 12.5, fontWeight: 500,  padding: "6px 14px" }}
-          >
-            Coming soon
+        </div>
+      )}
+    </section>
+  );
+}
+
+// Screen 31. Markly does not sync; this screen only reports whether the Base
+// already lives somewhere that does. Switching Bases lives on the Base tab.
+function AccountTab() {
+  const vaultRoot = useStore((s) => s.vaultRoot);
+  const host = syncHost(vaultRoot);
+
+  return (
+    <section>
+      <h1 className="text-ink" style={{ fontSize: 34, letterSpacing: "-0.02em", margin: "0 0 6px" }}>
+        Account &amp; Sync
+      </h1>
+      <p className="text-muted" style={{ fontSize: 14, margin: "0 0 22px" }}>
+        Markly works fully offline. Your Base is a local folder you own — no file
+        is sent anywhere.
+      </p>
+
+      <SectionLabel>Sync</SectionLabel>
+      <div
+        className="flex items-center gap-4 border border-line bg-surface"
+        style={{ padding: "14px 16px", marginTop: 12 }}
+      >
+        <span
+          className="flex shrink-0 items-center gap-1 px-2"
+          style={{
+            height: 18,
+            border: `1px solid ${host ? "var(--color-green)" : "var(--color-line)"}`,
+            color: host ? "var(--color-green)" : "var(--color-mid)",
+            background: host ? "var(--color-ok-weak)" : "transparent",
+            fontFamily: "var(--font-mono)",
+            fontSize: 11,
+            letterSpacing: "0.06em",
+          }}
+        >
+          <span style={{ width: 6, height: 6, background: "currentColor" }} />
+          {host ? "SYNCED" : "LOCAL"}
+        </span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="text-ink" style={{ fontSize: 13, fontWeight: 600 }}>
+            {host ?? "This Mac only"}
+          </div>
+          <div className="text-mid" style={{ fontSize: 12, marginTop: 2 }}>
+            {host
+              ? `Your Base is inside ${host}. ${host} does the syncing.`
+              : "Your Base is not inside a synced folder."}
           </div>
         </div>
       </div>
     </section>
-    </>
   );
 }
 

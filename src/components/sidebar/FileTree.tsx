@@ -7,7 +7,8 @@ import { unreadCount } from "../../lib/types";
 import { DocContextMenu } from "../ui/DocContextMenu";
 import type { CtxMenu } from "../ui/DocContextMenu";
 import type { DocEntry } from "../../lib/types";
-import { ExtChip } from "../ui/ExtChip";
+import { ExtChip, extTier, rawExt } from "../ui/ExtChip";
+import { openWithOtherApp } from "../../lib/handoff";
 
 interface TreeNode {
   name: string;
@@ -332,11 +333,25 @@ function RawFileRow({
   name: string; relPath: string; depth: number; active: boolean;
   openFile: (relPath: string) => void; onFileCtx: OnFileCtx;
 }) {
+  // An opaque row's chip carries ↗, which promises a hand-off to another app,
+  // so that is what clicking it does. If macOS has no handler the open fails
+  // silently, and we fall back to opening the file here — where the same screen
+  // that used to say "no preview" now offers Reveal and Copy path.
+  const opaque = extTier(rawExt(name)) === "opaque";
+  const vaultRoot = useStore((s) => s.vaultRoot);
+
+  async function activate() {
+    if (!opaque) return openFile(relPath);
+    const r = await openWithOtherApp(`${vaultRoot}/${relPath}`);
+    if (!r.ok) openFile(relPath);
+  }
+
   return (
     <button
-      onClick={() => openFile(relPath)}
+      onClick={() => { void activate(); }}
       onContextMenu={(e) => { e.preventDefault(); onFileCtx(e.clientX, e.clientY, relPath, name, "file"); }}
       aria-selected={active || undefined}
+      title={opaque ? "Open in another app" : undefined}
       className="hover:text-ink"
       style={{
         ...TREE_ROW,
