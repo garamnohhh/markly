@@ -92,6 +92,33 @@ function Meta({ children }: { children: React.ReactNode }) {
   );
 }
 
+// "Show the open file in the tree" — IntelliJ's button, same idea: it does
+// nothing until you press it. Mono glyph, not an SVG (23 · SVG 아이콘을 만들지
+// 않는다). ⌖ is the conventional locate mark; see the report for the note on it.
+function RevealControl() {
+  const revealInTree = useStore((s) => s.revealInTree);
+  const has = useStore((s) => !!(s.openFilePath || s.openDocId));
+  return (
+    <button
+      onClick={revealInTree}
+      disabled={!has}
+      title={has ? "Show the open file in the tree" : "Nothing is open"}
+      aria-label="Show the open file in the tree"
+      className="grid place-items-center font-mono transition-colors disabled:cursor-default"
+      style={{
+        width: 20,
+        height: 20,
+        fontSize: 13,
+        color: has ? "var(--color-mid)" : "var(--color-line)",
+      }}
+      onMouseEnter={(e) => { if (has) e.currentTarget.style.color = "var(--color-ink)"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.color = has ? "var(--color-mid)" : "var(--color-line)"; }}
+    >
+      ⌖
+    </button>
+  );
+}
+
 // "+" affordance in the Files header: New file / New folder, created at `dir`
 // (current doc's folder, else root). Reuses the small inline-input pattern.
 function NewItemControl({ dir }: { dir: string }) {
@@ -174,6 +201,19 @@ export function FileTree() {
   const [ctxMenu, setCtxMenu] = useState<CtxMenu | null>(null);
   const [fileCtxMenu, setFileCtxMenu] = useState<FileCtxMenu | null>(null);
 
+  // Scrolling is driven by a counter rather than by watching what is open, so
+  // the tree moves only when the button was actually pressed. The row exists by
+  // the time this runs: expanding the folders is part of the same update, so
+  // React has already re-rendered it.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const revealTick = useStore((s) => s.revealTick);
+  useEffect(() => {
+    if (!revealTick) return;
+    rootRef.current
+      ?.querySelector('[data-open="true"]')
+      ?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [revealTick]);
+
   const onCtx = useCallback((x: number, y: number, doc: DocEntry) => {
     setCtxMenu({ x, y, doc });
   }, []);
@@ -183,12 +223,13 @@ export function FileTree() {
   }, []);
 
   return (
-    <div data-find-exclude className="flex flex-col" style={{ gap: 1 }}>
+    <div ref={rootRef} data-find-exclude className="flex flex-col" style={{ gap: 1 }}>
       <div className="mb-[2px] flex items-center" style={{ height: 26, paddingLeft: 9, paddingRight: 6 }}>
         <span className="text-[10px] font-bold uppercase text-mid" style={{ letterSpacing: "0.13em" }}>
           {baseName}
         </span>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-1">
+          <RevealControl />
           <NewItemControl dir={currentDir} />
         </div>
       </div>
@@ -304,6 +345,7 @@ function DocFileRow({
       onClick={() => openDoc(doc.docId)}
       onContextMenu={(e) => { e.preventDefault(); onCtx(e.clientX, e.clientY, doc); }}
       aria-selected={active || undefined}
+      data-open={active || undefined}
       className="hover:text-ink"
       style={{
         ...TREE_ROW,
@@ -351,6 +393,7 @@ function RawFileRow({
       onClick={() => { void activate(); }}
       onContextMenu={(e) => { e.preventDefault(); onFileCtx(e.clientX, e.clientY, relPath, name, "file"); }}
       aria-selected={active || undefined}
+      data-open={active || undefined}
       title={opaque ? "Open in another app" : undefined}
       className="hover:text-ink"
       style={{

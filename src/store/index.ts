@@ -128,6 +128,9 @@ interface AppState {
   // leaving focus mode puts the layout back exactly as it was.
   focusMode: boolean;
   sidebarTab: SidebarTab;
+  // Bumped by revealInTree so the tree knows to scroll, without the tree
+  // having to watch what is open. Not persisted — it means nothing next launch.
+  revealTick: number;
   tocVisible: boolean;
   cmdPaletteOpen: boolean;
   findOpen: boolean;
@@ -162,6 +165,7 @@ interface AppState {
   openTag: (tag: string) => void;
   setFolderFilter: (path: string | null) => void;
   toggleFolder: (path: string) => void;
+  revealInTree: () => void;
   setSidebarWidth: (w: number) => void;
   setTocWidth: (w: number) => void;
   setShowEmptySections: (v: boolean) => void;
@@ -222,6 +226,7 @@ function _build() { return create<AppState>()(
       sidebarVisible: true,
       focusMode: false,
       sidebarTab: "queue",
+      revealTick: 0,
       tocVisible: true,
       cmdPaletteOpen: false,
       findOpen: false,
@@ -321,6 +326,39 @@ function _build() { return create<AppState>()(
             ? s.expandedFolders.filter((p) => p !== path)
             : [...s.expandedFolders, path],
         })),
+
+      // "Show the open file in the tree" — the IntelliJ button. It only ever
+      // runs on a click; nothing follows the open document on its own, because
+      // the tree is a place you go to look for something and being dragged
+      // somewhere else mid-search is the thing to avoid.
+      //
+      // Paths come from doc.path / openFilePath, never from docId: docId is
+      // lowercased and the tree is built from the real, cased path, so folder
+      // names computed from it would never match and nothing would expand.
+      revealInTree: () => {
+        const s = get();
+        const path = s.openFilePath ?? (s.openDocId ? s.db?.docs[s.openDocId]?.path : undefined);
+        if (!path) return;
+
+        const parts = path.split("/");
+        parts.pop(); // the file itself
+        const ancestors: string[] = [];
+        parts.reduce((prefix, part) => {
+          const next = prefix ? `${prefix}/${part}` : part;
+          ancestors.push(next);
+          return next;
+        }, "");
+
+        set((st) => ({
+          // the tree cannot be looked at while it is hidden: a narrow window
+          // keeps the sidebar in a drawer, and focus mode hides it outright
+          sidebarVisible: true,
+          focusMode: false,
+          sidebarTab: "files" as SidebarTab,
+          expandedFolders: [...new Set([...st.expandedFolders, ...ancestors])],
+          revealTick: st.revealTick + 1,
+        }));
+      },
       setSidebarWidth: (w) =>
         set({ sidebarWidth: Math.min(SIDEBAR_MAX, Math.max(SIDEBAR_MIN, w)) }),
       setTocWidth: (w) =>
