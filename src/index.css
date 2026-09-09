@@ -3,8 +3,28 @@
 /* Bundled, not CDN — this is an offline desktop app, so the design system's
    @import of Google Fonts and jsDelivr would simply not render. */
 @import "pretendard/dist/web/variable/pretendardvariable.css";
-@import "@fontsource/jetbrains-mono/400.css";
-@import "@fontsource/jetbrains-mono/500.css";
+
+/* JetBrains Mono, the Nerd Fonts patched build, subset and bundled.
+   @fontsource/jetbrains-mono shipped the stock font split by unicode-range,
+   and its ranges stop at Latin — so the marks the tree is drawn with (│ ├ ▪ ▫
+   ▌ − ⌘) fell outside every range and were quietly served by Menlo instead.
+   One file now covers the text and the marks, so they share metrics and a
+   drawing hand, and the Nerd Fonts private-use icons are available at all.
+
+   2474KB TTF → 65KB woff2. The subset keeps Latin-1, Latin Extended-A/B,
+   Greek, Cyrillic, Vietnamese, punctuation, currency, arrows, math, technical,
+   box drawing, block elements, geometric shapes and dingbats — a superset of
+   what @fontsource's ranges covered — plus the sixteen locate-mark candidates
+   sent to the designer. Regular only, as supplied; the one place that asks for
+   mono at 500 (the slideshow's esc button) now renders Regular. SIL OFL 1.1,
+   redistribution allowed; the licence sits next to the file. */
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMonoNerdFont-Regular.subset.woff2") format("woff2");
+  font-weight: 400 500;
+  font-style: normal;
+  font-display: swap;
+}
 
 @font-face {
   font-family: "D2Coding";
