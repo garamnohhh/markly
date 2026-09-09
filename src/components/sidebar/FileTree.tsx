@@ -69,6 +69,11 @@ const TREE_ROW: React.CSSProperties = {
   whiteSpace: "nowrap",
   textAlign: "left",
   width: "100%",
+  // clears the pinned header above, or a revealed row lands underneath it —
+  // and the same margin at the foot so a row revealed from below is not left
+  // flush against the bottom edge
+  scrollMarginTop: 30,
+  scrollMarginBottom: 30,
 };
 
 function Guide({ depth }: { depth: number }) {
@@ -224,7 +229,24 @@ export function FileTree() {
 
   return (
     <div ref={rootRef} data-find-exclude className="flex flex-col" style={{ gap: 1 }}>
-      <div className="mb-[2px] flex items-center" style={{ height: 26, paddingLeft: 9, paddingRight: 6 }}>
+      {/* Pinned. The tree scrolls, this row does not. The reveal button lives
+          here, and in a real base the list is long enough that the header was
+          800px above the visible area — you had to scroll all the way back up
+          to press it. The design system sets no rule for this row, so pinning
+          it is a departure from the handoff; it does carry a `sticky` layer in
+          its z-index scale, which is the tier used here. The negative margins
+          undo the scroller's 4px side padding so the background covers the
+          full width and rows pass behind it rather than beside it. */}
+      <div
+        className="sticky mb-[2px] flex items-center bg-tertiary"
+        style={{
+          // -8 not 0: sticky offsets are measured from the scroller's padding
+          // edge, and the scroller has 8px of top padding, so top:0 parks the
+          // header 8px down and two rows show through the gap above it.
+          top: -8,
+          height: 26, marginLeft: -4, marginRight: -4, paddingLeft: 13, paddingRight: 10, zIndex: 1,
+        }}
+      >
         <span className="text-[10px] font-bold uppercase text-mid" style={{ letterSpacing: "0.13em" }}>
           {baseName}
         </span>
