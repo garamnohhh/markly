@@ -7,6 +7,7 @@ use notify::{Event, RecommendedWatcher, RecursiveMode, Watcher};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use tauri::{Emitter, State};
+use tauri_plugin_opener::OpenerExt;
 
 pub struct VaultState {
     pub root: Mutex<Option<PathBuf>>,
@@ -82,6 +83,18 @@ fn get_root(state: &State<VaultState>) -> Result<PathBuf, String> {
         .unwrap()
         .clone()
         .ok_or_else(|| "no vault open".to_string())
+}
+
+fn vault_file(root: &std::path::Path, rel_path: &str) -> Result<PathBuf, String> {
+    let root = root.canonicalize().map_err(|e| e.to_string())?;
+    let path = root
+        .join(rel_path)
+        .canonicalize()
+        .map_err(|e| e.to_string())?;
+    if !path.starts_with(&root) || !path.is_file() {
+        return Err("invalid path".to_string());
+    }
+    Ok(path)
 }
 
 /// Split watcher paths into "needs a full markdown rescan" vs "only the non-md
@@ -294,6 +307,18 @@ pub fn read_raw_file(rel_path: String, state: State<VaultState>) -> Result<Strin
 }
 
 #[tauri::command]
+pub fn open_vault_file(
+    rel_path: String,
+    state: State<VaultState>,
+    app: tauri::AppHandle,
+) -> Result<(), String> {
+    let path = vault_file(&get_root(&state)?, &rel_path)?;
+    app.opener()
+        .open_path(path.to_string_lossy(), None::<&str>)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 pub fn write_raw_file(rel_path: String, content: String, state: State<VaultState>) -> Result<(), String> {
     let root = get_root(&state)?;
     let abs = root.join(&rel_path);
@@ -434,5 +459,19 @@ mod tests {
         }
         assert_eq!(classify_paths(&[markly.join("snapshots/x.md")], &markly), (false, false));
         assert_eq!(classify_paths(&[p(".git/index")], &markly), (false, false));
+    }
+
+    #[test]
+    fn vault_file_rejects_parent_escape() {
+        let base = std::env::temp_dir().join(format!("markly-open-{}", std::process::id()));
+        let root = base.join("vault");
+        std::fs::create_dir_all(&root).unwrap();
+        std::fs::write(root.join("inside.html"), "ok").unwrap();
+        std::fs::write(base.join("outside.html"), "no").unwrap();
+
+        assert!(vault_file(&root, "inside.html").is_ok());
+        assert!(vault_file(&root, "../outside.html").is_err());
+
+        std::fs::remove_dir_all(base).unwrap();
     }
 }

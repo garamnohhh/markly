@@ -412,11 +412,10 @@ function RawFileRow({
   // silently, and we fall back to opening the file here — where the same screen
   // that used to say "no preview" now offers Reveal and Copy path.
   const opaque = extTier(rawExt(name)) === "opaque";
-  const vaultRoot = useStore((s) => s.vaultRoot);
 
   async function activate() {
     if (!opaque) return openFile(relPath);
-    const r = await openWithOtherApp(`${vaultRoot}/${relPath}`);
+    const r = await openWithOtherApp(relPath);
     if (!r.ok) openFile(relPath);
   }
 

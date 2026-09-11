@@ -75,6 +75,7 @@ pub fn run() {
             commands::list_files,
             commands::list_dirs,
             commands::read_raw_file,
+            commands::open_vault_file,
             commands::write_raw_file,
             commands::rename_raw_file,
             commands::delete_raw_file,

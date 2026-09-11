@@ -32,6 +32,8 @@ export const api = {
     invoke<string[]>("list_dirs"),
   readRawFile: (relPath: string) =>
     invoke<string>("read_raw_file", { relPath }),
+  openVaultFile: (relPath: string) =>
+    invoke<void>("open_vault_file", { relPath }),
   writeRawFile: (relPath: string, content: string) =>
     invoke<void>("write_raw_file", { relPath, content }),
   renameRawFile: (relPath: string, newName: string) =>

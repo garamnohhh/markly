@@ -1,4 +1,5 @@
-import { openPath, revealItemInDir } from "@tauri-apps/plugin-opener";
+import { revealItemInDir } from "@tauri-apps/plugin-opener";
+import { api } from "./invoke";
 
 // Handing a file to another app. macOS answers in one of two ways and only one
 // of them is visible: if something claims the type it launches, and if nothing
@@ -17,9 +18,9 @@ export type HandoffResult = { ok: true } | { ok: false; noApp: boolean; message:
 
 const NO_APP = /-10814|ApplicationNotFound|No application knows/i;
 
-export async function openWithOtherApp(absPath: string): Promise<HandoffResult> {
+export async function openWithOtherApp(relPath: string): Promise<HandoffResult> {
   try {
-    await openPath(absPath);
+    await api.openVaultFile(relPath);
     return { ok: true };
   } catch (e) {
     const message = String(e);

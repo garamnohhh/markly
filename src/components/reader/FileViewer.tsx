@@ -215,12 +215,12 @@ function HtmlPreview({ text, name, onDetect }: { text: string; name: string; onD
 function ViewerHeader({
   name,
   note,
-  absPath,
+  relPath,
   onSlides,
 }: {
   name: string;
   note: string;
-  absPath: string;
+  relPath: string;
   onSlides?: () => void;
 }) {
   // "Open ↗" said nothing about what it opened, and it said nothing when it
@@ -231,7 +231,7 @@ function ViewerHeader({
 
   async function handOff() {
     setSaid(null);
-    const r = await openWithOtherApp(absPath);
+    const r = await openWithOtherApp(relPath);
     if (r.ok) {
       setSaid({ text: inBrowser ? "Opened in your browser" : "Opened", bad: false });
     } else {
@@ -492,7 +492,7 @@ export function FileViewer() {
       key={relPath}
       name={name}
       note={note}
-      absPath={`${vaultRoot}/${relPath}`}
+      relPath={relPath}
       onSlides={slideKind ? () => setShowSlides(true) : undefined}
     />
   );
@@ -586,7 +586,7 @@ function OpaqueFile({ relPath, name }: { relPath: string; name: string }) {
 
   async function handOff() {
     setFailed(null);
-    const r = await openWithOtherApp(abs);
+    const r = await openWithOtherApp(relPath);
     if (!r.ok) {
       setFailed(
         r.noApp
