@@ -24,7 +24,7 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline' blob: marklyfile:; style-src 'self' 'unsafe-inline' marklyfile:; img-src 'self' data: blob: marklyfile:; font-src 'self' data: marklyfile:; connect-src 'self' ipc: http://ipc.localhost marklyfile:; frame-src blob: data: marklyfile:; media-src 'self' data: blob: marklyfile:; object-src 'none'; base-uri 'self' marklyfile:"
     }
   },
   "bundle": {
