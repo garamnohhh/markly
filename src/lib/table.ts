@@ -1,5 +1,5 @@
-import { Annotation, EditorState } from "@codemirror/state";
-import { EditorView, KeyBinding } from "@codemirror/view";
+import { Annotation, EditorState, Transaction } from "@codemirror/state";
+import { EditorView, type KeyBinding } from "@codemirror/view";
 
 // CJK characters count as display width 2
 function strWidth(s: string): number {
@@ -107,24 +107,21 @@ function docCellStart(state: EditorState, docLineNum: number, col: number): numb
 // Annotation to break reformat → updateListener loop
 const reformatMark = Annotation.define<true>();
 
-// Real-time auto-format: fires on every doc change while cursor is in a table row
-export const tableAutoFormat = EditorView.updateListener.of((u) => {
-  if (!u.docChanged) return;
-  if (u.transactions.some((tr) => tr.annotation(reformatMark))) return;
+function formatTableAt(view: EditorView, lineNumber: number): boolean {
+  const line = view.state.doc.line(lineNumber);
+  if (!isTableRow(line.text) || isSepRow(line.text)) return false;
 
-  const head = u.state.selection.main.head;
-  const line = u.state.doc.lineAt(head);
-  if (!isTableRow(line.text) || isSepRow(line.text)) return;
-
-  const { start, end } = getTableBounds(u.state, line.number);
-  const tableLines = collectLines(u.state, start, end);
+  const { start, end } = getTableBounds(view.state, line.number);
+  const tableLines = collectLines(view.state, start, end);
   const formatted = formatTable(tableLines);
   const formattedText = formatted.join("\n");
-  if (formattedText === tableLines.join("\n")) return; // already aligned
+  if (formattedText === tableLines.join("\n")) return false;
 
-  const docStart = u.state.doc.line(start).from;
-  const docEnd = u.state.doc.line(end).to;
+  const docStart = view.state.doc.line(start).from;
+  const docEnd = view.state.doc.line(end).to;
   const rowIdx = line.number - start;
+  const head = view.state.selection.main.head;
+  const cursorLine = view.state.doc.lineAt(head);
   const col = cursorCol(line.text, head - line.from);
 
   // Cursor in reformatted line: after the same content the user just typed
@@ -133,18 +130,51 @@ export const tableAutoFormat = EditorView.updateListener.of((u) => {
   const rowDocStart = docStart + (rowIdx > 0 ? linesBeforeRow + 1 : 0);
   const cursor = rowDocStart + cellStart(formatted[rowIdx], col) + cellContent.length;
 
-  u.view.dispatch({
+  view.dispatch({
     changes: { from: docStart, to: docEnd, insert: formattedText },
-    selection: { anchor: cursor },
-    annotations: [reformatMark.of(true)],
+    selection: cursorLine.number === line.number ? { anchor: cursor } : undefined,
+    annotations: [reformatMark.of(true), Transaction.addToHistory.of(false)],
   });
-});
+  return true;
+}
+
+function formatSelectionTable(view: EditorView): boolean {
+  return formatTableAt(view, view.state.doc.lineAt(view.state.selection.main.head).number);
+}
+
+export function shouldAutoFormat(docChanged: boolean, composing: boolean, composeInput: boolean): boolean {
+  return docChanged && !composing && !composeInput;
+}
+
+export const tableAutoFormat = [
+  EditorView.updateListener.of((u) => {
+    if (u.transactions.some((tr) => tr.annotation(reformatMark))) return;
+    const composeInput = u.transactions.some((tr) => tr.isUserEvent("input.type.compose"));
+    if (shouldAutoFormat(u.docChanged, u.view.composing, composeInput)) {
+      formatSelectionTable(u.view);
+      return;
+    }
+    if (u.selectionSet && !u.docChanged) {
+      const before = u.startState.doc.lineAt(u.startState.selection.main.head).number;
+      const after = u.state.doc.lineAt(u.state.selection.main.head).number;
+      if (before !== after) formatTableAt(u.view, isTableRow(u.state.doc.line(after).text) ? after : before);
+    }
+  }),
+  EditorView.domEventHandlers({
+    compositionend: (_event, view) => {
+      queueMicrotask(() => {
+        if (!view.composing) formatSelectionTable(view);
+      });
+    },
+  }),
+];
 
 export function buildTableKeymap(): KeyBinding[] {
   return [
     {
       key: "Tab",
       run: (view) => {
+        formatSelectionTable(view);
         const { state } = view;
         const head = state.selection.main.head;
         const line = state.doc.lineAt(head);
@@ -185,6 +215,7 @@ export function buildTableKeymap(): KeyBinding[] {
         return true;
       },
       shift: (view) => {
+        formatSelectionTable(view);
         const { state } = view;
         const head = state.selection.main.head;
         const line = state.doc.lineAt(head);
