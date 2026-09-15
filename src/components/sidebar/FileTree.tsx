@@ -101,15 +101,7 @@ function Meta({ children }: { children: React.ReactNode }) {
 // nothing until you press it. Mono glyph, not an SVG (23 · SVG 아이콘을 만들지
 // 않는다).
 //
-// ◎ U+25CE, not ⌖ U+2316. ⌖ is the conventional locate mark and it is what
-// shipped first, but it is in none of the fonts this app asks for: the stack is
-// "JetBrains Mono", ui-monospace, Menlo, and U+2316 is absent from every one of
-// them (`fc-list :charset=2316` finds it in Apple Symbols, Arial Unicode MS and
-// the STIX faces only). It appeared in a terminal because the OS quietly
-// substituted one of those, and it is not a substitution to rely on. U+25CE is
-// in Menlo and in JetBrainsMono Nerd Font, carries the same advance as the rest
-// of the tree's marks, and every other glyph in this file was checked the same
-// way. Interim pick — the designer has a candidate list and has not chosen yet.
+// U+F192 Nerd Font dot-circle — 사용자 선택 2026-09-15.
 function RevealControl() {
   const revealInTree = useStore((s) => s.revealInTree);
   const has = useStore((s) => !!(s.openFilePath || s.openDocId));
@@ -129,7 +121,7 @@ function RevealControl() {
       onMouseEnter={(e) => { if (has) e.currentTarget.style.color = "var(--color-ink)"; }}
       onMouseLeave={(e) => { e.currentTarget.style.color = has ? "var(--color-mid)" : "var(--color-line)"; }}
     >
-      ◎
+      
     </button>
   );
 }
