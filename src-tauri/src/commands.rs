@@ -4,7 +4,7 @@ use crate::vault::db::{Db, DocEntry};
 use crate::vault::diff::DiffResult;
 use crate::vault::DocContent;
 use notify::{Event, RecommendedWatcher, RecursiveMode, Watcher};
-use std::path::PathBuf;
+use std::path::{Component, Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use tauri::{Emitter, State};
 use tauri_plugin_opener::OpenerExt;
@@ -85,13 +85,31 @@ fn get_root(state: &State<VaultState>) -> Result<PathBuf, String> {
         .ok_or_else(|| "no vault open".to_string())
 }
 
-fn vault_file(root: &std::path::Path, rel_path: &str) -> Result<PathBuf, String> {
+fn relative_path(rel_path: &str) -> Result<&Path, String> {
+    let path = Path::new(rel_path);
+    if path.as_os_str().is_empty() || !path.components().all(|c| matches!(c, Component::Normal(_))) {
+        return Err("invalid path".to_string());
+    }
+    Ok(path)
+}
+
+fn vault_file(root: &Path, rel_path: &str) -> Result<PathBuf, String> {
     let root = root.canonicalize().map_err(|e| e.to_string())?;
-    let path = root
-        .join(rel_path)
+    let path = root.join(relative_path(rel_path)?)
         .canonicalize()
         .map_err(|e| e.to_string())?;
     if !path.starts_with(&root) || !path.is_file() {
+        return Err("invalid path".to_string());
+    }
+    Ok(path)
+}
+
+fn new_vault_file(root: &Path, rel_path: &str) -> Result<PathBuf, String> {
+    let root = root.canonicalize().map_err(|e| e.to_string())?;
+    let path = root.join(relative_path(rel_path)?);
+    let parent = path.parent().ok_or_else(|| "invalid path".to_string())?;
+    let parent = parent.canonicalize().map_err(|e| e.to_string())?;
+    if !parent.starts_with(&root) {
         return Err("invalid path".to_string());
     }
     Ok(path)
@@ -232,7 +250,9 @@ pub fn create_doc(
     content: String,
     state: State<VaultState>,
 ) -> Result<Db, String> {
-    vault::create_doc(&get_root(&state)?, &rel_path, &content)
+    let root = get_root(&state)?;
+    new_vault_file(&root, &rel_path)?;
+    vault::create_doc(&root, &rel_path, &content)
 }
 
 #[tauri::command]
@@ -246,7 +266,9 @@ pub fn rename_doc(
     new_rel_path: String,
     state: State<VaultState>,
 ) -> Result<Db, String> {
-    vault::rename_doc(&get_root(&state)?, &doc_id, &new_rel_path)
+    let root = get_root(&state)?;
+    new_vault_file(&root, &new_rel_path)?;
+    vault::rename_doc(&root, &doc_id, &new_rel_path)
 }
 
 #[tauri::command]
@@ -297,11 +319,7 @@ pub fn list_files(state: State<VaultState>) -> Result<Vec<String>, String> {
 #[tauri::command]
 pub fn read_raw_file(rel_path: String, state: State<VaultState>) -> Result<String, String> {
     use base64::Engine;
-    let root = get_root(&state)?;
-    let abs = root.join(&rel_path);
-    if !abs.starts_with(&root) {
-        return Err("invalid path".to_string());
-    }
+    let abs = vault_file(&get_root(&state)?, &rel_path)?;
     let bytes = std::fs::read(&abs).map_err(|e| e.to_string())?;
     Ok(base64::engine::general_purpose::STANDARD.encode(&bytes))
 }
@@ -320,11 +338,7 @@ pub fn open_vault_file(
 
 #[tauri::command]
 pub fn write_raw_file(rel_path: String, content: String, state: State<VaultState>) -> Result<(), String> {
-    let root = get_root(&state)?;
-    let abs = root.join(&rel_path);
-    if !abs.starts_with(&root) {
-        return Err("invalid path".to_string());
-    }
+    let abs = vault_file(&get_root(&state)?, &rel_path)?;
     std::fs::write(&abs, content.as_bytes()).map_err(|e| e.to_string())
 }
 
@@ -357,26 +371,21 @@ pub fn list_dirs(state: State<VaultState>) -> Result<Vec<String>, String> {
 #[tauri::command]
 pub fn rename_raw_file(rel_path: String, new_name: String, state: State<VaultState>) -> Result<(), String> {
     let root = get_root(&state)?;
-    let old = root.join(&rel_path);
-    if !old.starts_with(&root) {
+    let old = vault_file(&root, &rel_path)?;
+    if Path::new(&new_name).components().count() != 1
+        || !matches!(Path::new(&new_name).components().next(), Some(Component::Normal(_)))
+    {
         return Err("invalid path".to_string());
     }
-    let new = old.parent()
-        .ok_or_else(|| "no parent".to_string())?
-        .join(&new_name);
-    if !new.starts_with(&root) {
-        return Err("invalid path".to_string());
-    }
+    let parent = Path::new(&rel_path).parent().unwrap_or_else(|| Path::new(""));
+    let new_rel = parent.join(&new_name);
+    let new = new_vault_file(&root, new_rel.to_str().ok_or("invalid path")?)?;
     std::fs::rename(&old, &new).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 pub fn delete_raw_file(rel_path: String, state: State<VaultState>) -> Result<(), String> {
-    let root = get_root(&state)?;
-    let abs = root.join(&rel_path);
-    if !abs.starts_with(&root) {
-        return Err("invalid path".to_string());
-    }
+    let abs = vault_file(&get_root(&state)?, &rel_path)?;
     std::fs::remove_file(&abs).map_err(|e| e.to_string())
 }
 
@@ -471,6 +480,17 @@ mod tests {
 
         assert!(vault_file(&root, "inside.html").is_ok());
         assert!(vault_file(&root, "../outside.html").is_err());
+        assert!(vault_file(&root, base.join("outside.html").to_str().unwrap()).is_err());
+        assert!(new_vault_file(&root, "new.md").is_ok());
+        assert!(new_vault_file(&root, "../new.md").is_err());
+        assert!(new_vault_file(&root, base.join("new.md").to_str().unwrap()).is_err());
+
+        #[cfg(unix)]
+        {
+            std::os::unix::fs::symlink(&base, root.join("escape")).unwrap();
+            assert!(vault_file(&root, "escape/outside.html").is_err());
+            assert!(new_vault_file(&root, "escape/new.md").is_err());
+        }
 
         std::fs::remove_dir_all(base).unwrap();
     }
