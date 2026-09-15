@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { LogoTile } from "../components/ui/Logo";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
+import { getVersion } from "@tauri-apps/api/app";
 import { useStore, useDocs, shortcutKeys, DEFAULT_SHORTCUTS, DEFAULT_TEMPLATES } from "../store";
 import type { Template } from "../store";
 import type { ShortcutsMap } from "../store";
@@ -804,6 +805,12 @@ function TemplatesTab() {
 }
 
 function AboutTab() {
+  const [version, setVersion] = useState("");
+
+  useEffect(() => {
+    getVersion().then(setVersion).catch(() => setVersion("Unavailable"));
+  }, []);
+
   return (
     <section>
       <div className="text-ink" style={{ fontSize: 16, fontWeight: 600, marginBottom: 14 }}>
@@ -818,7 +825,7 @@ function AboutTab() {
         <div style={{ flex: 1 }}>
           <div className="text-ink" style={{ fontSize: 15, fontWeight: 600 }}>
             Markly{" "}
-            <span className="text-mid" style={{ fontWeight: 400 }}>1.0.0</span>
+            <span className="text-mid" style={{ fontWeight: 400 }}>{version || "…"}</span>
           </div>
           <div className="text-muted" style={{ fontSize: 12.5, marginTop: 2 }}>
             Local-first markdown reader
