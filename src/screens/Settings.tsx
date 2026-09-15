@@ -248,11 +248,8 @@ function EditorTab() {
       <div className="text-ink" style={{ fontSize: 16, fontWeight: 600, marginBottom: 18 }}>
         Editor
       </div>
-      <Row label="Show right outline" sub="Quartz-style TOC">
+      <Row label="Show right outline" sub="Quartz-style TOC" last>
         <Toggle on={tocVisible} onChange={toggleToc} />
-      </Row>
-      <Row label="Show syntax while typing" sub="Reveal markdown on the focused line" last>
-        <Toggle on={true} onChange={() => {}} />
       </Row>
     </section>
   );
@@ -467,28 +464,12 @@ function TrackingTab() {
       <div className="text-ink" style={{ fontSize: 16, fontWeight: 600, marginBottom: 18 }}>
         Version Tracking
       </div>
-      <Row label="Read lock" sub="Keep the open document on a stable snapshot; never refresh under you">
-        <Toggle on={true} onChange={() => {}} />
-      </Row>
-      <Row label="Word-level diff" sub="Highlight changes word by word">
-        <Toggle on={true} onChange={() => {}} />
-      </Row>
       <Row label="Accept changes when diff closes" sub="Leaving the Changes screen accepts all reviewed changes automatically">
         <Toggle on={acceptChangesOnClose} onChange={setAcceptChangesOnClose} />
       </Row>
       <Row label="Mark as read when document closes" sub="Navigating away from a document marks it as read" last>
         <Toggle on={markReadOnDocClose} onChange={setMarkReadOnDocClose} />
       </Row>
-      <div style={{ marginTop: 24 }}>
-        <SectionLabel>AI metadata · optional</SectionLabel>
-        <Row
-          label="Read sidecar metadata"
-          sub="Use .markly/meta/*.json written by AI tools — summaries, topics, importance. Local only, no API calls."
-          last
-        >
-          <Toggle on={true} onChange={() => {}} />
-        </Row>
-      </div>
     </section>
   );
 }
