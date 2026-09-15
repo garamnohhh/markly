@@ -115,6 +115,43 @@ fn new_vault_file(root: &Path, rel_path: &str) -> Result<PathBuf, String> {
     Ok(path)
 }
 
+fn create_doc_at(root: &Path, rel_path: &str, content: &str) -> Result<Db, String> {
+    new_vault_file(root, rel_path)?;
+    vault::create_doc(root, rel_path, content)
+}
+
+fn rename_doc_at(root: &Path, doc_id: &str, new_rel_path: &str) -> Result<Db, String> {
+    new_vault_file(root, new_rel_path)?;
+    vault::rename_doc(root, doc_id, new_rel_path)
+}
+
+fn read_raw_file_at(root: &Path, rel_path: &str) -> Result<String, String> {
+    use base64::Engine;
+    let bytes = std::fs::read(vault_file(root, rel_path)?).map_err(|e| e.to_string())?;
+    Ok(base64::engine::general_purpose::STANDARD.encode(bytes))
+}
+
+fn write_raw_file_at(root: &Path, rel_path: &str, content: &str) -> Result<(), String> {
+    std::fs::write(vault_file(root, rel_path)?, content.as_bytes()).map_err(|e| e.to_string())
+}
+
+fn rename_raw_file_at(root: &Path, rel_path: &str, new_name: &str) -> Result<(), String> {
+    let old = vault_file(root, rel_path)?;
+    if Path::new(new_name).components().count() != 1
+        || !matches!(Path::new(new_name).components().next(), Some(Component::Normal(_)))
+    {
+        return Err("invalid path".to_string());
+    }
+    let parent = Path::new(rel_path).parent().unwrap_or_else(|| Path::new(""));
+    let new_rel = parent.join(new_name);
+    let new = new_vault_file(root, new_rel.to_str().ok_or("invalid path")?)?;
+    std::fs::rename(old, new).map_err(|e| e.to_string())
+}
+
+fn delete_raw_file_at(root: &Path, rel_path: &str) -> Result<(), String> {
+    std::fs::remove_file(vault_file(root, rel_path)?).map_err(|e| e.to_string())
+}
+
 /// Split watcher paths into "needs a full markdown rescan" vs "only the non-md
 /// file listing changed". Skips .markly, hidden dirs, .DS_Store and volatile
 /// sidecars (sqlite WAL, logs, temp) whose churn used to cause rescan storms.
@@ -251,8 +288,7 @@ pub fn create_doc(
     state: State<VaultState>,
 ) -> Result<Db, String> {
     let root = get_root(&state)?;
-    new_vault_file(&root, &rel_path)?;
-    vault::create_doc(&root, &rel_path, &content)
+    create_doc_at(&root, &rel_path, &content)
 }
 
 #[tauri::command]
@@ -267,8 +303,7 @@ pub fn rename_doc(
     state: State<VaultState>,
 ) -> Result<Db, String> {
     let root = get_root(&state)?;
-    new_vault_file(&root, &new_rel_path)?;
-    vault::rename_doc(&root, &doc_id, &new_rel_path)
+    rename_doc_at(&root, &doc_id, &new_rel_path)
 }
 
 #[tauri::command]
@@ -318,10 +353,7 @@ pub fn list_files(state: State<VaultState>) -> Result<Vec<String>, String> {
 
 #[tauri::command]
 pub fn read_raw_file(rel_path: String, state: State<VaultState>) -> Result<String, String> {
-    use base64::Engine;
-    let abs = vault_file(&get_root(&state)?, &rel_path)?;
-    let bytes = std::fs::read(&abs).map_err(|e| e.to_string())?;
-    Ok(base64::engine::general_purpose::STANDARD.encode(&bytes))
+    read_raw_file_at(&get_root(&state)?, &rel_path)
 }
 
 #[tauri::command]
@@ -338,8 +370,7 @@ pub fn open_vault_file(
 
 #[tauri::command]
 pub fn write_raw_file(rel_path: String, content: String, state: State<VaultState>) -> Result<(), String> {
-    let abs = vault_file(&get_root(&state)?, &rel_path)?;
-    std::fs::write(&abs, content.as_bytes()).map_err(|e| e.to_string())
+    write_raw_file_at(&get_root(&state)?, &rel_path, &content)
 }
 
 #[tauri::command]
@@ -370,23 +401,12 @@ pub fn list_dirs(state: State<VaultState>) -> Result<Vec<String>, String> {
 
 #[tauri::command]
 pub fn rename_raw_file(rel_path: String, new_name: String, state: State<VaultState>) -> Result<(), String> {
-    let root = get_root(&state)?;
-    let old = vault_file(&root, &rel_path)?;
-    if Path::new(&new_name).components().count() != 1
-        || !matches!(Path::new(&new_name).components().next(), Some(Component::Normal(_)))
-    {
-        return Err("invalid path".to_string());
-    }
-    let parent = Path::new(&rel_path).parent().unwrap_or_else(|| Path::new(""));
-    let new_rel = parent.join(&new_name);
-    let new = new_vault_file(&root, new_rel.to_str().ok_or("invalid path")?)?;
-    std::fs::rename(&old, &new).map_err(|e| e.to_string())
+    rename_raw_file_at(&get_root(&state)?, &rel_path, &new_name)
 }
 
 #[tauri::command]
 pub fn delete_raw_file(rel_path: String, state: State<VaultState>) -> Result<(), String> {
-    let abs = vault_file(&get_root(&state)?, &rel_path)?;
-    std::fs::remove_file(&abs).map_err(|e| e.to_string())
+    delete_raw_file_at(&get_root(&state)?, &rel_path)
 }
 
 #[tauri::command]
@@ -492,6 +512,97 @@ mod tests {
             assert!(new_vault_file(&root, "escape/new.md").is_err());
         }
 
+        std::fs::remove_dir_all(base).unwrap();
+    }
+
+    fn escape_fixture(name: &str) -> (PathBuf, PathBuf, Vec<String>) {
+        let base = std::env::temp_dir().join(format!("markly-{name}-{}", std::process::id()));
+        let root = base.join("vault");
+        std::fs::create_dir_all(&root).unwrap();
+        std::fs::write(root.join("inside.txt"), "inside").unwrap();
+        std::fs::write(base.join("outside.txt"), "outside").unwrap();
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(&base, root.join("escape")).unwrap();
+        let paths = vec![
+            "../outside.txt".to_string(),
+            base.join("outside.txt").to_string_lossy().into_owned(),
+            "escape/outside.txt".to_string(),
+        ];
+        (base, root, paths)
+    }
+
+    #[test]
+    fn read_raw_file_rejects_all_escape_forms() {
+        let (base, root, paths) = escape_fixture("read-escape");
+        for path in paths {
+            assert!(read_raw_file_at(&root, &path).is_err(), "{path}");
+        }
+        std::fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn write_raw_file_rejects_all_escape_forms() {
+        let (base, root, paths) = escape_fixture("write-escape");
+        for path in paths {
+            assert!(
+                write_raw_file_at(&root, &path, "changed").is_err(),
+                "{path}"
+            );
+        }
+        std::fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn rename_raw_file_rejects_all_escape_forms() {
+        let (base, root, paths) = escape_fixture("rename-raw-escape");
+        for path in paths {
+            assert!(
+                rename_raw_file_at(&root, &path, "renamed.txt").is_err(),
+                "{path}"
+            );
+        }
+        std::fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn delete_raw_file_rejects_all_escape_forms() {
+        let (base, root, paths) = escape_fixture("delete-escape");
+        for path in paths {
+            assert!(delete_raw_file_at(&root, &path).is_err(), "{path}");
+        }
+        std::fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn create_doc_rejects_all_escape_forms() {
+        let (base, root, _) = escape_fixture("create-escape");
+        let paths = [
+            "../new.md".to_string(),
+            base.join("new.md").to_string_lossy().into_owned(),
+            "escape/new.md".to_string(),
+        ];
+        for path in paths {
+            assert!(create_doc_at(&root, &path, "# no").is_err(), "{path}");
+        }
+        std::fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn rename_doc_rejects_all_escape_forms() {
+        let (base, root, _) = escape_fixture("rename-doc-escape");
+        std::fs::write(root.join("note.md"), "# Note").unwrap();
+        vault::scan(&root).unwrap();
+        let paths = [
+            "../new.md".to_string(),
+            base.join("new.md").to_string_lossy().into_owned(),
+            "escape/new.md".to_string(),
+        ];
+        for path in paths {
+            assert!(
+                rename_doc_at(&root, "note.md", &path).is_err(),
+                "{path}"
+            );
+        }
         std::fs::remove_dir_all(base).unwrap();
     }
 }
