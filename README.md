@@ -36,6 +36,7 @@ Markly 제거 전에 필요한 문서는 별도 백업 권장.
 2. 변경 이력이 필요 없으면 각 Base의 `.markly/` 삭제.
 3. WebView 설정과 캐시까지 지우려면 `~/Library/WebKit/com.garamnoh.markly` 삭제.
 
-## Third-party notices
+## 라이선스
 
-번들 폰트 출처와 라이선스: [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)
+Markly는 [Apache License 2.0](LICENSE)으로 배포.
+번들 폰트는 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) 참고.
