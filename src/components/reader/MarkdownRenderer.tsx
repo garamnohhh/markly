@@ -3,6 +3,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { writeImage } from "@tauri-apps/plugin-clipboard-manager";
 import { toBlob } from "html-to-image";
 import { parseDoc } from "../../lib/markdown";
+import { localImageUrl } from "../../lib/slides";
 import type { Heading } from "../../lib/markdown";
 import { MermaidDiagram } from "./MermaidDiagram";
 import { ShikiCodeBlock } from "./ShikiCodeBlock";
@@ -126,11 +127,12 @@ function openInVault(
 
 interface Props {
   source: string;
+  docPath?: string;
   onHeadings?: (h: Heading[]) => void;
   onSourceChange?: (newSource: string) => void;
 }
 
-export function MarkdownRenderer({ source, onHeadings, onSourceChange }: Props) {
+export function MarkdownRenderer({ source, docPath, onHeadings, onSourceChange }: Props) {
   const { segments, headings } = useMemo(() => parseDoc(source), [source]);
   const db = useStore((s) => s.db);
   const openDocId = useStore((s) => s.openDocId);
@@ -153,6 +155,17 @@ export function MarkdownRenderer({ source, onHeadings, onSourceChange }: Props) 
       a.classList.toggle("wikilink-unresolved", !ok);
     });
   }, [segments, db, openDocId]);
+
+  useEffect(() => {
+    const root = bodyRef.current;
+    const vaultRoot = useStore.getState().vaultRoot;
+    if (!root || !vaultRoot || !docPath) return;
+    root.querySelectorAll<HTMLImageElement>("img[src]").forEach((img) => {
+      const src = img.getAttribute("src") ?? "";
+      const resolved = localImageUrl(src, vaultRoot, docPath);
+      if (resolved) img.src = resolved;
+    });
+  }, [segments, docPath]);
 
   function handleClick(e: React.MouseEvent<HTMLDivElement>) {
     const target = e.target as HTMLElement;

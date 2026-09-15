@@ -151,7 +151,7 @@ export function RabbitHole() {
           </h1>
 
           {content ? (
-            <MarkdownRenderer source={content} />
+            <MarkdownRenderer source={content} docPath={currentDoc?.path} />
           ) : (
             <div className="text-muted" style={{ fontSize: 13 }}>Loading…</div>
           )}

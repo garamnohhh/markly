@@ -244,7 +244,7 @@ export function RelatedTopics({
                 {previewLoading ? (
                   <span className="text-muted" style={{ fontSize: 13 }}>Loading…</span>
                 ) : (
-                  <MarkdownRenderer source={previewContent} />
+                  <MarkdownRenderer source={previewContent} docPath={docs.find((d) => d.docId === selectedDocId)?.path} />
                 )}
               </div>
             ) : (

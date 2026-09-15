@@ -1,4 +1,4 @@
-import { assetBaseHref, needsAssetBase, withAssetBase } from "./slides.ts";
+import { assetBaseHref, localImageUrl, needsAssetBase, withAssetBase } from "./slides.ts";
 
 function equal(actual: unknown, expected: unknown) {
   if (JSON.stringify(actual) !== JSON.stringify(expected)) {
@@ -12,6 +12,10 @@ function equal(actual: unknown, expected: unknown) {
 equal(assetBaseHref("/Users/g/My Base/docs"), "marklyfile://localhost/Users/g/My%20Base/docs/");
 equal(assetBaseHref("/v/한글 폴더"), "marklyfile://localhost/v/%ED%95%9C%EA%B8%80%20%ED%8F%B4%EB%8D%94/");
 equal(assetBaseHref("/"), "marklyfile://localhost/");
+equal(localImageUrl("images/간트.png", "/vault", "plans/plan.md"), "marklyfile://localhost/vault/plans/images/%EA%B0%84%ED%8A%B8.png");
+equal(localImageUrl("../outside.png", "/vault", "plans/plan.md"), null);
+equal(localImageUrl("/outside.png", "/vault", "plans/plan.md"), null);
+equal(localImageUrl("https://example.com/x.png", "/vault", "plans/plan.md"), null);
 
 // A relative reference resolves against the directory, not the origin root.
 equal(

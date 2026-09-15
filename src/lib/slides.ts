@@ -17,6 +17,14 @@ export function assetBaseHref(absDir: string): string {
   return `marklyfile://localhost/${segments.map((s) => `${s}/`).join("")}`;
 }
 
+export function localImageUrl(src: string, vaultRoot: string, docPath: string): string | null {
+  if (!src || /^(?:[a-z][a-z0-9+.-]*:|\/|#)/i.test(src)) return null;
+  const path = src.split(/[?#]/, 1)[0];
+  if (path.split("/").includes("..")) return null;
+  const dir = docPath.split("/").slice(0, -1).join("/");
+  return new URL(src, assetBaseHref(`${vaultRoot.replace(/\/+$/, "")}/${dir}`)).href;
+}
+
 // Insert <base> as the first thing in <head> so it applies to every later
 // reference. Documents without a <head> get one. An existing <base> wins — the
 // author asked for it explicitly.

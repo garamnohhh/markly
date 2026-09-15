@@ -232,6 +232,7 @@ export function DocReader() {
                 />
                 <MarkdownRenderer
                   source={source}
+                  docPath={doc?.path}
                   onSourceChange={onInlineEdit}
                 />
               </>
