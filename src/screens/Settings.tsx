@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { LogoTile } from "../components/ui/Logo";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { getVersion } from "@tauri-apps/api/app";
 import { useStore, useDocs, shortcutKeys, DEFAULT_SHORTCUTS, DEFAULT_TEMPLATES } from "../store";
 import type { Template } from "../store";
@@ -787,6 +788,8 @@ function TemplatesTab() {
 
 function AboutTab() {
   const [version, setVersion] = useState("");
+  const repoFileUrl = (name: string) =>
+    `https://github.com/garamnohhh/markly/blob/main/${name}`;
 
   useEffect(() => {
     getVersion().then(setVersion).catch(() => setVersion("Unavailable"));
@@ -824,6 +827,23 @@ function AboutTab() {
           </div>
           <div className="text-mid" style={{ fontSize: 11.5, marginTop: 4 }}>
             © 2026 Markly
+          </div>
+          <div className="text-mid flex flex-wrap items-center gap-1.5" style={{ fontSize: 11.5, marginTop: 4 }}>
+            <span>Apache-2.0</span>
+            <span>·</span>
+            <button
+              onClick={() => void openUrl(repoFileUrl("LICENSE"))}
+              className="text-slate underline underline-offset-2"
+            >
+              LICENSE
+            </button>
+            <span>·</span>
+            <button
+              onClick={() => void openUrl(repoFileUrl("THIRD-PARTY-NOTICES.md"))}
+              className="text-slate underline underline-offset-2"
+            >
+              Bundled font notices
+            </button>
           </div>
         </div>
         <div className="flex gap-2">
