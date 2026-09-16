@@ -34,3 +34,6 @@ demo-vault/.markly/
 # Dev artifacts
 .playwright-mcp/
 .vite/
+
+# Local secrets
+.env*
