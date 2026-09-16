@@ -26,10 +26,12 @@ export function DocContextMenu({
 
   const [renaming, setRenaming] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const renameSubmitted = useRef(false);
 
   // Close on outside mousedown
   useEffect(() => {
     if (!menu) return;
+    renameSubmitted.current = false;
     setRenaming(false);
     const close = () => onClose();
     window.addEventListener("mousedown", close);
@@ -48,6 +50,8 @@ export function DocContextMenu({
   const dir = doc.path.includes("/") ? doc.path.slice(0, doc.path.lastIndexOf("/") + 1) : "";
 
   async function submitRename(value: string) {
+    if (renameSubmitted.current) return;
+    renameSubmitted.current = true;
     const newName = value.trim();
     onClose();
     if (!newName || newName === oldName) return;
@@ -105,7 +109,10 @@ export function DocContextMenu({
             className="w-full border border-line bg-surface px-2 py-1 text-[13px] text-ink focus:outline-none focus:ring-1 focus:ring-[var(--color-gold)]"
             onKeyDown={(e) => {
               if (e.key === "Enter") submitRename((e.target as HTMLInputElement).value);
-              if (e.key === "Escape") onClose();
+              if (e.key === "Escape") {
+                renameSubmitted.current = true;
+                onClose();
+              }
               e.stopPropagation();
             }}
             onBlur={(e) => submitRename(e.target.value)}
