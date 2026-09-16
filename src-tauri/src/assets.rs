@@ -92,7 +92,6 @@ pub fn handler<R: Runtime>(
     ctx: UriSchemeContext<'_, R>,
     request: Request<Vec<u8>>,
 ) -> Response<Vec<u8>> {
-    let decoded = decode_path(request.uri().path());
     let root = ctx
         .app_handle()
         .state::<VaultState>()
@@ -101,7 +100,7 @@ pub fn handler<R: Runtime>(
         .unwrap()
         .clone();
 
-    let response = match resolve(root, request.uri().path()) {
+    match resolve(root, request.uri().path()) {
         Ok(path) => match std::fs::read(&path) {
             Ok(bytes) => Response::builder()
                 .status(200)
@@ -112,14 +111,7 @@ pub fn handler<R: Runtime>(
             Err(_) => Response::builder().status(404).body(Vec::new()).unwrap(),
         },
         Err(code) => Response::builder().status(code).body(Vec::new()).unwrap(),
-    };
-    eprintln!(
-        "[marklyfile] uri={} decoded={} status={}",
-        request.uri(),
-        decoded.display(),
-        response.status()
-    );
-    response
+    }
 }
 
 #[cfg(test)]
