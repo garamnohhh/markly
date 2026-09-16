@@ -95,6 +95,9 @@ fn serve(root: Option<PathBuf>, url_path: &str) -> Response<Vec<u8>> {
                 .status(200)
                 .header("Content-Type", mime_for(&path))
                 .header("Access-Control-Allow-Origin", "*")
+                // Vault files change under the app, and a failed load stays
+                // failed in the webview's cache for the life of the session.
+                .header("Cache-Control", "no-store")
                 .body(bytes)
                 .unwrap(),
             Err(_) => Response::builder().status(404).body(Vec::new()).unwrap(),
@@ -185,6 +188,7 @@ mod tests {
             let response = serve(Some(vault.clone()), path.to_str().unwrap());
             assert_eq!(response.status(), 200);
             assert_eq!(response.headers()["Content-Type"], content_type);
+            assert_eq!(response.headers()["Cache-Control"], "no-store");
             assert_eq!(response.body(), body);
             assert_eq!(response.body().len(), body.len());
         }
