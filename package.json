@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "test": "vitest run src/lib/path.test.ts src/lib/rename.test.ts && node --experimental-strip-types src/lib/find.test.ts && node --experimental-strip-types src/lib/wiki.test.ts && node --experimental-strip-types src/lib/slides.test.ts && node --experimental-strip-types src/lib/table.test.ts",
+    "test": "node --experimental-strip-types src/lib/path.test.ts && node --experimental-strip-types src/lib/rename.test.ts && node --experimental-strip-types src/lib/find.test.ts && node --experimental-strip-types src/lib/wiki.test.ts && node --experimental-strip-types src/lib/slides.test.ts && node --experimental-strip-types src/lib/table.test.ts",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "RUSTFLAGS=\"--remap-path-prefix=$HOME=~ ${RUSTFLAGS:-}\" tauri",
@@ -44,7 +44,6 @@
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",
     "typescript": "~5.8.3",
-    "vite": "^7.0.4",
-    "vitest": "^5.0.0"
+    "vite": "^7.0.4"
   }
 }

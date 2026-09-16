@@ -1,22 +1,30 @@
-import { describe, expect, it } from "vitest";
-import { resolveDocRelative } from "./path";
+import { resolveDocRelative } from "./path.ts";
 
-describe("resolveDocRelative", () => {
-  const from = "docs/계획 (공개)/README.md";
+function equal(actual: unknown, expected: unknown) {
+  if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+    throw new Error(`expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
+  }
+}
 
-  it.each([
-    ["간트.html", "docs/계획 (공개)/간트.html"],
-    ["assets/간트.png", "docs/계획 (공개)/assets/간트.png"],
-    ["../보고서.pdf", "docs/보고서.pdf"],
-    ["한글 파일.md", "docs/계획 (공개)/한글 파일.md"],
-    ["a%20b%20(최종).md", "docs/계획 (공개)/a b (최종).md"],
-    ["간트.html?view=1#slide-2", "docs/계획 (공개)/간트.html"],
-  ])("resolves %s from the document folder", (href, expected) => {
-    expect(resolveDocRelative(href, from)).toBe(expected);
-  });
+const from = "docs/계획 (공개)/README.md";
 
-  it.each(["../../../escape.md", "https://example.com/a.md", "http://example.com/a.md", "file:///tmp/a.md", "#제목"])(
-    "ignores unsafe or non-relative href %s",
-    (href) => expect(resolveDocRelative(href, from)).toBeNull(),
-  );
-});
+// Resolved from the document's own folder.
+equal(resolveDocRelative("간트.html", from), "docs/계획 (공개)/간트.html");
+equal(resolveDocRelative("./간트.html", from), "docs/계획 (공개)/간트.html");
+equal(resolveDocRelative("assets/간트.png", from), "docs/계획 (공개)/assets/간트.png");
+equal(resolveDocRelative("../보고서.pdf", from), "docs/보고서.pdf");
+equal(resolveDocRelative("한글 파일.md", from), "docs/계획 (공개)/한글 파일.md");
+equal(resolveDocRelative("a%20b%20(최종).md", from), "docs/계획 (공개)/a b (최종).md");
+equal(resolveDocRelative("간트.html?view=1#slide-2", from), "docs/계획 (공개)/간트.html");
+equal(resolveDocRelative("note.md", "root.md"), "note.md");
+
+// Left alone: escapes the vault, absolute, external, or a bare anchor.
+equal(resolveDocRelative("../../../escape.md", from), null);
+equal(resolveDocRelative("/absolute.md", from), null);
+equal(resolveDocRelative("https://example.com/a.md", from), null);
+equal(resolveDocRelative("http://example.com/a.md", from), null);
+equal(resolveDocRelative("file:///tmp/a.md", from), null);
+equal(resolveDocRelative("#제목", from), null);
+equal(resolveDocRelative("", from), null);
+
+console.log("path.test.ts ok");
