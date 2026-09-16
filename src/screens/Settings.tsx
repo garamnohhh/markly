@@ -417,8 +417,8 @@ function AccountTab() {
         Account &amp; Sync
       </h1>
       <p className="text-muted" style={{ fontSize: 14, margin: "0 0 22px" }}>
-        Markly works fully offline. Your Base is a local folder you own — no file
-        is sent anywhere.
+        Your Base is a local folder you own, and no document content is sent
+        anywhere. Update checks contact GitHub Releases only.
       </p>
 
       <SectionLabel>Sync</SectionLabel>

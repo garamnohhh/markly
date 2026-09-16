@@ -77,7 +77,7 @@ pnpm tauri build   # 설치용 .app 과 .dmg 만들기
 - **문서**: 내가 고른 폴더에 그대로. Markly가 다른 곳으로 옮기지 않습니다.
 - **변경 기록**: 그 폴더 안 `.markly/` 폴더에. 버전별 사본과 변경 내역이 들어갑니다. 폴더를 지우면 기록도 같이 사라집니다.
 - **앱 설정**: 맥 안 앱 저장소(`~/Library/WebKit/com.garamnoh.markly`)에.
-- **밖으로 나가는 것**: 없습니다. 이 앱에는 인터넷으로 무언가를 보내는 코드가 없습니다.
+- **밖으로 나가는 것**: 문서 내용은 나가지 않습니다. 업데이트 확인 버튼을 누르면 새 버전 확인을 위해 GitHub Releases에 접속합니다.
 
 지우고 싶으면 앱을 휴지통에 넣고, 원하면 폴더 안 `.markly/` 와 위 설정 폴더를 지우면 끝입니다.
 
@@ -95,7 +95,7 @@ pnpm tauri build   # 설치용 .app 과 .dmg 만들기
 
 Markly is a macOS app for reading a local folder of Markdown files — and for noticing when something else changed them.
 
-It watches the folder, keeps a version each time a file changes outside the app, and shows you a word-level diff against the version you last read. You mark it read, or roll it back. No server, no account, no cloud: your files stay where they are.
+It watches the folder, keeps a version each time a file changes outside the app, and shows you a word-level diff against the version you last read. You mark it read, or roll it back. No server, no account, no cloud: your files stay where they are. Markly contacts GitHub Releases only when you check for updates; document content is never sent.
 
 Apple Silicon only. Built on macOS 26, still fine on 27. Download the dmg from the [latest release](https://github.com/garamnohhh/markly/releases/latest) and drag Markly into Applications. The app is not signed or notarised, so the first launch needs **System Settings → Privacy & Security → Open Anyway** — once, then it opens normally. The published `0.1.0` is a 2026-09-11 build and does not include later fixes; build from source with `pnpm install && pnpm tauri build` for the current code.
 
