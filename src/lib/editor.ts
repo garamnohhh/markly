@@ -21,7 +21,7 @@ import {
   indentLess,
 } from "@codemirror/commands";
 import { slugify } from "./markdown";
-import { buildTableKeymap, slashCommandKeymap, isTableRow, tableAutoFormat } from "./table";
+import { buildTableKeymap, slashCommandKeymap, isTableRow } from "./table";
 
 // Combined highlight: markdown syntax visuals + code-fence token colors (CSS-var based for dark mode)
 const mdHighlight = HighlightStyle.define([
@@ -161,7 +161,6 @@ export function createSourceEditor(
         syntaxHighlighting(mdHighlight),
         lineDecoPlugin,
         EditorView.lineWrapping,
-        tableAutoFormat,
         keymap.of([slashCommandKeymap, ...buildTableKeymap(), smartTab, ...defaultKeymap, ...historyKeymap]),
         EditorView.theme({
           "&": { backgroundColor: "transparent" },

@@ -3,6 +3,7 @@ import { EditorView } from "@codemirror/view";
 import { createSourceEditor } from "../../lib/editor";
 import { slugify } from "../../lib/markdown";
 import { registerFindTarget } from "../../lib/find";
+import { formatTables } from "../../lib/table";
 
 // Edit-mode surface: whole doc as raw markdown, mono with a left ink rule
 // (design). Reports the heading nearest the cursor so read mode can land at the
@@ -26,7 +27,9 @@ export function SourceEditor({
 
   useEffect(() => {
     if (!host.current) return;
-    const view = createSourceEditor(host.current, initialSource, {
+    const source = formatTables(initialSource);
+    if (source !== initialSource) cbs.current.onChange(source);
+    const view = createSourceEditor(host.current, source, {
       cursor: initialCursor,
       onChange: (t) => cbs.current.onChange(t),
       onCursorHeading: (s) => cbs.current.onCursorHeading?.(s),
@@ -45,7 +48,7 @@ export function SourceEditor({
 
     // land at the heading we were reading, show 3 lines of context above
     if (scrollToSlug) {
-      const lines = initialSource.split("\n");
+      const lines = source.split("\n");
       let headingIdx = -1;
       let headingPos = 0;
       let acc = 0;
@@ -59,8 +62,8 @@ export function SourceEditor({
         let contextPos = 0;
         for (let i = 0; i < contextIdx; i++) contextPos += lines[i].length + 1;
         view.dispatch({
-          selection: { anchor: Math.min(headingPos, initialSource.length) },
-          effects: EditorView.scrollIntoView(Math.min(contextPos, initialSource.length), { y: "start" }),
+          selection: { anchor: Math.min(headingPos, source.length) },
+          effects: EditorView.scrollIntoView(Math.min(contextPos, source.length), { y: "start" }),
         });
       }
     }
