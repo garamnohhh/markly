@@ -88,6 +88,21 @@ fn resolve(root: Option<PathBuf>, url_path: &str) -> Result<PathBuf, u16> {
     Ok(real)
 }
 
+fn serve(root: Option<PathBuf>, url_path: &str) -> Response<Vec<u8>> {
+    match resolve(root, url_path) {
+        Ok(path) => match std::fs::read(&path) {
+            Ok(bytes) => Response::builder()
+                .status(200)
+                .header("Content-Type", mime_for(&path))
+                .header("Access-Control-Allow-Origin", "*")
+                .body(bytes)
+                .unwrap(),
+            Err(_) => Response::builder().status(404).body(Vec::new()).unwrap(),
+        },
+        Err(code) => Response::builder().status(code).body(Vec::new()).unwrap(),
+    }
+}
+
 pub fn handler<R: Runtime>(
     ctx: UriSchemeContext<'_, R>,
     request: Request<Vec<u8>>,
@@ -100,18 +115,7 @@ pub fn handler<R: Runtime>(
         .unwrap()
         .clone();
 
-    match resolve(root, request.uri().path()) {
-        Ok(path) => match std::fs::read(&path) {
-            Ok(bytes) => Response::builder()
-                .status(200)
-                .header("Content-Type", mime_for(&path))
-                .header("Access-Control-Allow-Origin", "*")
-                .body(bytes)
-                .unwrap(),
-            Err(_) => Response::builder().status(404).body(Vec::new()).unwrap(),
-        },
-        Err(code) => Response::builder().status(code).body(Vec::new()).unwrap(),
-    }
+    serve(root, request.uri().path())
 }
 
 #[cfg(test)]
@@ -153,5 +157,38 @@ mod tests {
         assert_eq!(resolve(None, &inside), Err(403));
 
         std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn serves_image_and_text_files_with_exact_mime_and_body() {
+        let vault = std::env::temp_dir().join(format!(
+            "markly-assets-response-{}",
+            std::process::id()
+        ));
+        std::fs::create_dir_all(&vault).unwrap();
+
+        let cases: [(&str, &str, &[u8]); 4] = [
+            ("sample.png", "image/png", b"\x89PNG\r\n\x1a\n"),
+            ("sample.jpg", "image/jpeg", b"\xff\xd8\xff\xd9"),
+            (
+                "sample.svg",
+                "image/svg+xml",
+                b"<svg xmlns=\"http://www.w3.org/2000/svg\"/>",
+            ),
+            ("sample.txt", "text/plain; charset=utf-8", b"hello"),
+        ];
+
+        for (name, content_type, body) in cases {
+            let path = vault.join(name);
+            std::fs::write(&path, body).unwrap();
+
+            let response = serve(Some(vault.clone()), path.to_str().unwrap());
+            assert_eq!(response.status(), 200);
+            assert_eq!(response.headers()["Content-Type"], content_type);
+            assert_eq!(response.body(), body);
+            assert_eq!(response.body().len(), body.len());
+        }
+
+        std::fs::remove_dir_all(&vault).ok();
     }
 }
