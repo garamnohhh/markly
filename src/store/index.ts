@@ -4,6 +4,7 @@ import { useShallow } from "zustand/react/shallow";
 import { api } from "../lib/invoke";
 import { slugify } from "../lib/markdown";
 import { resolveWiki } from "../lib/wiki";
+import { remapRenameReferences, renamedDocId } from "../lib/rename";
 import type { Db, DocEntry } from "../lib/types";
 
 export type Theme = "light" | "dark";
@@ -189,6 +190,7 @@ interface AppState {
   acceptChange: (docId: string) => Promise<void>;
   revert: (docId: string, version: number) => Promise<void>;
   applyDb: (db: Db) => void;
+  applyRenamedDb: (db: Db, oldDocId: string, oldPath: string, newPath: string) => void;
 }
 
 const docsList = (db: Db | null): DocEntry[] =>
@@ -366,6 +368,14 @@ function _build() { return create<AppState>()(
       setShowEmptySections: (showEmptySections) => set({ showEmptySections }),
 
       applyDb: (db) => set({ db }),
+      applyRenamedDb: (db, oldDocId, oldPath, newPath) => set((s) => {
+        const newDocId = renamedDocId(db, newPath);
+        if (!newDocId) return { db };
+        return {
+          db,
+          ...remapRenameReferences(s, oldDocId, newDocId, oldPath, newPath),
+        };
+      }),
 
       loadNonMdFiles: async () => {
         try {

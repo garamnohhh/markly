@@ -5,6 +5,7 @@ import { useStore } from "../../store";
 import { docName } from "../../lib/types";
 import { api } from "../../lib/invoke";
 import type { DocEntry } from "../../lib/types";
+import { renameTargetPath } from "../../lib/rename";
 
 export interface CtxMenu {
   x: number;
@@ -20,6 +21,7 @@ export function DocContextMenu({
   onClose: () => void;
 }) {
   const applyDb = useStore((s) => s.applyDb);
+  const applyRenamedDb = useStore((s) => s.applyRenamedDb);
   const openId = useStore((s) => s.openDocId);
   const goInbox = useStore((s) => s.goInbox);
   const vaultRoot = useStore((s) => s.vaultRoot);
@@ -46,20 +48,20 @@ export function DocContextMenu({
   if (!menu) return null;
 
   const doc = menu.doc;
-  const oldName = doc.path.split("/").pop()?.replace(/\.md$/i, "") ?? "";
-  const dir = doc.path.includes("/") ? doc.path.slice(0, doc.path.lastIndexOf("/") + 1) : "";
+  const oldName = doc.path.split("/").pop() ?? "";
 
   async function submitRename(value: string) {
     if (renameSubmitted.current) return;
     renameSubmitted.current = true;
-    const newName = value.trim();
     onClose();
-    if (!newName || newName === oldName) return;
     try {
-      const db = await api.renameDoc(doc.docId, `${dir}${newName}.md`);
-      applyDb(db);
+      const newPath = renameTargetPath(doc.path, value);
+      if (!newPath) return;
+      const db = await api.renameDoc(doc.docId, newPath);
+      applyRenamedDb(db, doc.docId, doc.path, newPath);
     } catch (e) {
       console.error("rename failed", e);
+      alert(`이름을 바꾸지 못했어요.\n${String(e)}`);
     }
   }
 
