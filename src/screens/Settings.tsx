@@ -3,6 +3,8 @@ import { LogoTile } from "../components/ui/Logo";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { getVersion } from "@tauri-apps/api/app";
+import { check, type DownloadEvent, type Update } from "@tauri-apps/plugin-updater";
+import { relaunch } from "@tauri-apps/plugin-process";
 import { useStore, useDocs, shortcutKeys, DEFAULT_SHORTCUTS, DEFAULT_TEMPLATES } from "../store";
 import type { Template } from "../store";
 import type { ShortcutsMap } from "../store";
@@ -788,12 +790,52 @@ function TemplatesTab() {
 
 function AboutTab() {
   const [version, setVersion] = useState("");
+  const [update, setUpdate] = useState<Update | null>(null);
+  const [updateStatus, setUpdateStatus] = useState("");
+  const [checking, setChecking] = useState(false);
+  const [installing, setInstalling] = useState(false);
+  const releaseUrl = "https://github.com/garamnohhh/markly/releases/latest";
   const repoFileUrl = (name: string) =>
     `https://github.com/garamnohhh/markly/blob/main/${name}`;
 
   useEffect(() => {
     getVersion().then(setVersion).catch(() => setVersion("Unavailable"));
   }, []);
+
+  async function checkForUpdates() {
+    setChecking(true);
+    setUpdate(null);
+    setUpdateStatus("Checking…");
+    try {
+      const next = await check();
+      setUpdate(next);
+      setUpdateStatus(next ? `Version ${next.version} available` : "Up to date");
+    } catch (e) {
+      setUpdateStatus(`Update check failed: ${String(e)}`);
+    } finally {
+      setChecking(false);
+    }
+  }
+
+  async function installUpdate() {
+    if (!update) return;
+    let total = 0;
+    let downloaded = 0;
+    setInstalling(true);
+    setUpdateStatus("Downloading… 0%");
+    try {
+      await update.downloadAndInstall((event: DownloadEvent) => {
+        if (event.event === "Started") total = event.data.contentLength ?? 0;
+        if (event.event === "Progress") downloaded += event.data.chunkLength;
+        const percent = total ? Math.min(100, Math.round(downloaded / total * 100)) : 0;
+        setUpdateStatus(event.event === "Finished" ? "Installing… 100%" : `Downloading… ${percent}%`);
+      });
+      await relaunch();
+    } catch (e) {
+      setUpdateStatus(`Update failed: ${String(e)}`);
+      setInstalling(false);
+    }
+  }
 
   return (
     <section>
@@ -847,16 +889,38 @@ function AboutTab() {
             </button>
           </div>
         </div>
-        <div className="flex gap-2">
-          {["Release notes", "Check for updates"].map((label) => (
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex gap-2">
             <button
-              key={label}
+              onClick={() => void openUrl(releaseUrl)}
               className="border border-line text-slate"
               style={{ fontSize: 12.5, fontWeight: 500,  padding: "7px 12px" }}
             >
-              {label}
+              Release notes
             </button>
-          ))}
+            <button
+              onClick={() => void checkForUpdates()}
+              disabled={checking || installing}
+              className="border border-line text-slate disabled:opacity-50"
+              style={{ fontSize: 12.5, fontWeight: 500, padding: "7px 12px" }}
+            >
+              Check for updates
+            </button>
+          </div>
+          {updateStatus && (
+            <div className="flex items-center gap-2 text-right text-mid" style={{ maxWidth: 280, fontSize: 11.5 }}>
+              <span>{updateStatus}</span>
+              {update && !installing && (
+                <button
+                  onClick={() => void installUpdate()}
+                  className="shrink-0 border border-line px-2 py-1 text-slate"
+                  style={{ fontSize: 11.5 }}
+                >
+                  Install
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </section>
