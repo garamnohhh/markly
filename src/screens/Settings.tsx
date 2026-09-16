@@ -816,7 +816,7 @@ function AboutTab() {
           </div>
           <div
             className="text-muted flex items-baseline gap-1.5"
-            style={{ fontSize: 12, marginTop: 6 }}
+            style={{ fontSize: 12, lineHeight: "18px", marginTop: 6 }}
           >
             <span>Made by</span>
             {/* garamnoh design system, Wordmark, static-cursor variant */}
@@ -825,22 +825,23 @@ function AboutTab() {
               <span className="gn-wordmark-cursor" />
             </span>
           </div>
-          <div className="text-mid" style={{ fontSize: 11.5, marginTop: 4 }}>
+          <div className="text-mid" style={{ fontSize: 12, lineHeight: "18px" }}>
             © 2026 Markly
           </div>
-          <div className="text-mid flex flex-wrap items-center gap-1.5" style={{ fontSize: 11.5, marginTop: 4 }}>
-            <span>Apache-2.0</span>
-            <span>·</span>
+          <div className="text-mid" style={{ fontSize: 12, lineHeight: "18px" }}>
+            Apache-2.0 ·{" "}
             <button
               onClick={() => void openUrl(repoFileUrl("LICENSE"))}
               className="text-slate underline underline-offset-2"
+              style={{ font: "inherit", lineHeight: "inherit", padding: 0 }}
             >
               LICENSE
             </button>
-            <span>·</span>
+            {" · "}
             <button
               onClick={() => void openUrl(repoFileUrl("THIRD-PARTY-NOTICES.md"))}
               className="text-slate underline underline-offset-2"
+              style={{ font: "inherit", lineHeight: "inherit", padding: 0 }}
             >
               Bundled font notices
             </button>
