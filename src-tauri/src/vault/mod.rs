@@ -346,8 +346,11 @@ pub fn revert(root: &Path, doc_id: &str, version: u32) -> Result<Db, String> {
 
 pub fn rename_doc(root: &Path, doc_id: &str, new_rel_path: &str) -> Result<Db, String> {
     let mut db = db::load(root);
+    if !db.docs.contains_key(doc_id) {
+        db = scan(root)?;
+    }
     let existing = db.docs.get(doc_id).cloned()
-        .ok_or_else(|| format!("unknown doc: {doc_id}"))?;
+        .ok_or_else(|| format!("파일을 찾을 수 없습니다: {doc_id}. Base를 다시 스캔한 뒤 재시도하세요."))?;
 
     let old_file = root.join(&existing.path);
     let new_file = root.join(new_rel_path);
@@ -540,6 +543,29 @@ mod tests {
         assert!(create_folder(&root, "../evil").is_err());
         assert!(create_folder(&root, "").is_err());
         assert!(!root.parent().unwrap().join("evil").exists());
+        std::fs::remove_dir_all(&root).ok();
+    }
+
+    #[test]
+    fn rename_doc_recovers_when_db_entry_is_stale() {
+        let root = temp_vault();
+        let old_path = "briefing/2026/2026-09-16.md";
+        std::fs::create_dir_all(root.join("briefing/2026")).unwrap();
+        std::fs::write(root.join(old_path), "# Briefing").unwrap();
+        db::save(&root, &Db::default()).unwrap();
+
+        let renamed = rename_doc(&root, old_path, "briefing/2026/renamed.md").unwrap();
+
+        assert!(!root.join(old_path).exists());
+        assert!(root.join("briefing/2026/renamed.md").is_file());
+        assert!(renamed.docs.contains_key("briefing/2026/renamed.md"));
+        let error = rename_doc(&root, "missing.md", "renamed-missing.md")
+            .err()
+            .unwrap();
+        assert_eq!(
+            error,
+            "파일을 찾을 수 없습니다: missing.md. Base를 다시 스캔한 뒤 재시도하세요."
+        );
         std::fs::remove_dir_all(&root).ok();
     }
 }
