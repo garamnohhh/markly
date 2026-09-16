@@ -40,13 +40,27 @@ Markly는 폴더 하나를 맡아서 이렇게 해 줍니다.
 
 ## 설치
 
-> 아직 준비 중입니다. 내려받는 링크는 첫 릴리스가 올라가면 여기에 붙습니다.
+1. [릴리스 페이지](https://github.com/garamnohhh/markly/releases/latest)에서 `Markly_0.1.0_aarch64.dmg` 를 내려받습니다.
+2. 받은 dmg 를 두 번 눌러 엽니다.
+3. 창 안의 **Markly** 를 옆의 **Applications** 폴더로 끌어다 놓습니다.
+4. 응용 프로그램에서 Markly 를 엽니다.
 
-알아 두면 좋은 것.
+### 처음 열 때 "열 수 없습니다" 가 뜨면
 
-- **Apple Silicon 맥 전용**입니다. 인텔 맥에서는 돌아가지 않습니다.
+애플에 돈을 내고 받는 서명이 없는 앱이라, macOS가 처음 한 번 막습니다. 앱이 고장 난 게 아닙니다.
+
+1. 경고 창을 닫습니다.
+2. **시스템 설정 → 개인정보 보호 및 보안** 을 엽니다.
+3. 아래로 내리면 "Markly 은(는) 확인되지 않은 개발자가 배포했기 때문에 차단되었습니다" 같은 줄이 있습니다. 옆의 **그래도 열기** 를 누릅니다.
+4. 한 번 더 물어보면 **열기**.
+
+이 과정은 처음 한 번뿐입니다. 그다음부터는 그냥 열립니다.
+
+### 알아 두면 좋은 것
+
+- **Apple Silicon 맥 전용**입니다(M1 이후). 인텔 맥에서는 돌아가지 않습니다.
 - macOS 26 에서 만들었고, 27 로 올린 뒤에도 문제없이 쓰고 있습니다.
-- 애플 서명을 받지 않은 앱이라, 처음 열 때 macOS가 한 번 막습니다. **시스템 설정 → 개인정보 보호 및 보안** 으로 가서 "그래도 열기" 를 눌러 주면 됩니다. 그다음부터는 그냥 열립니다.
+- 지금 올라간 `0.1.0` 은 **2026-09-11 에 만든 빌드**입니다. 그 뒤에 고친 것(표 편집, 파일 이름 변경, 문서 안 상대경로 링크 등)은 이 설치 파일에 들어 있지 않습니다. 최신 상태로 쓰려면 아래 "소스에서 직접 빌드하기" 를 보세요.
 
 ## 소스에서 직접 빌드하기
 
@@ -83,6 +97,6 @@ Markly is a macOS app for reading a local folder of Markdown files — and for n
 
 It watches the folder, keeps a version each time a file changes outside the app, and shows you a word-level diff against the version you last read. You mark it read, or roll it back. No server, no account, no cloud: your files stay where they are.
 
-Apple Silicon only. Built on macOS 26, still fine on 27. The app is not notarised, so the first launch needs **System Settings → Privacy & Security → Open Anyway**. Downloads will be linked here once the first release is published. Build from source with `pnpm install && pnpm tauri build`.
+Apple Silicon only. Built on macOS 26, still fine on 27. Download the dmg from the [latest release](https://github.com/garamnohhh/markly/releases/latest) and drag Markly into Applications. The app is not signed or notarised, so the first launch needs **System Settings → Privacy & Security → Open Anyway** — once, then it opens normally. The published `0.1.0` is a 2026-09-11 build and does not include later fixes; build from source with `pnpm install && pnpm tauri build` for the current code.
 
 Licensed under [Apache-2.0](LICENSE); bundled font licences are listed in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
