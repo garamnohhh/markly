@@ -9,6 +9,7 @@ import { MermaidDiagram } from "./MermaidDiagram";
 import { ShikiCodeBlock } from "./ShikiCodeBlock";
 import { useStore } from "../../store";
 import { resolveWiki } from "../../lib/wiki";
+import { resolveDocRelative } from "../../lib/path";
 import type { Db } from "../../lib/types";
 
 const WIKI_PREFIX = "markly-wiki://";
@@ -220,12 +221,12 @@ export function MarkdownRenderer({ source, docPath, onHeadings, onSourceChange }
       return;
     }
 
-    // Relative internal link, e.g. [x](../foo/note.md) or (note.md).
-    const decoded = decodeURIComponent(href);
-    if (/\.md$/i.test(decoded) && !decoded.includes("://")) {
+    // Relative internal link, resolved from the current document's folder.
+    // Bare #anchors are intentionally left to the browser's in-page scroll.
+    const rel = docPath ? resolveDocRelative(href, docPath) : null;
+    if (rel) {
       e.preventDefault();
-      const hit = resolveWiki(db, decoded, openDocId ?? undefined);
-      if (hit) openDoc(hit);
+      openInVault(rel, db, openDoc, openFile, openDocId ?? undefined);
     }
   }
 
