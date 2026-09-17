@@ -37,3 +37,11 @@ demo-vault/.markly/
 
 # Local secrets
 .env*
+
+# Local agent configuration
+CLAUDE.md
+AGENTS.md
+.claude/
+
+# Claude Design source files
+*.dc.html
