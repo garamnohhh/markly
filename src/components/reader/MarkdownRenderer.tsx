@@ -134,7 +134,23 @@ interface Props {
 }
 
 export function MarkdownRenderer({ source, docPath, onHeadings, onSourceChange }: Props) {
-  const { segments, headings } = useMemo(() => parseDoc(source), [source]);
+  const vaultRoot = useStore((s) => s.vaultRoot);
+  const { segments, headings } = useMemo(() => {
+    const parsed = parseDoc(source);
+    if (vaultRoot && docPath) {
+      for (const segment of parsed.segments) {
+        if (!("html" in segment)) continue;
+        const template = document.createElement("template");
+        template.innerHTML = segment.html;
+        template.content.querySelectorAll<HTMLImageElement>("img[src]").forEach((img) => {
+          const resolved = localImageUrl(img.getAttribute("src") ?? "", vaultRoot, docPath);
+          if (resolved) img.setAttribute("src", resolved);
+        });
+        segment.html = template.innerHTML;
+      }
+    }
+    return parsed;
+  }, [source, vaultRoot, docPath]);
   const db = useStore((s) => s.db);
   const openDocId = useStore((s) => s.openDocId);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -156,17 +172,6 @@ export function MarkdownRenderer({ source, docPath, onHeadings, onSourceChange }
       a.classList.toggle("wikilink-unresolved", !ok);
     });
   }, [segments, db, openDocId]);
-
-  useEffect(() => {
-    const root = bodyRef.current;
-    const vaultRoot = useStore.getState().vaultRoot;
-    if (!root || !vaultRoot || !docPath) return;
-    root.querySelectorAll<HTMLImageElement>("img[src]").forEach((img) => {
-      const src = img.getAttribute("src") ?? "";
-      const resolved = localImageUrl(src, vaultRoot, docPath);
-      if (resolved) img.src = resolved;
-    });
-  }, [segments, docPath]);
 
   function handleClick(e: React.MouseEvent<HTMLDivElement>) {
     const target = e.target as HTMLElement;
