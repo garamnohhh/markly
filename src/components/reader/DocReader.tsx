@@ -51,7 +51,9 @@ export function DocReader() {
   useEffect(() => {
     return () => {
       const s = useStore.getState();
-      if (s.markReadOnDocClose && docId) s.markRead(docId);
+      if (s.markReadOnDocClose && docId && s.db?.docs[docId]) {
+        void s.markRead(docId).catch(() => {});
+      }
     };
   }, [docId]);
 
