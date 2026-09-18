@@ -26,26 +26,6 @@ pub struct DocEntry {
     pub created: u64,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct Settings {
-    pub scan_on_startup: bool,
-    pub read_lock: bool,
-    pub word_level_diff: bool,
-    pub mark_read_on_close: bool,
-}
-
-impl Default for Settings {
-    fn default() -> Self {
-        Self {
-            scan_on_startup: true,
-            read_lock: true,
-            word_level_diff: true,
-            mark_read_on_close: false,
-        }
-    }
-}
-
 fn schema_version() -> u32 {
     1
 }
@@ -57,8 +37,6 @@ pub struct Db {
     pub version: u32,
     #[serde(default)]
     pub docs: BTreeMap<String, DocEntry>,
-    #[serde(default)]
-    pub settings: Settings,
 }
 
 impl Default for Db {
@@ -66,7 +44,6 @@ impl Default for Db {
         Self {
             version: schema_version(),
             docs: BTreeMap::new(),
-            settings: Settings::default(),
         }
     }
 }

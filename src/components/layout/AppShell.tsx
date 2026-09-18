@@ -4,6 +4,7 @@ import { useViewport } from "../../hooks/useViewport";
 import { modalStack } from "../../lib/modalStack";
 import { TitleBar } from "./TitleBar";
 import { Sidebar } from "./Sidebar";
+import { UpdateBanner } from "./UpdateBanner";
 
 // Below 960 the sidebar has nowhere to sit, so it comes back as a Drawer
 // (23 · 패널 · 사이드바): full window height, scrim behind it, closed by Esc or
@@ -55,6 +56,7 @@ export function AppShell({
   return (
     <div className="flex h-full flex-col bg-paper text-ink">
       <TitleBar />
+      <UpdateBanner />
       <div className="relative flex min-h-0 flex-1">
         {showSidebar && sidebarFits && <Sidebar />}
         <main className={`min-w-0 flex-1 flex flex-col min-h-0 ${noPad ? "" : "overflow-y-auto"}`}>
