@@ -60,7 +60,7 @@ That is a one-time step. After that it launches normally.
 
 - **Apple Silicon only** (M1 and later). It will not run on an Intel Mac.
 - Built on macOS 26, and still fine on 27.
-- The published `0.1.0` is a **build from 2026-09-11**. Fixes made since then — table editing, renaming files, relative links inside a document — are not in that dmg. Build from source if you want the current code.
+- `0.1.0` is the first release under the name pirep. It is built from the current source, so it carries every fix made so far.
 
 ## Building from source
 
