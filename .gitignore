@@ -19,6 +19,7 @@ src-tauri/target
 # pirep vault state (generated; never commit a vault's index/snapshots)
 .pirep/
 demo-vault/.pirep/
+# Keep legacy vault state ignored until the automatic migration completes.
 .markly/
 demo-vault/.markly/
 
