@@ -199,7 +199,7 @@ const docsList = (db: Db | null): DocEntry[] =>
 function _build() { return create<AppState>()(
   persist(
     (set, get) => ({
-      theme: "dark",
+      theme: "light",
       vaultRoot: null,
       vaults: [],
       editorWidth: "normal",
