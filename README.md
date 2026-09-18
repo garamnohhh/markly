@@ -40,12 +40,20 @@ No server, no account, no cloud. The files stay in your folder; pirep only reads
 
 ## Install
 
-1. Download `pirep_0.1.0_aarch64.dmg` from the [v0.1.0 release](https://github.com/garamnohhh/pirep/releases/tag/v0.1.0).
+```sh
+curl -fsSL https://pirep.pages.dev/install.sh | sh
+```
+
+This installs the latest release in `/Applications`. It requires macOS on Apple silicon and does not use `sudo`.
+
+### dmg
+
+1. Download the dmg from the [latest release](https://github.com/garamnohhh/pirep/releases/latest).
 2. Open the dmg.
 3. Drag **pirep** onto the **Applications** folder next to it.
 4. Open pirep from Applications.
 
-### "pirep can't be opened" on first launch
+#### "pirep can't be opened" on first launch
 
 The app is not signed with a paid Apple certificate, so macOS blocks it once. Nothing is wrong with the app.
 
