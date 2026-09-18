@@ -21,3 +21,28 @@ export function resolveDocRelative(href: string, docPath: string): string | null
   }
   return parts.join("/") || null;
 }
+
+export type AbsoluteFileLink =
+  | { kind: "vault"; rel: string }
+  | { kind: "external"; path: string };
+
+export function resolveAbsoluteFileLink(
+  href: string,
+  vaultRoot: string | null,
+): AbsoluteFileLink | null {
+  if (!href.startsWith("/") && !href.startsWith("file://")) return null;
+
+  try {
+    const url = new URL(href.startsWith("file://") ? href : `file://${href}`);
+    if (url.protocol !== "file:" || (url.hostname && url.hostname !== "localhost")) return null;
+    const abs = decodeURIComponent(url.pathname);
+    const root = vaultRoot?.replace(/\/+$/, "");
+    if (root && (abs === root || abs.startsWith(`${root}/`))) {
+      const rel = abs.slice(root.length).replace(/^\/+/, "");
+      return rel ? { kind: "vault", rel } : null;
+    }
+    return { kind: "external", path: abs };
+  } catch {
+    return null;
+  }
+}

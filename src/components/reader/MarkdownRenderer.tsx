@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { openPath, openUrl } from "@tauri-apps/plugin-opener";
 import { writeImage } from "@tauri-apps/plugin-clipboard-manager";
 import { toBlob } from "html-to-image";
 import { parseDoc } from "../../lib/markdown";
@@ -9,7 +9,7 @@ import { MermaidDiagram } from "./MermaidDiagram";
 import { ShikiCodeBlock } from "./ShikiCodeBlock";
 import { useStore } from "../../store";
 import { resolveWiki } from "../../lib/wiki";
-import { resolveDocRelative } from "../../lib/path";
+import { resolveAbsoluteFileLink, resolveDocRelative } from "../../lib/path";
 import type { Db } from "../../lib/types";
 
 const WIKI_PREFIX = "markly-wiki://";
@@ -154,6 +154,7 @@ export function MarkdownRenderer({ source, docPath, onHeadings, onSourceChange }
   const db = useStore((s) => s.db);
   const openDocId = useStore((s) => s.openDocId);
   const bodyRef = useRef<HTMLDivElement>(null);
+  const [linkError, setLinkError] = useState<string | null>(null);
 
   useEffect(() => {
     onHeadings?.(headings);
@@ -195,34 +196,44 @@ export function MarkdownRenderer({ source, docPath, onHeadings, onSourceChange }
     const anchor = target.closest("a");
     if (!anchor) return;
     const href = anchor.getAttribute("href") ?? "";
+    e.preventDefault();
+    setLinkError(null);
+
+    const fail = (reason: unknown) => {
+      const detail = reason instanceof Error ? reason.message : String(reason);
+      setLinkError(`Could not open link: ${detail}`);
+    };
+    const handOff = (url: string) => void openUrl(url).catch(fail);
+    const handOffPath = (path: string) => void openPath(path).catch(fail);
 
     if (href.startsWith(WIKI_PREFIX)) {
-      e.preventDefault();
       const raw = decodeURIComponent(href.slice(WIKI_PREFIX.length));
-      void useStore.getState().followWikiLink(raw);
+      void useStore.getState().followWikiLink(raw).catch(fail);
       return;
     }
 
     const { db, openDoc, openFile, vaultRoot } = useStore.getState();
-    if (!db) return;
+    if (!db) { fail("Base is not available"); return; }
 
     if (href.startsWith("http://") || href.startsWith("https://")) {
-      e.preventDefault();
-      openUrl(href);
+      handOff(href);
       return;
     }
 
-    // Absolute file:// link. Open it inside Markly when it lives in the current
-    // vault (never surprise-open the browser); otherwise hand off to the OS.
-    if (href.startsWith("file://")) {
-      e.preventDefault();
-      const abs = decodeURIComponent(href.replace(/^file:\/\//, ""));
-      const root = vaultRoot?.replace(/\/+$/, "");
-      if (root && (abs === root || abs.startsWith(root + "/"))) {
-        openInVault(abs.slice(root.length).replace(/^\/+/, ""), db, openDoc, openFile, openDocId ?? undefined);
-      } else {
-        openUrl(href); // outside the vault → deliberate OS open
-      }
+    // Absolute paths and file:// URLs use the same containment rule.
+    if (href.startsWith("/") || href.startsWith("file://")) {
+      const resolved = resolveAbsoluteFileLink(href, vaultRoot);
+      if (!resolved) { fail("invalid file path"); return; }
+      if (resolved.kind === "vault") {
+        openInVault(resolved.rel, db, openDoc, openFile, openDocId ?? undefined);
+      } else handOffPath(resolved.path);
+      return;
+    }
+
+    if (href.startsWith("#")) {
+      const id = decodeURIComponent(href.slice(1));
+      if (!id) bodyRef.current?.scrollIntoView();
+      else document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
 
@@ -230,13 +241,15 @@ export function MarkdownRenderer({ source, docPath, onHeadings, onSourceChange }
     // Bare #anchors are intentionally left to the browser's in-page scroll.
     const rel = docPath ? resolveDocRelative(href, docPath) : null;
     if (rel) {
-      e.preventDefault();
       openInVault(rel, db, openDoc, openFile, openDocId ?? undefined);
+      return;
     }
+    fail("unsupported or missing path");
   }
 
   return (
     <div ref={bodyRef} className="md-body" onClick={handleClick}>
+      {linkError && <div className="md-link-error" role="alert">{linkError}</div>}
       {segments.map((seg, i) =>
         seg.kind === "mermaid" ? (
           <MermaidDiagram key={i} code={seg.code} />

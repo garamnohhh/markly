@@ -411,6 +411,21 @@ body {
   100% { opacity: 0; }
 }
 
+.md-link-error {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 100;
+  max-width: min(520px, calc(100vw - 48px));
+  padding: 10px 14px;
+  border: 1px solid var(--color-red);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-red);
+  font-size: 13px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+}
+
 /* Hidden stage used only to render the table at full width for image copy.
    Kept at 0,0 behind the opaque page (z-index:-1) rather than off-screen —
    html-to-image renders blank for far-off-screen nodes. Mirrors the base +

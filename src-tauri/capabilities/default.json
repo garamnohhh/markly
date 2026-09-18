@@ -16,6 +16,10 @@
     "core:window:allow-set-position",
     "core:window:allow-set-size",
     "opener:default",
+    {
+      "identifier": "opener:allow-open-path",
+      "allow": [{ "path": "$HOME/**" }]
+    },
     "dialog:default",
     "dialog:allow-ask",
     "clipboard-manager:allow-write-image",
