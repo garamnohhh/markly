@@ -97,14 +97,14 @@ pub fn scan(root: &Path) -> Result<Db, String> {
         }
     }
 
-    let markly = db::markly_dir(root);
+    let pirep = db::pirep_dir(root);
     let mut found = std::collections::HashSet::new();
 
-    // Don't descend into .markly (holds 1000s of snapshot .md), VCS, or
+    // Don't descend into .pirep (holds 1000s of snapshot .md), VCS, or
     // dependency/build dirs — keeps the walk small and avoids indexing stray
     // README.md under node_modules/target.
     let pruned = |name: &str| {
-        name == ".markly"
+        name == ".pirep"
             || name == "node_modules"
             || name == "target"
             || (name.starts_with('.') && name.len() > 1)
@@ -115,7 +115,7 @@ pub fn scan(root: &Path) -> Result<Db, String> {
         .filter_map(|e| e.ok())
     {
         let p = entry.path();
-        if !p.is_file() || p.starts_with(&markly) {
+        if !p.is_file() || p.starts_with(&pirep) {
             continue;
         }
         if p.extension().and_then(|e| e.to_str()) != Some("md") {
@@ -218,7 +218,7 @@ pub fn write_doc(root: &Path, doc_id: &str, content: &str, source: &str) -> Resu
         return Ok(db); // nothing changed
     }
 
-    // In-app edits are not "changes" to review (Markly reviews external/AI edits
+    // In-app edits are not "changes" to review (pirep reviews external/AI edits
     // only). No version bump: overwrite the current-version snapshot so it stays
     // the baseline for the next external diff, sync hash/meta, done.
     // Exception: a pending undecided external change (ldv < cv) — fall through to
@@ -363,14 +363,14 @@ pub fn rename_doc(root: &Path, doc_id: &str, new_rel_path: &str) -> Result<Db, S
     std::fs::rename(&old_file, &new_file).map_err(|e| e.to_string())?;
 
     let new_doc_id = new_rel_path.to_lowercase().replace('\\', "/");
-    let markly = db::markly_dir(root);
+    let pirep = db::pirep_dir(root);
 
-    let old_snap = markly.join("snapshots").join(db::storage_key(doc_id));
-    let new_snap = markly.join("snapshots").join(db::storage_key(&new_doc_id));
+    let old_snap = pirep.join("snapshots").join(db::storage_key(doc_id));
+    let new_snap = pirep.join("snapshots").join(db::storage_key(&new_doc_id));
     if old_snap.exists() { std::fs::rename(&old_snap, &new_snap).ok(); }
 
-    let old_chg = markly.join("changes").join(format!("{}.json", db::storage_key(doc_id)));
-    let new_chg = markly.join("changes").join(format!("{}.json", db::storage_key(&new_doc_id)));
+    let old_chg = pirep.join("changes").join(format!("{}.json", db::storage_key(doc_id)));
+    let new_chg = pirep.join("changes").join(format!("{}.json", db::storage_key(&new_doc_id)));
     if old_chg.exists() { std::fs::rename(&old_chg, &new_chg).ok(); }
 
     db.docs.remove(doc_id);
@@ -392,9 +392,9 @@ pub fn delete_doc(root: &Path, doc_id: &str) -> Result<Db, String> {
 
     std::fs::remove_file(root.join(&existing.path)).ok();
 
-    let markly = db::markly_dir(root);
-    std::fs::remove_dir_all(markly.join("snapshots").join(db::storage_key(doc_id))).ok();
-    std::fs::remove_file(markly.join("changes").join(format!("{}.json", db::storage_key(doc_id)))).ok();
+    let pirep = db::pirep_dir(root);
+    std::fs::remove_dir_all(pirep.join("snapshots").join(db::storage_key(doc_id))).ok();
+    std::fs::remove_file(pirep.join("changes").join(format!("{}.json", db::storage_key(doc_id)))).ok();
 
     db.docs.remove(doc_id);
     db::save(root, &db)?;
@@ -447,7 +447,7 @@ mod tests {
         static SEQ: AtomicU64 = AtomicU64::new(0);
         let uniq = SEQ.fetch_add(1, Ordering::Relaxed);
         let dir = std::env::temp_dir()
-            .join(format!("markly-test-{}-{}-{uniq}", std::process::id(), now()));
+            .join(format!("pirep-test-{}-{}-{uniq}", std::process::id(), now()));
         std::fs::create_dir_all(&dir).unwrap();
         dir
     }

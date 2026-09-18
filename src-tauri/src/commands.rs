@@ -153,9 +153,9 @@ fn delete_raw_file_at(root: &Path, rel_path: &str) -> Result<(), String> {
 }
 
 /// Split watcher paths into "needs a full markdown rescan" vs "only the non-md
-/// file listing changed". Skips .markly, hidden dirs, .DS_Store and volatile
+/// file listing changed". Skips .pirep, hidden dirs, .DS_Store and volatile
 /// sidecars (sqlite WAL, logs, temp) whose churn used to cause rescan storms.
-fn classify_paths(paths: &[PathBuf], markly: &std::path::Path) -> (bool, bool) {
+fn classify_paths(paths: &[PathBuf], pirep: &std::path::Path) -> (bool, bool) {
     const VOLATILE: &[&str] = &[
         "db", "db-shm", "db-wal", "sqlite", "sqlite3", "log", "tmp", "temp", "swp", "lock",
         "part", "crdownload",
@@ -163,7 +163,7 @@ fn classify_paths(paths: &[PathBuf], markly: &std::path::Path) -> (bool, bool) {
     let (mut md, mut other) = (false, false);
     for p in paths {
         let ext = p.extension().and_then(|e| e.to_str()).unwrap_or("");
-        let visible = !p.starts_with(markly)
+        let visible = !p.starts_with(pirep)
             && !VOLATILE.contains(&ext)
             && p.file_name().map(|n| n != ".DS_Store").unwrap_or(true)
             && !p.components().any(|c| {
@@ -191,17 +191,18 @@ pub fn scan_vault(
     app: tauri::AppHandle,
 ) -> Result<Db, String> {
     let r = PathBuf::from(&path);
+    vault::db::migrate_legacy_dir(&r)?;
     let db = vault::scan(&r)?;
     *state.root.lock().unwrap() = Some(r.clone());
 
     // (Re)start the file watcher. Events are coalesced and announced once the
     // filesystem goes quiet — see Coalescer for why the leading edge lost changes.
-    let markly = r.join(".markly");
+    let pirep = r.join(".pirep");
     let pending = state.pending.clone();
 
     let mut w = notify::recommended_watcher(move |res: notify::Result<Event>| {
         if let Ok(ev) = res {
-            let (md_changed, file_changed) = classify_paths(&ev.paths, &markly);
+            let (md_changed, file_changed) = classify_paths(&ev.paths, &pirep);
             pending
                 .lock()
                 .unwrap()
@@ -324,16 +325,16 @@ pub fn decide_version(doc_id: String, version: u32, state: State<VaultState>) ->
 #[tauri::command]
 pub fn list_files(state: State<VaultState>) -> Result<Vec<String>, String> {
     let root = get_root(&state)?;
-    let markly = root.join(".markly");
+    let pirep = root.join(".pirep");
     let mut files: Vec<String> = Vec::new();
     for entry in walkdir::WalkDir::new(&root)
         .follow_links(false)
         .into_iter()
         .filter_entry(|e| {
             let name = e.file_name().to_str().unwrap_or("");
-            // Allow root; block hidden dirs and .markly subtree
+            // Allow root; block hidden dirs and .pirep subtree
             e.depth() == 0
-                || (!name.starts_with('.') && !e.path().starts_with(&markly))
+                || (!name.starts_with('.') && !e.path().starts_with(&pirep))
         })
     {
         let Ok(e) = entry else { continue };
@@ -376,7 +377,7 @@ pub fn write_raw_file(rel_path: String, content: String, state: State<VaultState
 #[tauri::command]
 pub fn list_dirs(state: State<VaultState>) -> Result<Vec<String>, String> {
     let root = get_root(&state)?;
-    let markly = root.join(".markly");
+    let pirep = root.join(".pirep");
     let mut dirs: Vec<String> = Vec::new();
     for entry in walkdir::WalkDir::new(&root)
         .min_depth(1)
@@ -384,7 +385,7 @@ pub fn list_dirs(state: State<VaultState>) -> Result<Vec<String>, String> {
         .into_iter()
         .filter_entry(|e| {
             let name = e.file_name().to_str().unwrap_or("");
-            !name.starts_with('.') && !e.path().starts_with(&markly)
+            !name.starts_with('.') && !e.path().starts_with(&pirep)
         })
     {
         let Ok(e) = entry else { continue };
@@ -466,33 +467,33 @@ mod tests {
     #[test]
     fn ignored_paths_never_arm_the_flush() {
         let mut c = Coalescer::default();
-        c.note(false, false, 1000); // .markly snapshot, sqlite WAL, .DS_Store…
+        c.note(false, false, 1000); // .pirep snapshot, sqlite WAL, .DS_Store…
         assert_eq!(c.take_if_quiet(9000, QUIET_MS), None);
     }
 
     #[test]
     fn classify_routes_md_vs_files_and_ignores_noise() {
         let root = PathBuf::from("/v");
-        let markly = root.join(".markly");
+        let pirep = root.join(".pirep");
         let p = |s: &str| root.join(s);
 
         // a new .html → cheap file-list refresh only (the bug: it was ignored)
-        assert_eq!(classify_paths(&[p("outputs/14-tool.html")], &markly), (false, true));
+        assert_eq!(classify_paths(&[p("outputs/14-tool.html")], &pirep), (false, true));
         // markdown → full rescan
-        assert_eq!(classify_paths(&[p("notes/a.md")], &markly), (true, false));
+        assert_eq!(classify_paths(&[p("notes/a.md")], &pirep), (true, false));
         // both in one event
-        assert_eq!(classify_paths(&[p("a.md"), p("b.csv")], &markly), (true, true));
+        assert_eq!(classify_paths(&[p("a.md"), p("b.csv")], &pirep), (true, true));
         // volatile sidecars / snapshots / hidden dirs / .DS_Store → nothing
         for noisy in ["bus.db-shm", "bus.db-wal", "app.log", "x.tmp", ".DS_Store"] {
-            assert_eq!(classify_paths(&[p(noisy)], &markly), (false, false), "{noisy}");
+            assert_eq!(classify_paths(&[p(noisy)], &pirep), (false, false), "{noisy}");
         }
-        assert_eq!(classify_paths(&[markly.join("snapshots/x.md")], &markly), (false, false));
-        assert_eq!(classify_paths(&[p(".git/index")], &markly), (false, false));
+        assert_eq!(classify_paths(&[pirep.join("snapshots/x.md")], &pirep), (false, false));
+        assert_eq!(classify_paths(&[p(".git/index")], &pirep), (false, false));
     }
 
     #[test]
     fn vault_file_rejects_parent_escape() {
-        let base = std::env::temp_dir().join(format!("markly-open-{}", std::process::id()));
+        let base = std::env::temp_dir().join(format!("pirep-open-{}", std::process::id()));
         let root = base.join("vault");
         std::fs::create_dir_all(&root).unwrap();
         std::fs::write(root.join("inside.html"), "ok").unwrap();
@@ -516,7 +517,7 @@ mod tests {
     }
 
     fn escape_fixture(name: &str) -> (PathBuf, PathBuf, Vec<String>) {
-        let base = std::env::temp_dir().join(format!("markly-{name}-{}", std::process::id()));
+        let base = std::env::temp_dir().join(format!("pirep-{name}-{}", std::process::id()));
         let root = base.join("vault");
         std::fs::create_dir_all(&root).unwrap();
         std::fs::write(root.join("inside.txt"), "inside").unwrap();

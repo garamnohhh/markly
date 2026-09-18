@@ -1,9 +1,9 @@
-use super::db::{markly_dir, storage_key};
+use super::db::{pirep_dir, storage_key};
 use std::fs;
 use std::path::{Path, PathBuf};
 
 fn snapshot_path(root: &Path, doc_id: &str, version: u32) -> PathBuf {
-    markly_dir(root)
+    pirep_dir(root)
         .join("snapshots")
         .join(storage_key(doc_id))
         .join(format!("v{version}.md"))

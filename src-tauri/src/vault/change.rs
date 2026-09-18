@@ -1,4 +1,4 @@
-use super::db::{markly_dir, storage_key};
+use super::db::{pirep_dir, storage_key};
 use super::diff::{DiffStats, WordOp};
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -16,7 +16,7 @@ pub struct ChangeRecord {
 }
 
 fn changes_path(root: &Path, doc_id: &str) -> PathBuf {
-    markly_dir(root)
+    pirep_dir(root)
         .join("changes")
         .join(format!("{}.json", storage_key(doc_id)))
 }

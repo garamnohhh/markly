@@ -16,7 +16,9 @@ demo-dist
 # Rust build output
 src-tauri/target
 
-# Markly vault state (generated; never commit a vault's index/snapshots)
+# pirep vault state (generated; never commit a vault's index/snapshots)
+.pirep/
+demo-vault/.pirep/
 .markly/
 demo-vault/.markly/
 
