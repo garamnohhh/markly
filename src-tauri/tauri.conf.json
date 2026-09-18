@@ -41,7 +41,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEFBNzlFQkZFRkU5MjczQTkKUldTcGM1TCsvdXQ1cW02THlyR2VaSGV6TU1UOTlIcHM3S1MxM0lPSENrbzFiNXpPNEltQ2pxQlIK",
       "endpoints": [
         "https://github.com/garamnohhh/pirep/releases/latest/download/latest.json"
       ]
