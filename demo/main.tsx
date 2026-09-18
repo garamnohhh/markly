@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { DOCS, NON_MD, DIRS, VAULT_ROOT, BODY, DECK, CSV } from "./sample";
+import { DOCS, NON_MD, DIRS, VAULT_ROOT, BODY, DECK, CSV, DIFF_OPS } from "./sample";
 
 // ── Tauri stand-in ────────────────────────────────────────────────────────────
 // The app talks to Rust through window.__TAURI_INTERNALS__.invoke. Filling that
@@ -26,9 +26,8 @@ const handlers: Record<string, (a: Record<string, string>) => unknown> = {
   list_updates: () => DOCS.filter((d) => d.currentVersion > d.lastDecidedVersion),
   diff: () => ({
     from: 4, to: 7,
-    ops: [{ op: "eq", text: "처마 밑이 아니라 " }, { op: "del", text: "담장 옆" },
-          { op: "ins", text: "마당 한가운데" }, { op: "eq", text: "로 옮겼다." }],
-    stats: { additions: 1, deletions: 1 },
+    ops: DIFF_OPS,
+    stats: { additions: 3, deletions: 3 },
   }),
   list_changes: () => [],
   revert: () => db,

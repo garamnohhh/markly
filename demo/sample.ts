@@ -105,3 +105,18 @@ export const FILE_HTML = "Reports/summary.html";
 export const FILE_PDF = "Decisions/layout.pdf";
 export const FILE_CSV = "Reports/counts.csv";
 export const FILE_NOPE = "Decisions/sizes.xlsx";
+
+// The three changes between v4 and v7 of the report: the agent revised its own
+// counts after a second pass. Word-level ops, the shape the app's differ emits.
+export const DIFF_OPS = [
+  { op: "eq", text: "Ran the migration against a copy of the base. Nothing was written. Three of the four tables convert cleanly. The fourth does not: `events.payload` holds both JSON and plain text, and " },
+  { op: "del", text: "12 rows" },
+  { op: "ins", text: "41 rows" },
+  { op: "eq", text: " would lose the text.\n\n## Needs a person\n\n- [x] Convert the three clean tables\n- [x] Write defaults for " },
+  { op: "del", text: "9" },
+  { op: "ins", text: "12" },
+  { op: "eq", text: " nullable columns\n- [ ] Decide what happens to the " },
+  { op: "del", text: "12" },
+  { op: "ins", text: "41" },
+  { op: "eq", text: " mixed rows\n" },
+];
