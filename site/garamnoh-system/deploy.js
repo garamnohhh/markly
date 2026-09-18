@@ -229,4 +229,14 @@
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", start);
   } else start();
+
+  /* This site's languages live in two folders, so the header's language
+     control is a pair of links rather than a toggle. Remember which one was
+     followed; boot.js reads it and stops sending first-time visitors to the
+     English twin. */
+  each("[data-site-lang]", function (el) {
+    el.addEventListener("click", function () {
+      try { localStorage.setItem("garamnoh-system-lang", el.getAttribute("data-site-lang")); } catch (e) {}
+    });
+  });
 })();

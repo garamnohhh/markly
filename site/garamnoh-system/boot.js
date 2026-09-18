@@ -7,8 +7,19 @@
   var r = document.documentElement, t, l;
   try { t = localStorage.getItem("garamnoh-system-mode"); } catch (e) {}
   try { l = localStorage.getItem("garamnoh-system-lang"); } catch (e) {}
-  r.setAttribute("data-theme", t === "light" || t === "dark" ? t : "dark");
+  var l0 = l;
+  r.setAttribute("data-theme", t === "light" || t === "dark" ? t : "light");
   l = l === "ko" || l === "en" ? l : "en";
   r.setAttribute("data-lang", l);
   r.setAttribute("lang", l === "ko" ? "ko" : "en");
+
+  /* This site keeps its two languages in two folders rather than in one page,
+     so the default cannot be an attribute. A first visit — nothing stored —
+     lands on the English twin of whatever was asked for. Choosing a language
+     in the header stores it, and nobody is moved again. */
+  var TWINS = { "/": "/en/", "/index.html": "/en/index.html",
+                "/docs.html": "/en/docs.html", "/changelog.html": "/en/changelog.html" };
+  if (!l0 && TWINS[location.pathname]) {
+    location.replace(TWINS[location.pathname] + location.search + location.hash);
+  }
 })();
