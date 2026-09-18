@@ -274,7 +274,7 @@ function FolderDropdown({
   // already lives.
   useEffect(() => {
     const close = (e: MouseEvent) => {
-      if (!(e.target as HTMLElement).closest("[data-markly-menu]")) onClose();
+      if (!(e.target as HTMLElement).closest("[data-pirep-menu]")) onClose();
     };
     const key = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("mousedown", close);
@@ -290,7 +290,7 @@ function FolderDropdown({
 
   return (
     <div
-      data-markly-menu
+      data-pirep-menu
       className="fixed z-50 border border-line bg-surface"
       style={{
         top: state.y,

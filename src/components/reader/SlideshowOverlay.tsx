@@ -142,9 +142,9 @@ export function SlideshowOverlay({
       // is cross-origin — so even this guard has to sit inside the try.
       // onLoad fires again on every reload and StrictMode runs the src effect
       // twice, so the listeners go on at most once per frame.
-      const w = cw as Window & { __marklySlideKeys?: boolean };
-      if (w.__marklySlideKeys) return;
-      w.__marklySlideKeys = true;
+      const w = cw as Window & { __pirepSlideKeys?: boolean };
+      if (w.__pirepSlideKeys) return;
+      w.__pirepSlideKeys = true;
       keySource.current = null;
       cw.focus();
       cw.addEventListener("keydown", (e) => handleKeyRef.current(e, "frame"), true);
@@ -174,9 +174,9 @@ export function SlideshowOverlay({
     if (!cw) return;
     try {
       const doc = cw.document;
-      if (!doc.getElementById("markly-slideshow-fit")) {
+      if (!doc.getElementById("pirep-slideshow-fit")) {
         const style = doc.createElement("style");
-        style.id = "markly-slideshow-fit";
+        style.id = "pirep-slideshow-fit";
         style.textContent =
           "html,body{margin:0!important;padding:0!important;height:100%!important;" +
           "overflow:hidden!important;background:#111!important;" +

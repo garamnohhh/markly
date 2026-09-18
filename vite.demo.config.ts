@@ -29,7 +29,7 @@ export default defineConfig({
       output: {
         format: "iife",
         inlineDynamicImports: true,
-        entryFileNames: "markly.js",
+        entryFileNames: "pirep.js",
         assetFileNames: "assets/[name][extname]",
       },
     },

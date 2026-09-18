@@ -526,7 +526,7 @@ function _build() { return create<AppState>()(
       },
     }),
     {
-      name: "markly",
+      name: "pirep",
       partialize: (s) => ({
         theme: s.theme,
         vaultRoot: s.vaultRoot,

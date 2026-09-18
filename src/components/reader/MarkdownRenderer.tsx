@@ -12,7 +12,7 @@ import { resolveWiki } from "../../lib/wiki";
 import { resolveAbsoluteFileLink, resolveDocRelative } from "../../lib/path";
 import type { Db } from "../../lib/types";
 
-const WIKI_PREFIX = "markly-wiki://";
+const WIKI_PREFIX = "pirep-wiki://";
 
 // Rebuild GitHub-flavored Markdown from a rendered table — most portable copy
 // form (pastes clean into any editor). Alignment metadata is lost (not in DOM).
@@ -109,7 +109,7 @@ function TableBlock({ html }: { html: string }) {
   );
 }
 
-// Open a vault-relative path inside Markly: markdown docs in the reader, any
+// Open a vault-relative path inside pirep: markdown docs in the reader, any
 // other file in the file viewer.
 function openInVault(
   rel: string,

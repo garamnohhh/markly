@@ -1,18 +1,18 @@
 // File-type chip — 2026.09.07 handoff addendum, revised 17:28
-// (design_handoff_markly_2026-09-07/addenda/Markly File Type Chips.dc.html).
+// (design_handoff_pirep_2026-09-07/addenda/pirep File Type Chips.dc.html).
 //
 // "칩은 하나이고 세 가죽을 갈아입는다." The tier is not the extension, it is
-// what Markly can do with the file:
+// what pirep can do with the file:
 //
-//   NATIVE    Markly's own format — read, edit, version-tracked
+//   NATIVE    pirep's own format — read, edit, version-tracked
 //   READABLE  opens in the app, no editing of the document's history
 //   OPAQUE    cannot be opened here
 //
 // The addendum ships fixed arrays, but its own rule is capability-based —
-// "새 형식을 읽게 되면 배열에 한 줄 넣으면 끝이다". Markly reads more than the
+// "새 형식을 읽게 되면 배열에 한 줄 넣으면 끝이다". pirep reads more than the
 // addendum's list (every TEXT_EXTS entry, gif, tsv, mmd, toml, xml, sql, code
 // files, and files with no extension at all), so the arrays below are taken
-// from FileViewer's own sets rather than transcribed. Anything Markly cannot
+// from FileViewer's own sets rather than transcribed. Anything pirep cannot
 // open is OPAQUE, whatever its extension.
 
 // Only `.md` is scanned into the Base as a document, so only `.md` is native.
@@ -56,7 +56,7 @@ export function ExtChip({ name }: { name: string }) {
   const ext = rawExt(name);
   const tier = extTier(ext);
   return (
-    <span className={`markly-ext markly-ext--${tier}`}>
+    <span className={`pirep-ext pirep-ext--${tier}`}>
       {ext || "?"}
       {tier === "opaque" && <i aria-hidden>↗</i>}
     </span>

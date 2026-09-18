@@ -69,7 +69,7 @@ w.__TAURI_INTERNALS__ = {
 };
 
 try {
-  localStorage.setItem("markly", JSON.stringify({
+  localStorage.setItem("pirep", JSON.stringify({
     state: {
       theme: "dark", vaultRoot: VAULT_ROOT, vaults: [VAULT_ROOT],
       editorWidth: "normal", acceptChangesOnClose: false, markReadOnDocClose: true,

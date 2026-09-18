@@ -37,7 +37,7 @@
 /* class-based dark mode (toggled via settings, not OS) */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Design tokens — 2026.09.07 handoff (design_handoff_markly_2026-09-07/).
+/* Design tokens — 2026.09.07 handoff (design_handoff_pirep_2026-09-07/).
    Values are copied from the design system's own tokens/colors.css; nothing is
    adjusted by eye. The Tailwind --color-* names are kept so utilities keep
    working, and each one maps to a design-system token:
@@ -168,7 +168,7 @@
   --dur-enter: 260ms;
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-@keyframes markly-fade { from { opacity: 0 } to { opacity: 1 } }
+@keyframes pirep-fade { from { opacity: 0 } to { opacity: 1 } }
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
@@ -566,7 +566,7 @@ body {
 }
 .file-raw-shiki code { background: transparent !important; }
 
-/* Shiki code blocks (read mode) — Markly design, Shiki token colors */
+/* Shiki code blocks (read mode) — pirep design, Shiki token colors */
 .shiki-block {
   position: relative;
   margin: 1em 0;
@@ -661,14 +661,14 @@ body {
 }
 
 /* File-type chip — 2026.09.07 addendum, revised 17:28
-   (design_handoff_markly_2026-09-07/addenda/Markly File Type Chips.dc.html).
-   One chip, three skins. The tier is what Markly can do with the file, not
+   (design_handoff_pirep_2026-09-07/addenda/pirep File Type Chips.dc.html).
+   One chip, three skins. The tier is what pirep can do with the file, not
    which extension it is: "확장자 자체는 정보이지 상태가 아니므로 pdf 와 csv 에
    다른 색을 주지 않는다. 하지만 '이걸 여기서 읽을 수 있나'는 제품의 상태다."
 
    Sizes are one step under the addendum's ANATOMY (11px / 0 4px): at 11px the
    chip crowds the 12.5px tree row it sits in. Everything else is as specified. */
-.markly-ext {
+.pirep-ext {
   font-family: var(--font-mono);
   font-weight: 400;
   font-size: 10px;
@@ -686,28 +686,28 @@ body {
   background: var(--color-paper);
 }
 
-/* NATIVE — Markly's own format */
-.markly-ext--native {
+/* NATIVE — pirep's own format */
+.pirep-ext--native {
   color: var(--color-accent-text);
   border-color: var(--color-accent-text);
 }
 
 /* OPAQUE — cannot be opened here */
-.markly-ext--opaque {
+.pirep-ext--opaque {
   color: var(--color-mid);
   border-color: var(--color-line-soft);
   background: var(--color-tertiary);
 }
 /* colour alone never carries a state, so this one also carries a glyph */
-.markly-ext--opaque > i {
+.pirep-ext--opaque > i {
   font-style: normal;
   font-size: 8px;
 }
 
-/* garamnoh wordmark — the maker's mark, not Markly's. Typeset in mono with a
+/* garamnoh wordmark — the maker's mark, not pirep's. Typeset in mono with a
    block cursor that sits ON the baseline; the cursor is the mark. Copied from
    the garamnoh design system's components/wordmark.css. Only the static
-   variant is used — Markly already has one blinking dot, in the title bar. */
+   variant is used — pirep already has one blinking dot, in the title bar. */
 .gn-wordmark {
   display: inline-block;
   font-family: var(--font-mono);
@@ -731,13 +731,13 @@ body {
 }
 
 /* ── Brand mark ────────────────────────────────────────────────────────────
-   From design_handoff_markly_2026-09-07/assets/snippets.md. The mark is
+   From design_handoff_pirep_2026-09-07/assets/snippets.md. The mark is
    typeset, not a symbol: JetBrains Mono 400 plus a square accent dot. Drawn in
    code rather than shipped as an image so it follows theme, resolution and
    size changes. Do not restyle — the handoff forbids uppercase, other faces,
    round dots, other dot colours, italics, weight changes, shadows, gradients
    and rounded corners. */
-.markly-wordmark {
+.pirep-wordmark {
   font-family: var(--font-mono);
   font-weight: 400;
   font-size: 15px;              /* inline floor */
@@ -747,7 +747,7 @@ body {
   display: inline-block;
   padding-right: 0.36em;        /* where the dot sits */
 }
-.markly-wordmark > i {
+.pirep-wordmark > i {
   position: absolute;
   top: 0;
   right: 0;
@@ -757,49 +757,49 @@ body {
 }
 
 /* One dot blinks per page — the titlebar wordmark, nothing else. */
-.markly-wordmark--live > i {
-  animation: markly-blink 1.06s steps(1, end) infinite;
+.pirep-wordmark--live > i {
+  animation: pirep-blink 1.06s steps(1, end) infinite;
 }
-@keyframes markly-blink {
+@keyframes pirep-blink {
   0%, 49% { opacity: 1 }
   50%, 100% { opacity: 0 }
 }
 @media (prefers-reduced-motion: reduce) {
-  .markly-wordmark--live > i { animation: none }
+  .pirep-wordmark--live > i { animation: none }
 }
 
 /* Logo tile — 64px and up carries the whole name. font-size = tile × 0.192. */
-.markly-tile {
+.pirep-tile {
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--color-ink);
   flex-shrink: 0;
 }
-.markly-tile > .markly-wordmark {
+.pirep-tile > .pirep-wordmark {
   letter-spacing: -0.035em;     /* fixed inside a tile, at any size */
   color: var(--color-paper);
 }
 
-/* Small mark — 32px and below. Six letters stop reading, so only the `m` and
+/* Small mark — 32px and below. Five letters stop reading, so only the `p` and
    the dot remain, re-typeset against x-height = tile / 4. */
-.markly-mark {
+.pirep-mark {
   position: relative;
   display: block;
   flex-shrink: 0;
 }
-.markly-mark > b {
+.pirep-mark > b {
   position: absolute;
   font-family: var(--font-mono);
   font-weight: 400;
   font-size: 1em;
   line-height: 1;
-  left: -0.066em;               /* m ink, left edge */
+  left: -0.066em;               /* p ink, left edge */
   color: var(--color-paper);
 }
-.markly-mark > i {
+.pirep-mark > i {
   position: absolute;
-  left: 0.468em;                /* m ink, right edge */
+  left: 0.468em;                /* p ink, right edge */
   top: 0;
   background: var(--color-gold);
 }

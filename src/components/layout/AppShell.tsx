@@ -26,7 +26,7 @@ function SidebarDrawer({ onClose }: { onClose: () => void }) {
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-40" style={{ animation: "markly-fade var(--dur-enter) var(--ease)" }}>
+    <div className="fixed inset-0 z-40" style={{ animation: "pirep-fade var(--dur-enter) var(--ease)" }}>
       <div className="absolute inset-0"
         style={{ background: "color-mix(in oklab, var(--color-paper) 78%, transparent)" }} onClick={onClose} />
       <div className="absolute inset-y-0 left-0 flex">

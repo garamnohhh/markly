@@ -1,8 +1,8 @@
-// The Markly mark, typeset rather than drawn — see index.css and
-// design_handoff_markly_2026-09-06/assets/snippets.md.
+// The pirep mark, typeset rather than drawn — see index.css and
+// design_handoff_pirep_2026-09-06/assets/snippets.md.
 //
 // Two forms, picked by size: at 64px and up a tile carries the whole name, at
-// 32px and below only the `m` and its dot survive because six letters stop
+// 32px and below only the `p` and its dot survive because five letters stop
 // reading. Nothing here is an image, so the mark follows theme and resolution.
 
 // Inline wordmark. `live` blinks the dot — only ever one per screen, the one in
@@ -15,11 +15,11 @@ export function Wordmark({ size = 15, live }: { size?: number; live?: boolean })
   const dot = Math.max(2, Math.round(size * 0.27));
   return (
     <span
-      className={`markly-wordmark${live ? " markly-wordmark--live" : ""}`}
+      className={`pirep-wordmark${live ? " pirep-wordmark--live" : ""}`}
       style={{ fontSize: size, letterSpacing: tracking }}
-      aria-label="markly"
+      aria-label="pirep"
     >
-      markly<i style={{ width: dot, height: dot }} />
+      pirep<i style={{ width: dot, height: dot }} />
     </span>
   );
 }
@@ -27,9 +27,9 @@ export function Wordmark({ size = 15, live }: { size?: number; live?: boolean })
 // Square tile holding the whole name. Contents sit at 72% of the tile.
 export function LogoTile({ size = 64 }: { size?: number }) {
   return (
-    <span className="markly-tile" style={{ width: size, height: size }}>
-      <span className="markly-wordmark" style={{ fontSize: size * 0.192 }} aria-label="markly">
-        markly<i />
+    <span className="pirep-tile" style={{ width: size, height: size }}>
+      <span className="pirep-wordmark" style={{ fontSize: size * 0.192 }} aria-label="pirep">
+        pirep<i />
       </span>
     </span>
   );
@@ -43,19 +43,19 @@ export function Logo({ size = 22, className }: { size?: number; className?: stri
   const dot = Math.max(2, Math.round((size * 3) / 32));
   return (
     <span
-      className={`markly-tile ${className ?? ""}`}
+      className={`pirep-tile ${className ?? ""}`}
       style={{ width: size, height: size }}
-      aria-label="markly"
+      aria-label="pirep"
     >
       <span
-        className="markly-mark"
+        className="pirep-mark"
         style={{
           fontSize,
           width: `calc(0.468em + ${dot}px)`,
           height: `calc(0.560em + ${dot}px)`,
         }}
       >
-        <b style={{ top: `calc(${dot}px - 0.300em)` }}>m</b>
+        <b style={{ top: `calc(${dot}px - 0.300em)` }}>p</b>
         <i style={{ width: dot, height: dot }} />
       </span>
     </span>

@@ -1,6 +1,6 @@
 # Third-party notices
 
-Markly bundles the following fonts. These notices do not license Markly itself.
+pirep bundles the following fonts. These notices do not license pirep itself.
 
 ## Pretendard 1.3.9
 

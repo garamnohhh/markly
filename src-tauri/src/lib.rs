@@ -27,7 +27,7 @@ pub fn run() {
                 // default menu intercepted our app shortcuts. These predefined items bind
                 // only ⌘Q/W/H/M/X/C/V/A/Z — never our ⌘E/⌘K/⌘F/⌘\ etc.
                 use tauri::menu::{MenuBuilder, SubmenuBuilder};
-                let app_menu = SubmenuBuilder::new(app, "Markly")
+                let app_menu = SubmenuBuilder::new(app, "pirep")
                     .about(None)
                     .separator()
                     .hide()

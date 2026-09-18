@@ -9,10 +9,10 @@ function equal(actual: unknown, expected: unknown) {
 // Path separators survive; only the segments are encoded. A whole-path
 // encodeURIComponent would collapse this into one segment and break relative
 // resolution — that's the bug this shape exists to avoid.
-equal(assetBaseHref("/Users/g/My Base/docs"), "marklyfile://localhost/Users/g/My%20Base/docs/");
-equal(assetBaseHref("/v/한글 폴더"), "marklyfile://localhost/v/%ED%95%9C%EA%B8%80%20%ED%8F%B4%EB%8D%94/");
-equal(assetBaseHref("/"), "marklyfile://localhost/");
-equal(localImageUrl("images/간트.png", "/vault", "plans/plan.md"), "marklyfile://localhost/vault/plans/images/%EA%B0%84%ED%8A%B8.png");
+equal(assetBaseHref("/Users/g/My Base/docs"), "pirepfile://localhost/Users/g/My%20Base/docs/");
+equal(assetBaseHref("/v/한글 폴더"), "pirepfile://localhost/v/%ED%95%9C%EA%B8%80%20%ED%8F%B4%EB%8D%94/");
+equal(assetBaseHref("/"), "pirepfile://localhost/");
+equal(localImageUrl("images/간트.png", "/vault", "plans/plan.md"), "pirepfile://localhost/vault/plans/images/%EA%B0%84%ED%8A%B8.png");
 equal(localImageUrl("../outside.png", "/vault", "plans/plan.md"), null);
 equal(localImageUrl("/outside.png", "/vault", "plans/plan.md"), null);
 equal(localImageUrl("https://example.com/x.png", "/vault", "plans/plan.md"), null);
@@ -20,11 +20,11 @@ equal(localImageUrl("https://example.com/x.png", "/vault", "plans/plan.md"), nul
 // A relative reference resolves against the directory, not the origin root.
 equal(
   new URL("./support.js", assetBaseHref("/Users/g/deck")).href,
-  "marklyfile://localhost/Users/g/deck/support.js",
+  "pirepfile://localhost/Users/g/deck/support.js",
 );
 equal(
   new URL("_ds/styles.css", assetBaseHref("/Users/g/deck")).href,
-  "marklyfile://localhost/Users/g/deck/_ds/styles.css",
+  "pirepfile://localhost/Users/g/deck/_ds/styles.css",
 );
 
 const head = withAssetBase("<html><head><title>t</title></head><body>x</body></html>", "/d");

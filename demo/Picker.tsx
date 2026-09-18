@@ -75,7 +75,7 @@ export function Picker() {
   return (
     <div style={box}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderBottom: "1px solid #2a322e" }}>
-        <strong style={{ fontSize: 12, letterSpacing: ".04em" }}>MARKLY · BUILT</strong>
+        <strong style={{ fontSize: 12, letterSpacing: ".04em" }}>PIREP · BUILT</strong>
         <button onClick={() => setOpen(false)} style={{ marginLeft: "auto", background: "transparent", border: 0, color: "#6b776f", cursor: "pointer", font: "inherit" }}>×</button>
       </div>
 

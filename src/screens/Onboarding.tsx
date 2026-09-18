@@ -91,7 +91,7 @@ export function Onboarding() {
               New Base
             </div>
             <div style={{ fontSize: 12.5, color: "var(--color-muted)", lineHeight: 1.55 }}>
-              Create an empty folder and set it as a Markly Base.
+              Create an empty folder and set it as a pirep Base.
             </div>
           </button>
 

@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    markly_app_lib::run()
+    pirep_app_lib::run()
 }

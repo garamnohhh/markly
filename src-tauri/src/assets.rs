@@ -1,4 +1,4 @@
-//! `marklyfile://` — serves a vault file to the HTML preview iframe.
+//! `pirepfile://` — serves a vault file to the HTML preview iframe.
 //!
 //! HTML previews render from a blob: URL, which has no directory, so a document's
 //! relative references (`./support.js`, `_ds/styles.css`, `assets/logo.svg`) resolve
@@ -16,7 +16,7 @@ use std::path::{Component, Path, PathBuf};
 use tauri::{Manager, UriSchemeContext, Runtime};
 use tauri::http::{Request, Response};
 
-pub const SCHEME: &str = "marklyfile";
+pub const SCHEME: &str = "pirepfile";
 
 /// URL path (`/Users/g/My%20Base/deck/support.js`) → absolute filesystem path.
 /// Decoding is per segment so that `%20` in a folder name survives. A decoded
@@ -139,7 +139,7 @@ mod tests {
 
     #[test]
     fn refuses_traversal_and_paths_outside_the_vault() {
-        let dir = std::env::temp_dir().join(format!("markly-assets-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("pirep-assets-{}", std::process::id()));
         let vault = dir.join("vault");
         std::fs::create_dir_all(vault.join("deck")).unwrap();
         std::fs::write(vault.join("deck/support.js"), "ok").unwrap();
@@ -165,7 +165,7 @@ mod tests {
     #[test]
     fn serves_image_and_text_files_with_exact_mime_and_body() {
         let vault = std::env::temp_dir().join(format!(
-            "markly-assets-response-{}",
+            "pirep-assets-response-{}",
             std::process::id()
         ));
         std::fs::create_dir_all(&vault).unwrap();

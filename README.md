@@ -1,21 +1,21 @@
-# Markly
+# pirep
 
 A macOS app that reads a folder of Markdown files — and tells you when something else changed them.
 
-![The Markly reader](docs/screenshot-reader.png)
+![The pirep reader](docs/screenshot-reader.png)
 
 ## The problem it solves
 
 You keep your notes as Markdown files in a folder. Lately you are not the only one writing to them: an AI tool rewrites a section, a script appends a log, a sync folder pulls in someone else's edit. Open a file a week later and you cannot tell what is new.
 
-Markly watches one folder for you and answers that question.
+pirep watches one folder for you and answers that question.
 
 - It renders your documents properly — tables, code, maths, diagrams, checklists.
 - Every time a file changes outside the app, it keeps that version.
 - It shows you a **word-level diff** between the version you last read and the file as it is now.
 - You mark it read, or roll the file back to an earlier version.
 
-No server, no account, no cloud. The files stay in your folder; Markly only reads them.
+No server, no account, no cloud. The files stay in your folder; pirep only reads them.
 
 ## What's in it
 
@@ -33,25 +33,25 @@ No server, no account, no cloud. The files stay in your folder; Markly only read
 
 ## Using it
 
-1. Open the app and **pick a folder**. Markly calls it your *Base*.
+1. Open the app and **pick a folder**. pirep calls it your *Base*.
 2. Pick a document in the sidebar and read it.
 3. When a file changes outside the app it appears under **Changes**. Open it to see what moved, then mark it read or roll it back.
 4. Press `⌘E` if you want to edit.
 
 ## Install
 
-1. Download `Markly_0.1.0_aarch64.dmg` from the [v0.1.0 release](https://github.com/garamnohhh/markly/releases/tag/v0.1.0).
+1. Download `pirep_0.1.0_aarch64.dmg` from the [v0.1.0 release](https://github.com/garamnohhh/pirep/releases/tag/v0.1.0).
 2. Open the dmg.
-3. Drag **Markly** onto the **Applications** folder next to it.
-4. Open Markly from Applications.
+3. Drag **pirep** onto the **Applications** folder next to it.
+4. Open pirep from Applications.
 
-### "Markly can't be opened" on first launch
+### "pirep can't be opened" on first launch
 
 The app is not signed with a paid Apple certificate, so macOS blocks it once. Nothing is wrong with the app.
 
 1. Dismiss the warning.
 2. Open **System Settings → Privacy & Security**.
-3. Scroll down to the line saying Markly was blocked because it is from an unidentified developer, and press **Open Anyway**.
+3. Scroll down to the line saying pirep was blocked because it is from an unidentified developer, and press **Open Anyway**.
 4. Confirm with **Open**.
 
 That is a one-time step. After that it launches normally.
@@ -74,12 +74,12 @@ pnpm tauri build   # produce the .app and .dmg
 
 ## Where your files and data live
 
-- **Your documents**: exactly where they were. Markly never moves them out of your folder.
-- **Version history**: in a `.markly/` folder inside your Base — one copy per version, plus the change log. Delete that folder and the history goes with it.
-- **App settings**: in the app's own storage under `~/Library/WebKit/com.garamnoh.markly`.
+- **Your documents**: exactly where they were. pirep never moves them out of your folder.
+- **Version history**: in a `.pirep/` folder inside your Base — one copy per version, plus the change log. Delete that folder and the history goes with it.
+- **App settings**: in the app's own storage under `~/Library/WebKit/com.garamnoh.pirep`.
 - **What leaves your machine**: no document content, ever. The app has no telemetry and no sync. The only outbound request it can make is looking up the latest GitHub release, and only if you press *Check for updates* in Settings — that check is not finished yet and currently fails.
 
-To remove Markly, move the app to the Trash and, if you want, delete the `.markly/` folder in your Base and the settings folder above.
+To remove pirep, move the app to the Trash and, if you want, delete the `.pirep/` folder in your Base and the settings folder above.
 
 ## Built with
 

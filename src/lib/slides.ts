@@ -5,7 +5,7 @@
 // resolve — the browser doesn't even attempt them. Injecting a <base> pointing at
 // the file's real directory fixes that without rewriting the document.
 
-// marklyfile://localhost/<segment-encoded absolute dir>/ — served by
+// pirepfile://localhost/<segment-encoded absolute dir>/ — served by
 // src-tauri/src/assets.rs, which decodes per segment and refuses anything outside
 // the open vault.
 //
@@ -14,7 +14,7 @@
 // a <base> — relative URLs resolve against the origin root, not the directory.
 export function assetBaseHref(absDir: string): string {
   const segments = absDir.split("/").filter(Boolean).map(encodeURIComponent);
-  return `marklyfile://localhost/${segments.map((s) => `${s}/`).join("")}`;
+  return `pirepfile://localhost/${segments.map((s) => `${s}/`).join("")}`;
 }
 
 export function localImageUrl(src: string, vaultRoot: string, docPath: string): string | null {

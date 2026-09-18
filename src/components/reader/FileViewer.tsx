@@ -147,9 +147,9 @@ function HtmlPreview({ text, name, onDetect }: { text: string; name: string; onD
         }, delay);
       }
     }
-    if (!cw.document.querySelector("style[data-markly-find]")) {
+    if (!cw.document.querySelector("style[data-pirep-find]")) {
       const style = cw.document.createElement("style");
-      style.dataset.marklyFind = "";
+      style.dataset.pirepFind = "";
       style.textContent = "::selection{background:rgba(255,210,74,.72);color:inherit}";
       cw.document.head.appendChild(style);
     }
@@ -607,7 +607,7 @@ function OpaqueFile({ relPath, name }: { relPath: string; name: string }) {
       <div className="flex flex-col items-center gap-1">
         <span style={{ fontSize: 13, color: "var(--color-ink)" }}>{name}</span>
         <span style={{ fontSize: 12, fontFamily: "var(--font-mono)" }}>
-          Markly does not read this format
+          pirep does not read this format
         </span>
       </div>
       <div className="flex items-center gap-2">

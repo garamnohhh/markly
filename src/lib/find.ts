@@ -6,17 +6,17 @@ export type FindTarget = {
   clear?: () => void;
 };
 
-const registry = globalThis as typeof globalThis & { __marklyFindTarget?: FindTarget | null };
+const registry = globalThis as typeof globalThis & { __pirepFindTarget?: FindTarget | null };
 
 export function registerFindTarget(target: FindTarget): () => void {
-  registry.__marklyFindTarget = target;
+  registry.__pirepFindTarget = target;
   return () => {
-    if (registry.__marklyFindTarget === target) registry.__marklyFindTarget = null;
+    if (registry.__pirepFindTarget === target) registry.__pirepFindTarget = null;
   };
 }
 
 export function getFindTarget(): FindTarget {
-  return registry.__marklyFindTarget ?? createDomFindTarget();
+  return registry.__pirepFindTarget ?? createDomFindTarget();
 }
 
 export function findOccurrences(text: string, query: string): FindMatch[] {

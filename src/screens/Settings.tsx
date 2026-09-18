@@ -199,7 +199,7 @@ function AppearanceTab() {
         Appearance
       </div>
       <div className="text-muted" style={{ fontSize: 13, marginBottom: 18 }}>
-        Personalise the look and feel of Markly.
+        Personalise the look and feel of pirep.
       </div>
       <Row label="Theme">
         <Choice
@@ -258,7 +258,7 @@ function EditorTab() {
   );
 }
 
-// Screen 14. The Base is the folder Markly watches; the app does not sync, it
+// Screen 14. The Base is the folder pirep watches; the app does not sync, it
 // only says whether the folder already sits somewhere that does.
 const SYNC_HOSTS: { match: string; name: string }[] = [
   { match: "/Library/Mobile Documents/", name: "iCloud Drive" },
@@ -331,7 +331,7 @@ function BaseTab() {
             className="text-mid"
             style={{ fontFamily: "var(--font-mono)", fontSize: 11 }}
           >
-            {/* the spec shows a folder size here; Markly does not measure one
+            {/* the spec shows a folder size here; pirep does not measure one
                 yet, so it counts what it does know */}
             {docs.length} documents · {nonMd.length} other files
           </div>
@@ -352,7 +352,7 @@ function BaseTab() {
         >
           <span className="font-mono" style={{ color: "var(--color-info)" }}>i</span>
           <span>
-            This folder is inside {host}. {host} does the syncing — Markly only
+            This folder is inside {host}. {host} does the syncing — pirep only
             watches the files for changes.
           </span>
         </div>
@@ -405,7 +405,7 @@ function BaseTab() {
   );
 }
 
-// Screen 31. Markly does not sync; this screen only reports whether the Base
+// Screen 31. pirep does not sync; this screen only reports whether the Base
 // already lives somewhere that does. Switching Bases lives on the Base tab.
 function AccountTab() {
   const vaultRoot = useStore((s) => s.vaultRoot);
@@ -794,9 +794,9 @@ function AboutTab() {
   const [updateStatus, setUpdateStatus] = useState("");
   const [checking, setChecking] = useState(false);
   const [installing, setInstalling] = useState(false);
-  const releaseUrl = "https://github.com/garamnohhh/markly/releases/latest";
+  const releaseUrl = "https://github.com/garamnohhh/pirep/releases/latest";
   const repoFileUrl = (name: string) =>
-    `https://github.com/garamnohhh/markly/blob/main/${name}`;
+    `https://github.com/garamnohhh/pirep/blob/main/${name}`;
 
   useEffect(() => {
     getVersion().then(setVersion).catch(() => setVersion("Unavailable"));
@@ -850,7 +850,7 @@ function AboutTab() {
         <LogoTile size={128} />
         <div style={{ flex: 1 }}>
           <div className="text-ink" style={{ fontSize: 15, fontWeight: 600 }}>
-            Markly{" "}
+            pirep{" "}
             <span className="text-mid" style={{ fontWeight: 400 }}>{version || "…"}</span>
           </div>
           <div className="text-muted" style={{ fontSize: 12.5, marginTop: 2 }}>
@@ -868,7 +868,7 @@ function AboutTab() {
             </span>
           </div>
           <div className="text-mid" style={{ fontSize: 12, lineHeight: "18px" }}>
-            © 2026 Markly
+            © 2026 pirep
           </div>
           <div className="text-mid" style={{ fontSize: 12, lineHeight: "18px" }}>
             Apache-2.0 ·{" "}

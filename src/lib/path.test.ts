@@ -27,7 +27,7 @@ equal(resolveDocRelative("file:///tmp/a.md", from), null);
 equal(resolveDocRelative("#제목", from), null);
 equal(resolveDocRelative("", from), null);
 
-// Absolute Markdown links stay in Markly only when they are inside the Base.
+// Absolute Markdown links stay in pirep only when they are inside the Base.
 equal(
   resolveAbsoluteFileLink("/Users/g/Base/docs/note.md", "/Users/g/Base"),
   { kind: "vault", rel: "docs/note.md" },

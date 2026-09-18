@@ -117,7 +117,7 @@ export function parseDoc(src: string): {
   // resolution can match real filenames incl. spaces; alias/target is the display.
   const withWiki = body.replace(/\[\[([^\]]+)\]\]/g, (_, inner) => {
     const { linkPart, display } = parseWikiInner(inner);
-    return `[${display}](markly-wiki://${encodeURIComponent(linkPart)})`;
+    return `[${display}](pirep-wiki://${encodeURIComponent(linkPart)})`;
   });
   const preprocessed = encodeLinkDestSpaces(withWiki);
   const tokens = md.parse(preprocessed, {});

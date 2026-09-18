@@ -28,21 +28,21 @@ function isTauriFrameNoise(text: string): boolean {
 // and would stack a second (stale-closure) listener on top of the old one.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const _w = window as any;
-if (_w.__marklyOnError) window.removeEventListener("error", _w.__marklyOnError);
-if (_w.__marklyOnRej) window.removeEventListener("unhandledrejection", _w.__marklyOnRej);
+if (_w.__pirepOnError) window.removeEventListener("error", _w.__pirepOnError);
+if (_w.__pirepOnRej) window.removeEventListener("unhandledrejection", _w.__pirepOnRej);
 
-_w.__marklyOnError = (e: ErrorEvent) => {
+_w.__pirepOnError = (e: ErrorEvent) => {
   if (isTauriFrameNoise(e.message ?? "")) return;
   showFatal(`[error] ${e.message}\n${e.error?.stack ?? ""}`);
 };
-_w.__marklyOnRej = (e: PromiseRejectionEvent) => {
+_w.__pirepOnRej = (e: PromiseRejectionEvent) => {
   const msg = String(e.reason);
   if (isTauriFrameNoise(msg)) { e.preventDefault(); return; }
   showFatal(`[promise] ${msg}`);
 };
 
-window.addEventListener("error", _w.__marklyOnError);
-window.addEventListener("unhandledrejection", _w.__marklyOnRej);
+window.addEventListener("error", _w.__pirepOnError);
+window.addEventListener("unhandledrejection", _w.__pirepOnRej);
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
