@@ -56,6 +56,8 @@ The app is not signed with a paid Apple certificate, so macOS blocks it once. No
 
 That is a one-time step. After that it launches normally.
 
+If macOS says the app is damaged, remove only its quarantine flag with `xattr -dr com.apple.quarantine /Applications/pirep.app`, then open it again.
+
 ### Before you download
 
 - **Apple Silicon only** (M1 and later). It will not run on an Intel Mac.
