@@ -338,22 +338,32 @@ You read.</span></h1>
     <div  style="max-width: 1120px; margin: 0px auto; padding: 76px 28px;">
       <div  style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 48px; align-items: start;">
         <div >
-          <span  class="gn-label" style="color: var(--text-3);">DOWNLOAD</span>
+          <span  class="gn-label" style="color: var(--text-3);">INSTALL</span>
           <h2  style="font-size: 34px; letter-spacing: -0.02em; margin: 16px 0px 12px; max-width: 20ch; text-wrap: pretty;"><span class="sc-interp">Open one folder to start</span></h2>
           <p  style="font-size: 15px; line-height: 1.78; color: var(--text-2); margin: 0px 0px 28px; max-width: 46ch; text-wrap: pretty;"><span class="sc-interp">Install it, pick a folder with markdown in it, and start reading. There is no onboarding to sit through.</span></p>
-          <div  style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
-            <a  href="#get" style="height: 44px; background: var(--accent); color: var(--on-accent); display: flex; align-items: center; gap: 10px; padding: 0px 20px; font-size: 15px; font-weight: 500;">
-              <span  class="gn-mono" style="font-size: 15px;"><span class="sc-interp">󰇚</span></span><span class="sc-interp">Download for macOS</span>
-            </a>
-            <span  class="gn-mono" style="font-size: 11px; color: var(--text-3);"><span class="sc-interp">Windows and Linux are on the way</span></span>
-            <a  href="../changelog.html" style="font-size: 12.5px;"><span class="sc-interp">See what changed in 0.4.2</span></a>
+          <div  style="border: 1px solid var(--line); background: var(--surface);">
+            <div  style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--line-soft);">
+              <span  class="gn-mono" style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3);">TERMINAL</span>
+              <button  type="button" class="gn-mono gn-copy" data-copy="curl -fsSL https://pirep.pages.dev/install.sh | sh" data-copied="Copied" style="margin-left: auto; height: 26px; padding: 0px 12px; font-size: 11px; letter-spacing: 0.06em; border: 1px solid var(--line); background: var(--bg); color: var(--text-2); cursor: pointer;">Copy</button>
+            </div>
+            <div  style="padding: 14px;">
+              <div  class="gn-mono" style="font-size: 12.5px; line-height: 1.8; color: var(--text); white-space: pre;"><span style="color: var(--text-3);">$ </span>curl -fsSL https://pirep.pages.dev/install.sh | sh
+<span style="color: var(--text-3);">$ </span>open -a pirep</div>
+            </div>
           </div>
+          <div  style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 18px;">
+            <a  href="https://github.com/garamnohhh/pirep/releases/latest" style="font-size: 12.5px;">Download the dmg (14 MB)</a>
+            <a  href="./install.sh" style="font-size: 12.5px;">Read the script</a>
+            <span  class="gn-mono" style="font-size: 11px; color: var(--text-3);">Apple silicon · Windows and Linux are on the way</span>
+            <a  href="./changelog.html" style="font-size: 12.5px;">See what changed in 0.1.1</a>
+          </div>
+          <p  class="gn-mono" style="font-size: 11px; line-height: 1.8; color: var(--text-3); margin: 14px 0px 0px; max-width: 52ch;">With the dmg, the first launch needs one click in System Settings &gt; Privacy &amp; Security &gt; Open Anyway.<br>To remove it: rm -rf /Applications/pirep.app</p>
         </div>
         <div  style="border: 1px solid var(--line); background: var(--surface); margin-top: 38px;">
           
             <div  style="display: flex; align-items: baseline; gap: 20px; padding: 14px 20px; border-bottom: 1px solid var(--line-soft);">
               <span  class="gn-mono" style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); width: 104px; flex: 0 0 auto;"><span class="sc-interp">VERSION</span></span>
-              <span  class="gn-mono" style="flex: 1 1 0%; min-width: 0px; font-size: 12.5px; color: var(--text); text-align: right;"><span class="sc-interp">0.4.2 · 2026.09.08</span></span>
+              <span  class="gn-mono" style="flex: 1 1 0%; min-width: 0px; font-size: 12.5px; color: var(--text); text-align: right;"><span class="sc-interp">0.1.1 · 2026.09.18</span></span>
             </div>
           
             <div  style="display: flex; align-items: baseline; gap: 20px; padding: 14px 20px; border-bottom: 1px solid var(--line-soft);">
@@ -363,7 +373,7 @@ You read.</span></h1>
           
             <div  style="display: flex; align-items: baseline; gap: 20px; padding: 14px 20px; border-bottom: 1px solid var(--line-soft);">
               <span  class="gn-mono" style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); width: 104px; flex: 0 0 auto;"><span class="sc-interp">REQUIRES</span></span>
-              <span  class="gn-mono" style="flex: 1 1 0%; min-width: 0px; font-size: 12.5px; color: var(--text); text-align: right;"><span class="sc-interp">macOS 13 or later</span></span>
+              <span  class="gn-mono" style="flex: 1 1 0%; min-width: 0px; font-size: 12.5px; color: var(--text); text-align: right;"><span class="sc-interp">macOS · Apple silicon</span></span>
             </div>
           
             <div  style="display: flex; align-items: baseline; gap: 20px; padding: 14px 20px; border-bottom: 1px solid var(--line-soft);">
@@ -381,10 +391,23 @@ You read.</span></h1>
       <span  style="font-family: var(--font-mono); font-weight: 400; font-size: 15px; letter-spacing: -0.02em; line-height: 1; position: relative; display: inline-block; padding-right: 0.36em; flex: 0 0 auto; color: var(--text-2);">pirep<span  style="position: absolute; top: 0px; right: 0px; width: 0.27em; height: 0.27em; background: var(--accent);"></span></span>
       <span  class="gn-mono" style="font-size: 11px; color: var(--text-3);"><span class="sc-interp">2026 · made in Jeonju</span></span>
       <div  style="margin-left: auto; display: flex; align-items: center; gap: 18px; flex-wrap: wrap;">
-        <a  href="../docs.html" style="font-size: 12.5px; color: var(--text-2);"><span class="sc-interp">Docs</span></a>
-        <a  href="../changelog.html" style="font-size: 12.5px; color: var(--text-2);"><span class="sc-interp">Release notes</span></a>
+        <a  href="./docs.html" style="font-size: 12.5px; color: var(--text-2);"><span class="sc-interp">Docs</span></a>
+        <a  href="./changelog.html" style="font-size: 12.5px; color: var(--text-2);"><span class="sc-interp">Release notes</span></a>
       </div>
     </div>
   </div></div></div></div>
 <script src="../garamnoh-system/deploy.js"></script>
-</body></html>
+</html>
+<script>
+document.querySelectorAll('.gn-copy').forEach(function (b) {
+  b.addEventListener('click', function () {
+    navigator.clipboard.writeText(b.dataset.copy).then(function () {
+      var was = b.textContent;
+      b.textContent = b.dataset.copied;
+      b.style.color = 'var(--accent-text)';
+      b.style.borderColor = 'var(--accent-text)';
+      setTimeout(function () { b.textContent = was; b.style.color = ''; b.style.borderColor = ''; }, 1600);
+    });
+  });
+});
+</script>

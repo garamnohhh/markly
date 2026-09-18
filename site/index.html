@@ -338,22 +338,32 @@ img[src*="assets/"] { border: 1px solid var(--line); }
     <div  style="max-width: 1120px; margin: 0px auto; padding: 76px 28px;">
       <div  style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 48px; align-items: start;">
         <div >
-          <span  class="gn-label" style="color: var(--text-3);">DOWNLOAD</span>
+          <span  class="gn-label" style="color: var(--text-3);">INSTALL</span>
           <h2  style="font-size: 34px; letter-spacing: -0.02em; margin: 16px 0px 12px; max-width: 20ch; text-wrap: pretty;"><span class="sc-interp">폴더 하나만 열면 시작해요</span></h2>
           <p  style="font-size: 15px; line-height: 1.78; color: var(--text-2); margin: 0px 0px 28px; max-width: 46ch; text-wrap: pretty;"><span class="sc-interp">설치하고 마크다운이 있는 폴더를 고르면 바로 읽을 수 있어요. 가입 절차는 없어요.</span></p>
-          <div  style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
-            <a  href="#get" style="height: 44px; background: var(--accent); color: var(--on-accent); display: flex; align-items: center; gap: 10px; padding: 0px 20px; font-size: 15px; font-weight: 500;">
-              <span  class="gn-mono" style="font-size: 15px;"><span class="sc-interp">󰇚</span></span><span class="sc-interp">macOS용 받기</span>
-            </a>
-            <span  class="gn-mono" style="font-size: 11px; color: var(--text-3);"><span class="sc-interp">Windows · Linux는 준비 중이에요</span></span>
-            <a  href="./changelog.html" style="font-size: 12.5px;"><span class="sc-interp">0.4.2 업데이트 기록 보기</span></a>
+          <div  style="border: 1px solid var(--line); background: var(--surface);">
+            <div  style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--line-soft);">
+              <span  class="gn-mono" style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3);">TERMINAL</span>
+              <button  type="button" class="gn-mono gn-copy" data-copy="curl -fsSL https://pirep.pages.dev/install.sh | sh" data-copied="복사됨" style="margin-left: auto; height: 26px; padding: 0px 12px; font-size: 11px; letter-spacing: 0.06em; border: 1px solid var(--line); background: var(--bg); color: var(--text-2); cursor: pointer;">복사</button>
+            </div>
+            <div  style="padding: 14px;">
+              <div  class="gn-mono" style="font-size: 12.5px; line-height: 1.8; color: var(--text); white-space: pre;"><span style="color: var(--text-3);">$ </span>curl -fsSL https://pirep.pages.dev/install.sh | sh
+<span style="color: var(--text-3);">$ </span>open -a pirep</div>
+            </div>
           </div>
+          <div  style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 18px;">
+            <a  href="https://github.com/garamnohhh/pirep/releases/latest" style="font-size: 12.5px;">dmg로 받기 (14 MB)</a>
+            <a  href="./install.sh" style="font-size: 12.5px;">스크립트 보기</a>
+            <span  class="gn-mono" style="font-size: 11px; color: var(--text-3);">Apple 실리콘 · Windows · Linux는 준비 중이에요</span>
+            <a  href="./changelog.html" style="font-size: 12.5px;">0.1.1 업데이트 기록 보기</a>
+          </div>
+          <p  class="gn-mono" style="font-size: 11px; line-height: 1.8; color: var(--text-3); margin: 14px 0px 0px; max-width: 52ch;">dmg로 받으면 첫 실행 때 시스템 설정 &gt; 개인정보 보호 및 보안에서 열기를 한 번 눌러요.<br>지울 때는 rm -rf /Applications/pirep.app</p>
         </div>
         <div  style="border: 1px solid var(--line); background: var(--surface); margin-top: 38px;">
           
             <div  style="display: flex; align-items: baseline; gap: 20px; padding: 14px 20px; border-bottom: 1px solid var(--line-soft);">
               <span  class="gn-mono" style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); width: 104px; flex: 0 0 auto;"><span class="sc-interp">VERSION</span></span>
-              <span  class="gn-mono" style="flex: 1 1 0%; min-width: 0px; font-size: 12.5px; color: var(--text); text-align: right;"><span class="sc-interp">0.4.2 · 2026.09.08</span></span>
+              <span  class="gn-mono" style="flex: 1 1 0%; min-width: 0px; font-size: 12.5px; color: var(--text); text-align: right;"><span class="sc-interp">0.1.1 · 2026.09.18</span></span>
             </div>
           
             <div  style="display: flex; align-items: baseline; gap: 20px; padding: 14px 20px; border-bottom: 1px solid var(--line-soft);">
@@ -363,7 +373,7 @@ img[src*="assets/"] { border: 1px solid var(--line); }
           
             <div  style="display: flex; align-items: baseline; gap: 20px; padding: 14px 20px; border-bottom: 1px solid var(--line-soft);">
               <span  class="gn-mono" style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); width: 104px; flex: 0 0 auto;"><span class="sc-interp">REQUIRES</span></span>
-              <span  class="gn-mono" style="flex: 1 1 0%; min-width: 0px; font-size: 12.5px; color: var(--text); text-align: right;"><span class="sc-interp">macOS 13 이상</span></span>
+              <span  class="gn-mono" style="flex: 1 1 0%; min-width: 0px; font-size: 12.5px; color: var(--text); text-align: right;"><span class="sc-interp">macOS · Apple 실리콘</span></span>
             </div>
           
             <div  style="display: flex; align-items: baseline; gap: 20px; padding: 14px 20px; border-bottom: 1px solid var(--line-soft);">
@@ -387,4 +397,17 @@ img[src*="assets/"] { border: 1px solid var(--line); }
     </div>
   </div></div></div></div>
 <script src="./garamnoh-system/deploy.js"></script>
-</body></html>
+</html>
+<script>
+document.querySelectorAll('.gn-copy').forEach(function (b) {
+  b.addEventListener('click', function () {
+    navigator.clipboard.writeText(b.dataset.copy).then(function () {
+      var was = b.textContent;
+      b.textContent = b.dataset.copied;
+      b.style.color = 'var(--accent-text)';
+      b.style.borderColor = 'var(--accent-text)';
+      setTimeout(function () { b.textContent = was; b.style.color = ''; b.style.borderColor = ''; }, 1600);
+    });
+  });
+});
+</script>
