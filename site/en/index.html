@@ -336,25 +336,23 @@ You read.</span></h1>
 
   <div  id="get" style="border-bottom: 1px solid var(--line);">
     <div  style="max-width: 1120px; margin: 0px auto; padding: 76px 28px;">
-      <div  style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 48px; align-items: start;">
+      <span  class="gn-label" style="color: var(--text-3);">INSTALL</span>
+      <h2  style="font-size: 34px; letter-spacing: -0.02em; margin: 16px 0px 12px; max-width: 20ch; text-wrap: pretty;"><span class="sc-interp">Open one folder to start</span></h2>
+      <p  style="font-size: 15px; line-height: 1.78; color: var(--text-2); margin: 0px 0px 28px; max-width: 46ch; text-wrap: pretty;"><span class="sc-interp">Install it, pick a folder with markdown in it, and start reading. There is no onboarding to sit through.</span></p>
+      <div  style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px; align-items: start; margin-top: 4px;">
         <div >
-          <span  class="gn-label" style="color: var(--text-3);">INSTALL</span>
-          <h2  style="font-size: 34px; letter-spacing: -0.02em; margin: 16px 0px 12px; max-width: 20ch; text-wrap: pretty;"><span class="sc-interp">Open one folder to start</span></h2>
-          <p  style="font-size: 15px; line-height: 1.78; color: var(--text-2); margin: 0px 0px 28px; max-width: 46ch; text-wrap: pretty;"><span class="sc-interp">Install it, pick a folder with markdown in it, and start reading. There is no onboarding to sit through.</span></p>
-          <div  style="border: 1px solid var(--line); background: var(--surface);">
-            <div  style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--line-soft);">
-              <span  class="gn-mono" style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3);">TERMINAL</span>
-              <button  type="button" class="gn-mono gn-copy" data-copy="curl -fsSL https://pirep.pages.dev/install.sh | sh" data-copied="Copied" style="margin-left: auto; height: 26px; padding: 0px 12px; font-size: 11px; letter-spacing: 0.06em; border: 1px solid var(--line); background: var(--bg); color: var(--text-2); cursor: pointer;">Copy</button>
+            <div  style="border: 1px solid var(--line); background: var(--surface);">
+              <div  style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--line-soft);">
+                <span  class="gn-mono" style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3);">TERMINAL</span>
+                <button  type="button" class="gn-mono gn-copy" data-copy="curl -fsSL https://pirep.pages.dev/install.sh | sh" data-copied="Copied" style="margin-left: auto; height: 26px; padding: 0px 12px; font-size: 11px; letter-spacing: 0.06em; border: 1px solid var(--line); background: var(--bg); color: var(--text-2); cursor: pointer;">Copy</button>
+              </div>
+              <div  style="padding: 14px;">
+                <div  class="gn-mono" style="font-size: 12.5px; line-height: 1.8; color: var(--text); white-space: pre;"><span style="color: var(--text-3);">$ </span>curl -fsSL https://pirep.pages.dev/install.sh | sh</div>
+              </div>
             </div>
-            <div  style="padding: 14px;">
-              <div  class="gn-mono" style="font-size: 12.5px; line-height: 1.8; color: var(--text); white-space: pre;"><span style="color: var(--text-3);">$ </span>curl -fsSL https://pirep.pages.dev/install.sh | sh
-<span style="color: var(--text-3);">$ </span>open -a pirep</div>
-            </div>
-          </div>
-          <p  style="font-size: 12.5px; line-height: 1.8; color: var(--text-2); margin: 16px 0px 0px; max-width: 52ch; text-wrap: pretty;">If you would rather not use a terminal, take the dmg from the <a href="https://github.com/garamnohhh/pirep/releases/latest">release page</a>. An app installed that way needs one pass through System Settings &gt; Privacy &amp; Security &gt; Open Anyway on its first launch.</p>
-          <p  class="gn-mono" style="font-size: 11px; line-height: 1.8; color: var(--text-3); margin: 12px 0px 0px;">macOS on Apple silicon. Windows and Linux are on the way.<br>To remove it: rm -rf /Applications/pirep.app</p>
+            <p  style="font-size: 12.5px; line-height: 1.8; color: var(--text-2); margin: 16px 0px 0px; max-width: 52ch; text-wrap: pretty;">If you would rather not use a terminal, take the dmg from the <a href="https://github.com/garamnohhh/pirep/releases/latest">release page</a>. An app installed that way needs one pass through System Settings &gt; Privacy &amp; Security &gt; Open Anyway on its first launch.</p>
         </div>
-        <div  style="border: 1px solid var(--line); background: var(--surface); margin-top: 38px;">
+        <div  style="border: 1px solid var(--line); background: var(--surface);">
           
             <div  style="display: flex; align-items: baseline; gap: 20px; padding: 14px 20px; border-bottom: 1px solid var(--line-soft);">
               <span  class="gn-mono" style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); width: 104px; flex: 0 0 auto;"><span class="sc-interp">VERSION</span></span>
@@ -374,6 +372,10 @@ You read.</span></h1>
             <div  style="display: flex; align-items: baseline; gap: 20px; padding: 14px 20px; border-bottom: 1px solid var(--line-soft);">
               <span  class="gn-mono" style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); width: 104px; flex: 0 0 auto;"><span class="sc-interp">LICENCE</span></span>
               <span  class="gn-mono" style="flex: 1 1 0%; min-width: 0px; font-size: 12.5px; color: var(--text); text-align: right;"><span class="sc-interp">Free · no account</span></span>
+            </div>          
+            <div  style="display: flex; align-items: baseline; gap: 20px; padding: 14px 20px; border-bottom: 1px solid var(--line-soft);">
+              <span  class="gn-mono" style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); width: 104px; flex: 0 0 auto;"><span class="sc-interp">SOON</span></span>
+              <span  class="gn-mono" style="flex: 1 1 0%; min-width: 0px; font-size: 12.5px; color: var(--text-3); text-align: right;"><span class="sc-interp">Windows · Linux</span></span>
             </div>
           
         </div>
