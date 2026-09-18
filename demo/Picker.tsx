@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { MAIN_DOC, RABBIT_DOC, TAG, FILE_HTML, FILE_PDF, FILE_CSV, FILE_NOPE } from "./sample";
 
 // Floating screen picker. Deliberately not a side rail: the app has to keep the
 // whole window so window.innerWidth stays real and the 1120 / 960 breakpoints
@@ -10,17 +11,17 @@ const s = () => (window as unknown as { __ms: { getState: () => Store } }).__ms.
 
 const SCREENS: { label: string; run: () => void }[] = [
   { label: "Knowledge Inbox", run: () => { const t = s(); t.setSidebarTab("queue"); t.goInbox(); } },
-  { label: "Reader", run: () => { const t = s(); t.setSidebarTab("queue"); t.openDoc("field notes/rain gauge.md"); if (t.tocVisible) t.toggleToc(); } },
-  { label: "Reader + outline", run: () => { const t = s(); t.openDoc("field notes/rain gauge.md"); if (!t.tocVisible) t.toggleToc(); } },
+  { label: "Reader", run: () => { const t = s(); t.setSidebarTab("queue"); t.openDoc(MAIN_DOC); if (t.tocVisible) t.toggleToc(); } },
+  { label: "Reader + outline", run: () => { const t = s(); t.openDoc(MAIN_DOC); if (!t.tocVisible) t.toggleToc(); } },
   { label: "File tree", run: () => { const t = s(); t.goInbox(); t.setSidebarTab("files"); } },
-  { label: "Command palette", run: () => { const t = s(); t.openDoc("field notes/rain gauge.md"); t.setCmdPalette(true); } },
-  { label: "Changes", run: () => s().openDiff("field notes/rain gauge.md", 4, 7) },
-  { label: "Tag results", run: () => s().openTag("design") },
-  { label: "Rabbit Hole", run: () => s().goRabbitHole("reading/typography.md") },
-  { label: "File viewer · HTML", run: () => { const t = s(); t.setSidebarTab("files"); t.openFile("Reading/slides.html"); } },
-  { label: "File viewer · PDF", run: () => { const t = s(); t.setSidebarTab("files"); t.openFile("Reading/handout.pdf"); } },
-  { label: "File viewer · CSV", run: () => { const t = s(); t.setSidebarTab("files"); t.openFile("Workshop/bench.csv"); } },
-  { label: "File viewer · cannot open", run: () => { const t = s(); t.setSidebarTab("files"); t.openFile("Workshop/cutlist.xlsx"); } },
+  { label: "Command palette", run: () => { const t = s(); t.openDoc(MAIN_DOC); t.setCmdPalette(true); } },
+  { label: "Changes", run: () => s().openDiff(MAIN_DOC, 4, 7) },
+  { label: "Tag results", run: () => s().openTag(TAG) },
+  { label: "Rabbit Hole", run: () => s().goRabbitHole(RABBIT_DOC) },
+  { label: "File viewer · HTML", run: () => { const t = s(); t.setSidebarTab("files"); t.openFile(FILE_HTML); } },
+  { label: "File viewer · PDF", run: () => { const t = s(); t.setSidebarTab("files"); t.openFile(FILE_PDF); } },
+  { label: "File viewer · CSV", run: () => { const t = s(); t.setSidebarTab("files"); t.openFile(FILE_CSV); } },
+  { label: "File viewer · cannot open", run: () => { const t = s(); t.setSidebarTab("files"); t.openFile(FILE_NOPE); } },
   { label: "Settings", run: () => s().setView("settings") },
   { label: "First run", run: () => s().clearVault() },
 ];
