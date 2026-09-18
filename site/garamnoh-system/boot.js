@@ -18,7 +18,8 @@
      lands on the English twin of whatever was asked for. Choosing a language
      in the header stores it, and nobody is moved again. */
   var TWINS = { "/": "/en/", "/index.html": "/en/index.html",
-                "/docs.html": "/en/docs.html", "/changelog.html": "/en/changelog.html" };
+                "/docs": "/en/docs", "/docs.html": "/en/docs.html",
+                "/changelog": "/en/changelog", "/changelog.html": "/en/changelog.html" };
   if (!l0 && TWINS[location.pathname]) {
     location.replace(TWINS[location.pathname] + location.search + location.hash);
   }
